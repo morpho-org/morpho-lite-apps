@@ -10,8 +10,8 @@ import { blo } from "blo";
 import { formatBalanceWithSymbol, formatLtv, getTokenSymbolURI, Token } from "@/lib/utils";
 import { Sheet, SheetTrigger } from "@/components/ui/sheet";
 import { BorrowSheetContent } from "@/components/borrow-sheet-content";
-import { MarketId, MarketParams } from "@morpho-org/blue-sdk";
-import { Info } from "lucide-react";
+import { MarketId, MarketParams, MarketUtils } from "@morpho-org/blue-sdk";
+import { Eye, Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { keepPreviousData } from "@tanstack/react-query";
 import { RequestChart } from "@/components/request-chart";
@@ -138,6 +138,20 @@ export function BorrowSubPage() {
     query: { staleTime: 10 * 60 * 1000, gcTime: Infinity, placeholderData: keepPreviousData },
   });
 
+  const { data: positionsRaw, refetch: refetchPositionsRaw } = useReadContracts({
+    contracts: filteredCreateMarketArgs.map(
+      (args) =>
+        ({
+          address: morpho.address,
+          abi: morphoAbi,
+          functionName: "position",
+          args: userAddress ? [args.id, userAddress] : undefined,
+        }) as const,
+    ),
+    allowFailure: false,
+    query: { staleTime: 1 * 60 * 1000, placeholderData: keepPreviousData },
+  });
+
   const tokens = useMemo(() => {
     const map = new Map<Address, Token>();
     filteredCreateMarketArgs.forEach((args, idx) => {
@@ -224,6 +238,7 @@ export function BorrowSubPage() {
                 <TableHead className="text-primary rounded-l-lg pl-4 text-xs font-light">Collateral</TableHead>
                 <TableHead className="text-primary text-xs font-light">Loan</TableHead>
                 <TableHead className="text-primary text-xs font-light">LLTV</TableHead>
+                <TableHead className="text-primary text-xs font-light">Position</TableHead>
                 <TableHead className="text-primary rounded-r-lg text-xs font-light">
                   <div className="flex items-center gap-1">
                     Liquidity
@@ -244,7 +259,13 @@ export function BorrowSubPage() {
             </TableHeader>
             <TableBody>
               {filteredCreateMarketArgs.map((args, idx) => (
-                <Sheet key={args.id}>
+                <Sheet
+                  key={args.id}
+                  onOpenChange={(isOpen) => {
+                    // Refetch positions on sidesheet close, since user may have sent txns to modify one
+                    if (!isOpen) refetchPositionsRaw();
+                  }}
+                >
                   <SheetTrigger asChild>
                     <TableRow className="bg-secondary">
                       <TableCell className="rounded-l-lg p-5">
@@ -254,12 +275,54 @@ export function BorrowSubPage() {
                         <TokenTableCell {...tokens.get(args.marketParams.loanToken)!} />
                       </TableCell>
                       <TableCell>{formatLtv(args.marketParams.lltv)}</TableCell>
+                      <TableCell>
+                        {
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Eye className="h-4 w-4" />
+                              </TooltipTrigger>
+                              <TooltipContent className="text-secondary max-w-56 p-3 font-light">
+                                <h3>Collateral</h3>
+                                <p>
+                                  {positionsRaw && tokens.get(args.marketParams.collateralToken)?.decimals !== undefined
+                                    ? formatBalanceWithSymbol(
+                                        positionsRaw[idx][2],
+                                        tokens.get(args.marketParams.collateralToken)!.decimals!,
+                                        tokens.get(args.marketParams.collateralToken)!.symbol,
+                                        5,
+                                        true,
+                                      )
+                                    : "－"}
+                                </p>
+                                <h3 className="pt-3">Borrows</h3>
+                                <p>
+                                  {markets &&
+                                  positionsRaw &&
+                                  tokens.get(args.marketParams.loanToken)?.decimals !== undefined
+                                    ? formatBalanceWithSymbol(
+                                        MarketUtils.toBorrowAssets(positionsRaw[idx][1], {
+                                          totalBorrowAssets: markets[idx][2],
+                                          totalBorrowShares: markets[idx][3],
+                                        }),
+                                        tokens.get(args.marketParams.loanToken)!.decimals!,
+                                        tokens.get(args.marketParams.loanToken)!.symbol,
+                                        5,
+                                        true,
+                                      )
+                                    : "－"}
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        }
+                      </TableCell>
                       <TableCell className="rounded-r-lg">
                         {markets && tokens.get(args.marketParams.loanToken)?.decimals !== undefined
                           ? formatBalanceWithSymbol(
                               markets[idx][0] - markets[idx][2],
                               tokens.get(args.marketParams.loanToken)!.decimals!,
-                              tokens.get(args.marketParams.loanToken)?.symbol,
+                              tokens.get(args.marketParams.loanToken)!.symbol,
                               5,
                               true,
                             )
