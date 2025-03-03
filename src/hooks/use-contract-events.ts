@@ -1,8 +1,15 @@
 import { useQueries } from "@tanstack/react-query";
-import type { Abi, BlockNumber, BlockTag, ContractEventName, GetContractEventsParameters } from "viem";
+import {
+  type Abi,
+  type BlockNumber,
+  type BlockTag,
+  type ContractEventName,
+  type GetContractEventsParameters,
+} from "viem";
 import { serialize, usePublicClient } from "wagmi";
 import { hash } from "ohash";
 import { useMemo } from "react";
+import { useBenchmark_eth_getLogs } from "@/hooks/use-benchmark-eth-getLogs";
 
 type BlockRangeBound = BlockNumber | BlockTag | undefined;
 type BlockRange = [BlockRangeBound, BlockRangeBound];
@@ -12,7 +19,6 @@ type BlockRange = [BlockRangeBound, BlockRangeBound];
  * Wraps around `publicClient.getContractEvents`
  * @param args Arguments to pass through to `publicClient.getContractEvents`, along with some extra fields (see below)
  * @param args.query Subset of tanstack query params, specifically `{ enabled: boolean }`
- * @param args.maxBlockRange The maximum block range supported by the active viem client/transport
  * @param args.reverseChronologicalOrder All initial `eth_getLogs` requests are sent in the same EventLoop. Response
  * ordering is probablistic, but can be influenced slightly by sending those first requests in reverse order. Returned
  * events are always sorted earliest-to-latest by blockNumber>txnIndex>logIndex.
@@ -24,32 +30,36 @@ export default function useContractEvents<
   fromBlock extends BlockNumber | BlockTag = "earliest",
   toBlock extends BlockNumber | BlockTag = "latest",
 >(
-  args: GetContractEventsParameters<abi, eventName, strict, fromBlock, toBlock> & {
+  args: Omit<GetContractEventsParameters<abi, eventName, strict, fromBlock, toBlock>, "blockHash"> & {
     query?: { enabled?: boolean };
-    maxBlockRange?: bigint;
     reverseChronologicalOrder?: boolean;
   },
 ) {
-  args = { ...args };
+  const publicClient = usePublicClient();
+  const { data: maxBlockRange } = useBenchmark_eth_getLogs({
+    publicClient,
+    retryCount: 1,
+    retryDelay: 200,
+    timeout: 6_000,
+    latestBlockNumber: typeof args.toBlock === "bigint" ? args.toBlock : undefined,
+  });
 
-  if (args.blockHash === undefined) {
-    if (args.fromBlock === undefined) args.fromBlock = "earliest";
-    if (args.toBlock === undefined) args.toBlock = "latest";
-  }
+  args = { ...args };
+  if (args.fromBlock === undefined) args.fromBlock = "earliest";
+  if (args.toBlock === undefined) args.toBlock = "latest";
 
   // Extract and remove these fields from `args` since we don't want them in the `queryKey`.
-  const { fromBlock, toBlock, query, maxBlockRange, reverseChronologicalOrder } = args;
+  const { fromBlock, toBlock, query, reverseChronologicalOrder } = args;
   delete args.fromBlock;
   delete args.toBlock;
   delete args.query;
-  delete args.maxBlockRange;
   delete args.reverseChronologicalOrder;
 
   // Initialize standard block range...
   let blockRanges: BlockRange[] = [[fromBlock, toBlock]];
 
   // ...slice it if necessary...
-  if (query?.enabled && maxBlockRange) {
+  if (query?.enabled && typeof maxBlockRange === "bigint") {
     if (typeof toBlock !== "bigint" || typeof fromBlock !== "bigint") {
       throw new Error(
         `Tried to query contract events with \`maxBlockRange\` constraint without explicit \`fromBlock\` or \`toBlock\`.`,
@@ -60,8 +70,6 @@ export default function useContractEvents<
 
   // ...and finally reverse it if necessary.
   if (reverseChronologicalOrder) blockRanges.reverse();
-
-  const publicClient = usePublicClient();
 
   const queryFn = async ([fromBlock, toBlock]: BlockRange) => {
     if (publicClient === undefined) {
@@ -94,7 +102,7 @@ export default function useContractEvents<
         refetchOnWindowFocus: false,
         refetchOnReconnect: false,
         placeholderData: [],
-        enabled: query?.enabled,
+        enabled: query?.enabled && maxBlockRange !== undefined,
       };
     }),
   });

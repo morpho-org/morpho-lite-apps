@@ -33,17 +33,19 @@ import { Chain, HttpTransportConfig } from "viem";
 import { RequestTrackingProvider } from "./hooks/use-request-tracking";
 
 const httpConfig: HttpTransportConfig = {
-  retryCount: 5,
-  retryDelay: 500,
-  timeout: 60_000,
+  retryCount: 0,
+  timeout: 30_000,
 };
 
 function createFallbackTransport(...rpcUrls: string[]) {
-  return fallback([
-    unstable_connector(injected, { key: "injected", name: "Injected", retryCount: 2, retryDelay: 100 }),
-    ...rpcUrls.map((rpcUrl) => http(rpcUrl, httpConfig)),
-    http(undefined, httpConfig),
-  ]);
+  return fallback(
+    [
+      unstable_connector(injected, { key: "injected", name: "Injected", retryCount: 0 }),
+      ...rpcUrls.map((rpcUrl) => http(rpcUrl, httpConfig)),
+      http(undefined, httpConfig),
+    ],
+    { retryCount: 6, retryDelay: 100 },
+  );
 }
 
 const chains = [

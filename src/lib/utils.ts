@@ -52,3 +52,16 @@ export type Token = { address: Address; symbol?: string; decimals?: number; imag
 export function getTokenSymbolURI(symbol: string | undefined) {
   return `https://cdn.morpho.org/assets/logos/${encodeURIComponent((symbol ?? "").toLowerCase())}.svg`;
 }
+
+export function promiseWithTimeout<T>(
+  promise: Promise<T>,
+  ms: number,
+  error = new Error("Promise timed out"),
+): Promise<T> {
+  let timer: ReturnType<typeof setTimeout>;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(error), ms);
+  });
+
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}

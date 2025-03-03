@@ -58,7 +58,6 @@ export function EarnSubPage() {
     address: [factoryV1_1.address].concat(factory ? [factory.address] : []),
     fromBlock: factory?.fromBlock ?? factoryV1_1.fromBlock,
     toBlock: blockNumber,
-    maxBlockRange: 10_000n,
     reverseChronologicalOrder: true,
     eventName: "CreateMetaMorpho",
     strict: true,
@@ -77,7 +76,6 @@ export function EarnSubPage() {
     abi: erc4626Abi,
     fromBlock: factory?.fromBlock ?? factoryV1_1.fromBlock,
     toBlock: blockNumber,
-    maxBlockRange: 10_000n,
     reverseChronologicalOrder: true,
     eventName: "Deposit", // ERC-4626
     args: { receiver: userAddress },

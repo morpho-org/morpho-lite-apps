@@ -51,7 +51,6 @@ export function BorrowSubPage() {
     address: morpho.address,
     fromBlock: morpho.fromBlock,
     toBlock: blockNumber,
-    maxBlockRange: 10_000n,
     reverseChronologicalOrder: true,
     eventName: "SupplyCollateral",
     args: { onBehalf: userAddress },
