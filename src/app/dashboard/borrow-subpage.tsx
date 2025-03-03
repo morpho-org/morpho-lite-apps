@@ -40,6 +40,9 @@ export function BorrowSubPage() {
     query: { staleTime: Infinity, gcTime: Infinity, refetchOnMount: "always" },
   });
 
+  const urlSearchParams = new URLSearchParams(window.location.search);
+  const isDev = urlSearchParams.has("dev");
+
   const morpho = useMemo(() => getContractDeploymentInfo(chainId, "Morpho"), [chainId]);
 
   const {
@@ -168,25 +171,35 @@ export function BorrowSubPage() {
             : 5;
   if (!userAddress) totalProgress = 0;
 
+  const progressCard = (
+    <Card className="bg-secondary h-min md:h-full">
+      <CardContent className="flex h-full flex-col gap-2 p-6 text-xs font-light">
+        <div className="flex justify-between">
+          <span>Indexing your positions</span>
+          {(ffSupplyCollateralEvents * 100).toFixed(2)}%
+        </div>
+        <Progress finalColor="bg-green-400" value={ffSupplyCollateralEvents * 100} className="mb-auto" />
+        <div className="bottom-0 flex justify-between">
+          <i>Total Progress</i>
+          {((totalProgress * 100) / 5).toFixed(2)}%
+        </div>
+        <Progress finalColor="bg-green-400" value={(totalProgress * 100) / 5} />
+      </CardContent>
+    </Card>
+  );
+
   return (
     <div className="flex min-h-screen flex-col px-2.5">
-      <div className="flex w-full max-w-5xl flex-col gap-4 px-8 pt-24 pb-14 md:m-auto md:grid md:grid-cols-[40%_60%] md:px-0 md:pt-32 dark:bg-neutral-900">
-        <Card className="bg-secondary h-min md:h-full">
-          <CardContent className="flex h-full flex-col gap-2 p-6 text-xs font-light">
-            <div className="flex justify-between">
-              <span>Indexing your positions</span>
-              {(ffSupplyCollateralEvents * 100).toFixed(2)}%
-            </div>
-            <Progress finalColor="bg-green-400" value={ffSupplyCollateralEvents * 100} className="mb-auto" />
-            <div className="bottom-0 flex justify-between">
-              <i>Total Progress</i>
-              {((totalProgress * 100) / 5).toFixed(2)}%
-            </div>
-            <Progress finalColor="bg-green-400" value={(totalProgress * 100) / 5} />
-          </CardContent>
-        </Card>
-        <RequestChart />
-      </div>
+      {isDev ? (
+        <div className="flex w-full max-w-5xl flex-col gap-4 px-8 pt-24 pb-14 md:m-auto md:grid md:grid-cols-[40%_60%] md:px-0 md:pt-32 dark:bg-neutral-900">
+          {progressCard}
+          <RequestChart />
+        </div>
+      ) : (
+        <div className="flex h-96 w-full max-w-5xl flex-col gap-4 px-8 pt-24 pb-14 md:m-auto md:px-0 md:pt-32 dark:bg-neutral-900">
+          {progressCard}
+        </div>
+      )}
       <div className="bg-background dark:bg-background/30 flex grow justify-center rounded-t-xl">
         <div className="text-primary w-full max-w-5xl px-8 pt-8 pb-32">
           <Table className="border-separate border-spacing-y-3">
