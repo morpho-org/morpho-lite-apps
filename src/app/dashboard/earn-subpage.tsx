@@ -17,6 +17,7 @@ import { EarnSheetContent } from "@/components/earn-sheet-content";
 import { RequestChart } from "@/components/request-chart";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
+import { CtaCard } from "@/components/cta-card";
 
 function TokenTableCell({ address, symbol, imageSrc }: Token) {
   return (
@@ -186,24 +187,6 @@ export function EarnSubPage() {
           : 4;
   if (!userAddress) totalProgress = 0;
 
-  const ctaCard = (
-    <>
-      <div className="flex h-full flex-col items-start justify-center gap-4">
-        <h1 className="text-5xl font-light">Earn on your terms</h1>
-        <h2 className="font-light">Connect wallet to get started</h2>
-      </div>
-      <div className="hidden items-center justify-end md:flex md:max-h-72">
-        <video loop={true} autoPlay={true} preload="metadata" playsInline={true} className="aspect-square h-full">
-          <source src="https://cdn.morpho.org/v2/assets/videos/earn-animation.mov" type="video/mp4; codecs='hvc1'" />
-          <source
-            src="https://cdn.morpho.org/v2/assets/videos/earn-animation.webm"
-            type="video/webm; codecs=vp09.00.41.08"
-          />
-        </video>
-      </div>
-    </>
-  );
-
   const progressCard = (
     <Card className="bg-secondary h-min md:h-full">
       <CardContent className="flex h-full flex-col gap-2 p-6 text-xs font-light">
@@ -228,16 +211,20 @@ export function EarnSubPage() {
 
   return (
     <div className="flex min-h-screen flex-col px-2.5">
-      {userAddress === undefined || isDev ? (
+      {userAddress === undefined ? (
+        <CtaCard
+          className="flex w-full max-w-5xl flex-col gap-4 px-8 pt-24 pb-14 md:m-auto md:grid md:grid-cols-[50%_50%] md:px-0 md:pt-32 dark:bg-neutral-900"
+          bigText="Earn on your terms"
+          littleText="Connect wallet to get started"
+          videoSrc={{
+            mov: "https://cdn.morpho.org/v2/assets/videos/earn-animation.mov",
+            webm: "https://cdn.morpho.org/v2/assets/videos/earn-animation.webm",
+          }}
+        />
+      ) : isDev ? (
         <div className="flex w-full max-w-5xl flex-col gap-4 px-8 pt-24 pb-14 md:m-auto md:grid md:grid-cols-[40%_60%] md:px-0 md:pt-32 dark:bg-neutral-900">
-          {userAddress ? (
-            <>
-              {progressCard}
-              <RequestChart />
-            </>
-          ) : (
-            <>{ctaCard}</>
-          )}
+          {progressCard}
+          <RequestChart />
         </div>
       ) : (
         <div className="flex h-96 w-full max-w-5xl flex-col gap-4 px-8 pt-24 pb-14 md:m-auto md:px-0 md:pt-32 dark:bg-neutral-900">
