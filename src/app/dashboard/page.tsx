@@ -7,8 +7,7 @@ import { useState } from "react";
 import { WalletMenu } from "@/components/wallet-menu";
 import { EarnSubPage } from "./earn-subpage";
 import { BorrowSubPage } from "./borrow-subpage";
-import { useGhDeployments } from "@/hooks/use-gh-deployments";
-import { useMemo } from "react";
+import { Footer } from "@/components/footer";
 
 enum SubPage {
   Earn = "earn",
@@ -18,22 +17,6 @@ enum SubPage {
 export default function Page() {
   const [selectedSubPage, setSelectedSubPage] = useState(SubPage.Earn);
   const [selectedChainName, setSelectedChainName] = useState("Ethereum");
-
-  const { data: ghDeployments } = useGhDeployments({
-    owner: "morpho-org",
-    repo: "morpho-blue-offchain-public",
-    environment: "IPFS",
-  });
-
-  const ipfsDeployments = useMemo(
-    () =>
-      ghDeployments?.filter(
-        (deployment) => deployment.status === "success" && deployment.environment_url !== undefined,
-      ),
-    [ghDeployments],
-  );
-
-  console.log(ipfsDeployments);
 
   return (
     <div className="bg-gray-200 dark:bg-neutral-900">
@@ -81,7 +64,7 @@ export default function Page() {
         </div>
       </Header>
       {selectedSubPage === SubPage.Earn ? <EarnSubPage /> : <BorrowSubPage />}
-      <div className="bg-secondary fixed bottom-0 h-[12px] w-full"></div>
+      <Footer />
     </div>
   );
 }
