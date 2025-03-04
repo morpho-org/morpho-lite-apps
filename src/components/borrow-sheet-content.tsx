@@ -23,8 +23,8 @@ import { TransactionButton } from "@/components/transaction-button";
 import { Toaster } from "sonner";
 
 enum Actions {
-  SupplyCollateral = "+ Collateral",
-  WithdrawCollateral = "- Collateral",
+  SupplyCollateral = "Supply",
+  WithdrawCollateral = "Withdraw",
   Repay = "Repay",
 }
 
@@ -103,7 +103,10 @@ export function BorrowSheetContent({
   );
 
   const accrualPosition = useMemo(
-    () => (market && position ? new AccrualPosition(position, market) : undefined),
+    () =>
+      market && position
+        ? new AccrualPosition(position, market).accrueInterest(BigInt((Date.now() / 1000).toFixed(0)))
+        : undefined,
     [position, market],
   );
 
@@ -154,7 +157,10 @@ export function BorrowSheetContent({
           address: morpho,
           abi: morphoAbi,
           functionName: "repay",
-          args: [{ ...marketParams }, inputValue, 0n, userAddress, "0x"],
+          args:
+            inputValue === accrualPosition?.borrowAssets && position !== undefined
+              ? ([{ ...marketParams }, 0n, position.borrowShares, userAddress, "0x"] as const) // max repay with shares
+              : ([{ ...marketParams }, inputValue, 0n, userAddress, "0x"] as const), // normal repay with assets
         } as const)
       : undefined;
 

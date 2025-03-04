@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/sheet";
 import { formatBalance, Token } from "@/lib/utils";
 import { Address, erc4626Abi, extractChain, parseUnits } from "viem";
-import { useAccount, useChainId, useChains, useReadContract } from "wagmi";
+import { useAccount, useChainId, useChains, useReadContracts } from "wagmi";
 import { CircleArrowLeft } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { keepPreviousData } from "@tanstack/react-query";
@@ -32,29 +32,39 @@ export function EarnSheetContent({ vaultAddress, asset }: { vaultAddress: Addres
   const [selectedTab, setSelectedTab] = useState(Actions.Withdraw);
   const [textInputValue, setTextInputValue] = useState("");
 
-  const { data: maxWithdraw, refetch: refetchMaxWithdraw } = useReadContract({
-    address: vaultAddress,
-    abi: erc4626Abi,
-    functionName: "maxWithdraw",
-    args: [userAddress ?? "0x"],
+  const { data: maxes, refetch: refetchMaxes } = useReadContracts({
+    contracts: [
+      { address: vaultAddress, abi: erc4626Abi, functionName: "maxWithdraw", args: [userAddress ?? "0x"] },
+      { address: vaultAddress, abi: erc4626Abi, functionName: "maxRedeem", args: [userAddress ?? "0x"] },
+    ],
+    allowFailure: false,
     query: { enabled: !!userAddress, staleTime: 1 * 60 * 1000, placeholderData: keepPreviousData },
   });
 
   const { inputValue, withdrawTxnConfig } = useMemo(() => {
     const inputValue = asset.decimals !== undefined ? parseUnits(textInputValue, asset.decimals) : undefined;
+    const isReadyForConfig = userAddress !== undefined && inputValue !== undefined;
+    const isMaxed = inputValue === maxes?.[0];
+
     return {
       inputValue,
-      withdrawTxnConfig:
-        userAddress !== undefined && inputValue !== undefined
+      withdrawTxnConfig: isReadyForConfig
+        ? isMaxed
           ? ({
+              address: vaultAddress,
+              abi: erc4626Abi,
+              functionName: "redeem",
+              args: [maxes![1], userAddress, userAddress],
+            } as const)
+          : ({
               address: vaultAddress,
               abi: erc4626Abi,
               functionName: "withdraw",
               args: [inputValue, userAddress, userAddress],
             } as const)
-          : undefined,
+        : undefined,
     };
-  }, [vaultAddress, userAddress, asset, textInputValue]);
+  }, [vaultAddress, userAddress, asset, textInputValue, maxes]);
 
   return (
     <SheetContent className="z-[9999] gap-3 overflow-y-scroll dark:bg-neutral-900">
@@ -80,9 +90,7 @@ export function EarnSheetContent({ vaultAddress, asset }: { vaultAddress: Addres
           <img className="rounded-full" height={16} width={16} src={asset.imageSrc} />
         </div>
         <p className="text-lg font-medium">
-          {maxWithdraw !== undefined && asset.decimals !== undefined
-            ? formatBalance(maxWithdraw, asset.decimals, 5)
-            : "－"}
+          {maxes !== undefined && asset.decimals !== undefined ? formatBalance(maxes[0], asset.decimals, 5) : "－"}
         </p>
       </div>
       <Tabs
@@ -123,7 +131,7 @@ export function EarnSheetContent({ vaultAddress, asset }: { vaultAddress: Addres
             <TokenAmountInput
               decimals={asset.decimals}
               value={textInputValue}
-              maxValue={maxWithdraw}
+              maxValue={maxes?.[0]}
               onChange={setTextInputValue}
             />
           </div>
@@ -132,7 +140,7 @@ export function EarnSheetContent({ vaultAddress, asset }: { vaultAddress: Addres
             disabled={!inputValue}
             onTxnReceipt={() => {
               setTextInputValue("");
-              refetchMaxWithdraw();
+              refetchMaxes();
             }}
           >
             Withdraw
