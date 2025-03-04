@@ -42,11 +42,9 @@ export function Footer() {
     for (const deployment of ipfsDeployments) {
       if (!deployment.environment_url) continue;
       const cid = deployment.environment_url.replace("https://", "").split(".")[0];
-      console.log(cid);
       if (window.location.host.includes(cid)) return true;
     }
 
-    console.log(ipfsDeployments);
     return false;
   }, [ipfsDeployments]);
 
