@@ -1,4 +1,14 @@
-import { createConfig, deserialize, fallback, http, injected, serialize, type Transport, WagmiProvider } from "wagmi";
+import {
+  createConfig,
+  deserialize,
+  fallback,
+  http,
+  injected,
+  serialize,
+  type Transport,
+  unstable_connector,
+  WagmiProvider,
+} from "wagmi";
 import {
   arbitrum,
   base,
@@ -29,7 +39,11 @@ const httpConfig: HttpTransportConfig = {
 };
 
 function createFallbackTransport(rpcUrls: string[]) {
-  return fallback(rpcUrls.map((rpcUrl) => http(rpcUrl, httpConfig)));
+  return fallback([
+    unstable_connector(injected, { key: "injected", name: "Injected", retryCount: 2, retryDelay: 100 }),
+    ...rpcUrls.map((rpcUrl) => http(rpcUrl, httpConfig)),
+    http(undefined, httpConfig),
+  ]);
 }
 
 const chains = [
