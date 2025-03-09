@@ -7,6 +7,7 @@ import { useState } from "react";
 import { WalletMenu } from "@/components/wallet-menu";
 import { EarnSubPage } from "./earn-subpage";
 import { BorrowSubPage } from "./borrow-subpage";
+import { Footer } from "@/components/footer";
 
 enum SubPage {
   Earn = "earn",
@@ -63,7 +64,7 @@ export default function Page() {
         </div>
       </Header>
       {selectedSubPage === SubPage.Earn ? <EarnSubPage /> : <BorrowSubPage />}
-      <div className="bg-secondary fixed bottom-0 h-[12px] w-full"></div>
+      <Footer />
     </div>
   );
 }

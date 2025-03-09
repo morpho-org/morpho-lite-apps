@@ -2,6 +2,7 @@ import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { XIcon } from "lucide-react";
+import { GITHUB_REPO_URL } from "@/lib/constants";
 
 export function Header({ className, children, ...props }: React.ComponentProps<"div">) {
   const [shouldShowBanner, setShouldShowBanner] = useState(true);
@@ -13,12 +14,7 @@ export function Header({ className, children, ...props }: React.ComponentProps<"
           <span className="grow py-2 text-center">
             This app is built for emergencies, so it prioritizes resilience over speed. Please be patient as it loads.
             You can also run it yourself{" "}
-            <a
-              className="underline"
-              href="https://github.com/morpho-org/morpho-blue-offchain-public"
-              rel="noopener noreferrer"
-              target="_blank"
-            >
+            <a className="underline" href={GITHUB_REPO_URL} rel="noopener noreferrer" target="_blank">
               here.
             </a>
           </span>

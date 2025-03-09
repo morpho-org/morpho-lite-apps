@@ -37,39 +37,44 @@ export function RequestTrackingProvider({ children }: { children: React.ReactNod
       let key = "";
 
       const ethJsonRpcRequest = extractEthJsonRpcRequest(...args);
+      const ethJsonRpcRequests = ethJsonRpcRequest
+        ? Array.isArray(ethJsonRpcRequest)
+          ? ethJsonRpcRequest
+          : [ethJsonRpcRequest]
+        : [];
 
       // Track request
-      if (ethJsonRpcRequest) {
+      ethJsonRpcRequests.forEach((r) => {
         const value = {
           provider: args[0].toString(),
-          method: ethJsonRpcRequest.method,
+          method: r.method,
           requestTimestamp,
         };
-        key = cyrb64Hash(JSON.stringify({ ...value, params: ethJsonRpcRequest.params }));
+        key = cyrb64Hash(JSON.stringify({ ...value, params: r.params }));
 
         setLogs((x) => {
           const y = new Map(x);
           y.set(key, value);
           return y;
         });
-      }
+      });
 
       const response = await originalFetch(...args);
 
       // Track response
-      if (ethJsonRpcRequest) {
+      ethJsonRpcRequests.forEach((r) => {
         setLogs((x) => {
           const y = new Map(x);
           y.set(key, {
             provider: args[0].toString(),
-            method: ethJsonRpcRequest.method,
+            method: r.method,
             requestTimestamp,
             responseTimestamp: Date.now(),
             responseStatus: response.status,
           });
           return y;
         });
-      }
+      });
 
       return response;
     };

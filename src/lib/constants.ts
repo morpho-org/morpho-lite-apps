@@ -29,6 +29,10 @@ type Deployments = {
   };
 };
 
+export const GITHUB_OWNER = "morpho-org";
+export const GITHUB_REPO = "morpho-blue-offchain-public";
+export const GITHUB_REPO_URL = `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}`;
+
 export const DEPLOYMENTS: Deployments = {
   [mainnet.id]: {
     Morpho: { address: "0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb", fromBlock: 18883124n },
