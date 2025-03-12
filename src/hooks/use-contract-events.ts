@@ -10,6 +10,7 @@ import { serialize, usePublicClient } from "wagmi";
 import { hash } from "ohash";
 import { useMemo } from "react";
 import { useBenchmark_eth_getLogs } from "@/hooks/use-benchmark-eth-getLogs";
+import { cyrb64Hash } from "@/lib/cyrb64";
 
 type BlockRangeBound = BlockNumber | BlockTag | undefined;
 type BlockRange = [BlockRangeBound, BlockRangeBound];
@@ -89,13 +90,11 @@ export default function useContractEvents<
   const results = useQueries({
     queries: blockRanges.map((blockRange) => {
       return {
-        queryKey: [
-          "useContractEvents",
-          publicClient?.chain.id,
-          serialize({ ...args, abi: hash(args.abi) }),
-          serialize({ fromBlock: blockRange[0], toBlock: blockRange[1] }),
-        ],
+        queryKey: ["useContractEvents", publicClient?.chain.id, { ...args, abi: hash(args.abi) }, blockRange],
         queryFn: () => queryFn(blockRange),
+        queryKeyHashFn(queryKey: unknown) {
+          return cyrb64Hash(serialize(queryKey));
+        },
         staleTime: typeof blockRange[1] !== "bigint" ? 5 * 60 * 1000 : Infinity,
         gcTime: typeof blockRange[1] !== "bigint" ? 10 * 60 * 1000 : Infinity,
         refetchOnMount: true,

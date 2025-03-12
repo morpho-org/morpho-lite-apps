@@ -65,3 +65,12 @@ export function promiseWithTimeout<T>(
 
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
 }
+
+export function areSetsEqual<T>(a: Set<T>, b: Set<T>) {
+  if (a.size !== b.size) return false;
+
+  for (const key of a) {
+    if (!b.has(key)) return false;
+  }
+  return true;
+}
