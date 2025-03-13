@@ -22,10 +22,10 @@ export type Strategy = AnnotatedTransport[];
 
 const BLOCK_BINS = [1n, 1_000n, 2_000n, 5_000n, 10_000n, 100_000n, "unconstrained" as const];
 const INITIAL_TIMEOUT = 30_000; // (ms)
-const ORDINARY_RETRIES = 2; // Num of `eth_getLogs` retries in bins that have succeeded before
-const EXPLORATORY_RETRIES = 0; // Num of `eth_getLogs` retries when stepping up to next bin
-const ORDINARY_RETRY_DELAY = 100; // Delay to pass to viem if retrying in bins that have have succeeded before (ms)
-const EXPLORATORY_RETRY_DELAY = 0; // Delay to pass to viem if retrying when stepping up to next bin (ms)
+const ORDINARY_RETRIES = 4; // Num of `eth_getLogs` retries in bins that have succeeded before
+const EXPLORATORY_RETRIES = 2; // Num of `eth_getLogs` retries when stepping up to next bin
+const ORDINARY_RETRY_DELAY = 50; // Delay to pass to viem if retrying in bins that have have succeeded before (ms)
+const EXPLORATORY_RETRY_DELAY = 50; // Delay to pass to viem if retrying when stepping up to next bin (ms)
 const EXPLORATION_INITIATION_THRESHOLD = 1; // Num successes to get in current bin before exploring next one
 const EXPLORATION_CANCELLATION_THRESHOLD = 3; // Num failures to tolerate before giving up (not counting viem internals)
 
@@ -39,7 +39,7 @@ export function getStrategyBasedOn<Transport extends EIP1193Transport>(
       latencyEma: number;
       stabilityEma: number;
       blockBinsStats: { success: number; failure: number }[];
-      blockBinsBestIdx: number;
+      blockBinsBestIdxs: number[];
     }
   >();
 
@@ -52,7 +52,7 @@ export function getStrategyBasedOn<Transport extends EIP1193Transport>(
       latencyEma: r.latency,
       stabilityEma: 1.0,
       blockBinsStats: new Array(BLOCK_BINS.length).fill({ success: 0, failure: 0 }),
-      blockBinsBestIdx: 0,
+      blockBinsBestIdxs: [0],
     };
 
     // Figure out which bin the request corresponds to
@@ -63,7 +63,7 @@ export function getStrategyBasedOn<Transport extends EIP1193Transport>(
     entry.stabilityEma = 0.8 * entry.stabilityEma + 0.2 * (r.status === "success" ? 1 : 0);
     entry.blockBinsStats[blockBinsIdx][r.status] += 1;
     if (r.status === "success") {
-      entry.blockBinsBestIdx = Math.max(entry.blockBinsBestIdx, blockBinsIdx); // TODO: could change this so it's "best blockBinsBestIdx in the past N requests" so that after N failures we bump back down
+      entry.blockBinsBestIdxs = entry.blockBinsBestIdxs.slice(-10).concat(blockBinsIdx)
     }
 
     // Update map (in case this was a new entry obj)
@@ -89,11 +89,12 @@ export function getStrategyBasedOn<Transport extends EIP1193Transport>(
 
     const stats = transportStats.get(transport.id)!;
     const timeout = stats.latencyEma * 5;
+    const blockBinsBestIdx = Math.max(...stats.blockBinsBestIdxs);
 
     if (
-      stats.blockBinsBestIdx < BLOCK_BINS.length - 1 &&
-      stats.blockBinsStats[stats.blockBinsBestIdx].success >= EXPLORATION_INITIATION_THRESHOLD &&
-      stats.blockBinsStats[stats.blockBinsBestIdx + 1].failure < EXPLORATION_CANCELLATION_THRESHOLD
+      blockBinsBestIdx < BLOCK_BINS.length - 1 &&
+      stats.blockBinsStats[blockBinsBestIdx].success >= EXPLORATION_INITIATION_THRESHOLD &&
+      stats.blockBinsStats[blockBinsBestIdx].failure < EXPLORATION_CANCELLATION_THRESHOLD
     ) {
       // Explore next bin!!
       strategy.push({
@@ -102,14 +103,14 @@ export function getStrategyBasedOn<Transport extends EIP1193Transport>(
         stabilityEma: stats.stabilityEma,
         retryCount: EXPLORATORY_RETRIES,
         retryDelay: EXPLORATORY_RETRY_DELAY,
-        maxNumBlocks: BLOCK_BINS[stats.blockBinsBestIdx + 1],
+        maxNumBlocks: BLOCK_BINS[blockBinsBestIdx + 1],
       });
     }
 
     // NOTE: In addition to the current bin, we push all lower bins into the strategy.
     // This is important when response size is the limiting factor, like how Alchemy
     // won't return more than 10k events unless you request <=2k blocks.
-    for (let i = stats.blockBinsBestIdx; i >= 0; i -= 1) {
+    for (let i = blockBinsBestIdx; i >= 0; i -= 1) {
       strategy.push({
         ...transport,
         timeout,

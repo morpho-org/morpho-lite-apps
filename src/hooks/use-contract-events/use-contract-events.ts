@@ -57,6 +57,7 @@ type ToBlockNumber = BlockNumber;
 type QueryData = UseQueryResult<Awaited<ReturnType<ReturnType<typeof getQueryFn>>>, Error>["data"];
 
 const REQUESTS_PER_SECOND = 5;
+const MAX_REQUESTS_TO_TRACK = 512;
 
 // TODO: If caller holds everything constant, but moves fromBlock earlier, it'll break cache. Moving coalescing to hook start (and updating knownRanges accordingly) should fix this
 /**
@@ -65,7 +66,7 @@ const REQUESTS_PER_SECOND = 5;
  * @param args Arguments to pass through to `publicClient.getContractEvents`, along with some extra fields (see below)
  * @param args.query Subset of tanstack query params, specifically `{ enabled: boolean }`
  */
-export default function useContractEvents2<
+export default function useContractEvents<
   const abi extends Abi | readonly unknown[],
   eventName extends ContractEventName<abi> | undefined = undefined,
   strict extends boolean | undefined = undefined,
@@ -168,7 +169,7 @@ export default function useContractEvents2<
 
     setSeeds((x) => {
       const y = new Map(x);
-      remainingRanges.slice(0, 2).forEach((v) => y.set(v.fromBlock, v.isGap ? v.toBlock : requiredRange[1]));
+      remainingRanges.slice(0, 200).forEach((v) => y.set(v.fromBlock, v.isGap ? v.toBlock : requiredRange[1]));
       return y;
     });
 
@@ -248,7 +249,7 @@ export default function useContractEvents2<
       setRequestStats((value) => {
         // Since `staleTime` and `gcTime` are `Infinity`, individual request stats should only change once.
         // This implies that length is a sufficient check of equality.
-        return newRequestStats.length !== value.length ? newRequestStats : value;
+        return newRequestStats.length !== value.length ? newRequestStats.slice(0, MAX_REQUESTS_TO_TRACK) : value;
       });
       setKnownRanges((value) => {
         let shouldUpdate = false;

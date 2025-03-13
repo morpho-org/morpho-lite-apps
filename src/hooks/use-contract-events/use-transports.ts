@@ -72,6 +72,7 @@ function eip1193RequestFnWithTimeout<rpcSchema extends RpcSchema | undefined = u
 
 export function useEIP1193Transports({ publicClient }: { publicClient: UsePublicClientReturnType }) {
   const raw = publicClient?.transport === undefined ? undefined : extractTransports(publicClient.transport);
+  // TODO: warn on lack of uniqueness amongst IDs
   const newValue =
     raw?.map((transport) => ({
       id: idForTransport(transport),
