@@ -118,8 +118,8 @@ const queryClient = new QueryClient({
     queries: {
       gcTime: 7 * 24 * 60 * 60 * 1_000, // 7 days
       queryKeyHashFn(queryKey) {
-        return cyrb64Hash(serialize(queryKey))
-      }
+        return cyrb64Hash(serialize(queryKey));
+      },
     },
   },
 });
@@ -129,39 +129,6 @@ const persister = createSyncStoragePersister({
   storage: window.localStorage,
   deserialize,
 });
-
-// import { get, set, del } from 'idb-keyval'
-// import {
-//   PersistedClient,
-//   Persister,
-// } from '@tanstack/react-query-persist-client'
-
-// /**
-//  * Creates an Indexed DB persister
-//  * @see https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API
-//  */
-// export function createIDBPersister(idbValidKey: IDBValidKey = 'reactQuery') {
-//   return {
-//     persistClient: async (client: PersistedClient) => {
-//       await set(idbValidKey, client)
-//     },
-//     restoreClient: async () => {
-//       return await get<PersistedClient>(idbValidKey)
-//     },
-//     removeClient: async () => {
-//       await del(idbValidKey)
-//     },
-//   } satisfies Persister
-// }
-
-// const persister2 = createIDBPersister();
-
-// import { get as getItem, set as setItem, del as removeItem } from "idb-keyval";
-// const persister2 = createAsyncStoragePersister({
-//   storage: { getItem, setItem, removeItem },
-//   serialize: (data) => data,
-//   deserialize: (data) => data,
-// })
 
 function App() {
   return (
