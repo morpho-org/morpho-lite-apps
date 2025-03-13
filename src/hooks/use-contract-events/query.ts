@@ -19,6 +19,9 @@ export function getQueryFn<
       throw new Error("useContractEvents queryFn requires query `meta` to be defined and well-formed.");
     }
 
+    // TODO: `chainId = queryKey[1]` so could verify that each transport is on the right chain
+    // TODO: return "finalized" block number at time of call
+
     const fromBlock = queryKey[3] as bigint;
     const { strategy, toBlockMax } = meta as { strategy: Strategy; toBlockMax: bigint };
 

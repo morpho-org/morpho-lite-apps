@@ -1,4 +1,5 @@
 import { type useEIP1193Transports } from "@/hooks/use-contract-events/use-transports";
+import { compareBigInts } from "@/lib/utils";
 
 type EIP1193Transport = ReturnType<typeof useEIP1193Transports>[number];
 
@@ -62,7 +63,7 @@ export function getStrategyBasedOn<Transport extends EIP1193Transport>(
     entry.stabilityEma = 0.8 * entry.stabilityEma + 0.2 * (r.status === "success" ? 1 : 0);
     entry.blockBinsStats[blockBinsIdx][r.status] += 1;
     if (r.status === "success") {
-      entry.blockBinsBestIdx = Math.max(entry.blockBinsBestIdx, blockBinsIdx);
+      entry.blockBinsBestIdx = Math.max(entry.blockBinsBestIdx, blockBinsIdx); // TODO: could change this so it's "best blockBinsBestIdx in the past N requests" so that after N failures we bump back down
     }
 
     // Update map (in case this was a new entry obj)
@@ -74,6 +75,7 @@ export function getStrategyBasedOn<Transport extends EIP1193Transport>(
   transports.forEach((transport) => {
     // If we don't yet know anything about the transport, default to worst-case scenario
     if (!transportStats.has(transport.id)) {
+      // TODO: allow custom defaults for each transport to be passed in
       strategy.push({
         ...transport,
         timeout: INITIAL_TIMEOUT,
@@ -119,7 +121,6 @@ export function getStrategyBasedOn<Transport extends EIP1193Transport>(
     }
   });
 
-  // TODO: initial preferred sort
   strategy.sort((a, b) => {
     if (a.maxNumBlocks === b.maxNumBlocks) {
       const stabilityLevelA = Math.floor(a.stabilityEma * 10);
@@ -129,10 +130,8 @@ export function getStrategyBasedOn<Transport extends EIP1193Transport>(
     }
     if (a.maxNumBlocks === "unconstrained") return -1;
     if (b.maxNumBlocks === "unconstrained") return +1;
-    return Number(b.maxNumBlocks - a.maxNumBlocks);
+    return compareBigInts(b.maxNumBlocks, a.maxNumBlocks);
   });
 
-  console.log("Updated strategy with maxNumBlocks", strategy.at(0)?.maxNumBlocks, strategy);
-
-  return { strategy: strategy as Strategy, maxNumBlocksOptimistic: strategy.at(0)?.maxNumBlocks };
+  return strategy as Strategy;
 }

@@ -1,5 +1,4 @@
 import { areSetsEqual, promiseWithTimeout } from "@/lib/utils";
-import { useEffect, useState } from "react";
 import {
   type Transport,
   type TransportConfig,
@@ -9,6 +8,7 @@ import {
   type PublicRpcSchema,
 } from "viem";
 import { type UsePublicClientReturnType } from "wagmi";
+import { useDeepMemo } from "@/hooks/use-deep-memo";
 
 export type EIP1193RequestFnWithTimeout<rpcSchema extends RpcSchema | undefined = undefined> = ReturnType<
   typeof eip1193RequestFnWithTimeout<rpcSchema>
@@ -71,29 +71,16 @@ function eip1193RequestFnWithTimeout<rpcSchema extends RpcSchema | undefined = u
 }
 
 export function useEIP1193Transports({ publicClient }: { publicClient: UsePublicClientReturnType }) {
-  const [transports, setTransports] = useState<
-    {
-      id: ReturnType<typeof idForTransport>;
-      request: ReturnType<typeof eip1193RequestFnWithTimeout<PublicRpcSchema>>;
-    }[]
-  >([]);
-
-  useEffect(() => {
-    if (publicClient?.transport === undefined) return;
-
-    const raw = extractTransports(publicClient.transport);
-    const newValue = raw.map((transport) => ({
+  const raw = publicClient?.transport === undefined ? undefined : extractTransports(publicClient.transport);
+  const newValue =
+    raw?.map((transport) => ({
       id: idForTransport(transport),
       request: eip1193RequestFnWithTimeout<PublicRpcSchema>(transport.request),
-    }));
+    })) ?? [];
 
-    setTransports((value) => {
-      const valueIds = new Set(value.map((transport) => transport.id));
-      const newValueIds = new Set(newValue.map((transport) => transport.id));
-
-      return areSetsEqual(valueIds, newValueIds) ? value : newValue;
-    });
-  }, [publicClient?.transport]);
-
-  return transports;
+  return useDeepMemo(() => newValue, [newValue], (a, b) => {
+    const aIds = new Set(a[0].map((transport) => transport.id));
+    const bIds = new Set(b[0].map((transport) => transport.id));
+    return areSetsEqual(aIds, bIds);
+  });
 }

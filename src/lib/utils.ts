@@ -74,3 +74,8 @@ export function areSetsEqual<T>(a: Set<T>, b: Set<T>) {
   }
   return true;
 }
+
+export function compareBigInts(a: bigint, b: bigint) {
+  if (a == b) return 0;
+  return a > b ? 1 : -1;
+}
