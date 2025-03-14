@@ -1,5 +1,4 @@
 import { type useEIP1193Transports } from "@/hooks/use-contract-events/use-transports";
-import { compareBigInts } from "@/lib/utils";
 
 type EIP1193Transport = ReturnType<typeof useEIP1193Transports>[number];
 
@@ -28,6 +27,7 @@ const ORDINARY_RETRY_DELAY = 50; // Delay to pass to viem if retrying in bins th
 const EXPLORATORY_RETRY_DELAY = 50; // Delay to pass to viem if retrying when stepping up to next bin (ms)
 const EXPLORATION_INITIATION_THRESHOLD = 1; // Num successes to get in current bin before exploring next one
 const EXPLORATION_CANCELLATION_THRESHOLD = 3; // Num failures to tolerate before giving up (not counting viem internals)
+const MAX_TIMEOUT = 30_000;
 
 export function getStrategyBasedOn<Transport extends EIP1193Transport>(
   transports: Transport[],
@@ -42,6 +42,23 @@ export function getStrategyBasedOn<Transport extends EIP1193Transport>(
       blockBinsBestIdxs: number[];
     }
   >();
+
+  const computeCompositeScore = (
+    stats: NonNullable<ReturnType<typeof transportStats.get>>,
+    timeout: number,
+    blockBinsBestIdx: number,
+  ) => {
+    const normalizedTimeout = timeout / MAX_TIMEOUT;
+    const normalizedBin =
+      BLOCK_BINS[blockBinsBestIdx] === "unconstrained"
+        ? 1
+        : Number(BLOCK_BINS[blockBinsBestIdx]) / (10 * Number(BLOCK_BINS.at(-2)));
+
+    const wLatency = 0.1,
+      wStability = 0.5,
+      wBin = 0.5;
+    return wStability * stats.stabilityEma - wLatency * normalizedTimeout + wBin * normalizedBin;
+  };
 
   const sortedRequestStats = [...requestStats];
   sortedRequestStats.sort((a, b) => a.timestamp - b.timestamp);
@@ -63,14 +80,14 @@ export function getStrategyBasedOn<Transport extends EIP1193Transport>(
     entry.stabilityEma = 0.8 * entry.stabilityEma + 0.2 * (r.status === "success" ? 1 : 0);
     entry.blockBinsStats[blockBinsIdx][r.status] += 1;
     if (r.status === "success") {
-      entry.blockBinsBestIdxs = entry.blockBinsBestIdxs.slice(-10).concat(blockBinsIdx)
+      entry.blockBinsBestIdxs = entry.blockBinsBestIdxs.slice(-10).concat(blockBinsIdx);
     }
 
     // Update map (in case this was a new entry obj)
     transportStats.set(r.transportId, entry);
   });
 
-  const strategy: (AnnotatedTransport & { stabilityEma: number })[] = [];
+  const strategy: (AnnotatedTransport & { compositeScore: number })[] = [];
 
   transports.forEach((transport) => {
     // If we don't yet know anything about the transport, default to worst-case scenario
@@ -79,16 +96,16 @@ export function getStrategyBasedOn<Transport extends EIP1193Transport>(
       strategy.push({
         ...transport,
         timeout: INITIAL_TIMEOUT,
-        stabilityEma: 1.0,
         retryCount: ORDINARY_RETRIES,
         retryDelay: ORDINARY_RETRY_DELAY,
         maxNumBlocks: BLOCK_BINS[0],
+        compositeScore: 1,
       });
       return;
     }
 
     const stats = transportStats.get(transport.id)!;
-    const timeout = stats.latencyEma * 5;
+    const timeout = Math.min(stats.latencyEma * 5, MAX_TIMEOUT);
     const blockBinsBestIdx = Math.max(...stats.blockBinsBestIdxs);
 
     if (
@@ -100,10 +117,10 @@ export function getStrategyBasedOn<Transport extends EIP1193Transport>(
       strategy.push({
         ...transport,
         timeout,
-        stabilityEma: stats.stabilityEma,
         retryCount: EXPLORATORY_RETRIES,
         retryDelay: EXPLORATORY_RETRY_DELAY,
         maxNumBlocks: BLOCK_BINS[blockBinsBestIdx + 1],
+        compositeScore: computeCompositeScore(stats, timeout, blockBinsBestIdx),
       });
     }
 
@@ -114,25 +131,22 @@ export function getStrategyBasedOn<Transport extends EIP1193Transport>(
       strategy.push({
         ...transport,
         timeout,
-        stabilityEma: stats.stabilityEma,
         retryCount: ORDINARY_RETRIES,
         retryDelay: ORDINARY_RETRY_DELAY,
         maxNumBlocks: BLOCK_BINS[i],
+        compositeScore: computeCompositeScore(stats, timeout, i),
       });
     }
   });
 
   strategy.sort((a, b) => {
-    if (a.maxNumBlocks === b.maxNumBlocks) {
-      const stabilityLevelA = Math.floor(a.stabilityEma * 10);
-      const stabilityLevelB = Math.floor(b.stabilityEma * 10);
-      if (stabilityLevelA.toFixed(2) === stabilityLevelB.toFixed(2)) return a.timeout - b.timeout;
-      return stabilityLevelB - stabilityLevelA;
-    }
+    if (a.maxNumBlocks === b.maxNumBlocks) return b.compositeScore - a.compositeScore;
     if (a.maxNumBlocks === "unconstrained") return -1;
     if (b.maxNumBlocks === "unconstrained") return +1;
-    return compareBigInts(b.maxNumBlocks, a.maxNumBlocks);
+    return b.compositeScore - a.compositeScore;
   });
+
+  console.log("NEW STRATEGY", strategy);
 
   return strategy as Strategy;
 }
