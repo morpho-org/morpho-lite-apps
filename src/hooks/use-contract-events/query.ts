@@ -20,10 +20,13 @@ export function getQueryFn<
     }
 
     // TODO: `chainId = queryKey[1]` so could verify that each transport is on the right chain
-    // TODO: return "finalized" block number at time of call
 
     const fromBlock = queryKey[3] as bigint;
-    const { strategy, toBlockMax } = meta as { strategy: Strategy; toBlockMax: bigint };
+    const { strategy, toBlockMax, finalizedBlockNumber } = meta as {
+      strategy: Strategy;
+      toBlockMax: bigint;
+      finalizedBlockNumber: bigint;
+    };
 
     const stats: RequestStats = [];
 
@@ -40,7 +43,7 @@ export function getQueryFn<
       }
 
       const numBlocks = 1n + toBlock - fromBlock;
-      const timestamp = Date.now();
+      const timestamp0 = Date.now();
 
       try {
         const logs = await transport.request(
@@ -57,22 +60,22 @@ export function getQueryFn<
           transportId: transport.id,
           status: "success",
           numBlocks,
-          timestamp,
-          latency: Date.now() - timestamp,
+          timestamp0,
+          timestamp1: Date.now(),
         });
-        console.log(`Successfully fetched ${fromBlock}->${toBlock} with`, transport);
-        return { logs, stats, fromBlock, toBlock };
+        // console.info(`Successfully fetched ${fromBlock}->${toBlock} (${numBlocks} blocks) with`, transport);
+        return { logs, stats, fromBlock, toBlock, finalizedBlockNumber };
       } catch {
         stats.push({
           transportId: transport.id,
           status: "failure",
           numBlocks,
-          timestamp,
-          latency: Date.now() - timestamp,
+          timestamp0,
+          timestamp1: Date.now(),
         });
-        console.log(`Failed to fetch ${fromBlock}->${toBlock} with`, transport);
+        // console.info(`Failed to fetch ${fromBlock}->${toBlock} (${numBlocks} blocks) with`, transport);
       }
     }
-    return { logs: undefined, stats, fromBlock: undefined, toBlock: undefined };
+    return { stats };
   };
 }

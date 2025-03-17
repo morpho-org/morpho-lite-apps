@@ -17,7 +17,7 @@ type RemainingSegment = {
  * - a boolean flag: true if the segment fills in a gap between known data,
  *   or false if it extends to newer blocks.
  *
- * Our interpretation:
+ * Notes:
  * - Any missing segment between two known ranges (or before the first known range) is treated as a gap.
  * - A missing segment at the tail end of the required range (after the last known range) is considered an extension.
  * - If there is no known data, the entire required range is treated as an extension.
@@ -32,6 +32,7 @@ export function getRemainingSegments(
   requiredRange: readonly [BlockNumber, BlockNumber],
   knownRanges: Map<BlockNumber, BlockNumber>,
   maxNumBlocks: bigint | "unconstrained",
+  maxNumSegments: number = Infinity,
 ): RemainingSegment[] {
   const [requiredStart, requiredEnd] = requiredRange;
 
@@ -80,17 +81,19 @@ export function getRemainingSegments(
     if (current < knownStart) {
       // There is a missing segment from 'current' up to just before the known range starts.
       // We consider these as gaps (filling in missing historical data).
-      addMissingRange(current, knownStart - BigInt(1), maxNumBlocks, true, remainingSegments);
+      addMissingRange(current, knownStart - BigInt(1), maxNumBlocks, true, remainingSegments, maxNumSegments);
     }
     // Move the pointer to the block after this known range.
     if (knownEnd + BigInt(1) > current) {
       current = knownEnd + BigInt(1);
     }
+
+    if (remainingSegments.length === maxNumSegments) break;
   }
   // Process any missing segment after the last known range.
-  if (current <= requiredEnd) {
+  if (remainingSegments.length < maxNumSegments && current <= requiredEnd) {
     // Missing segment at the tail is considered as extending to newer blocks.
-    addMissingRange(current, requiredEnd, maxNumBlocks, false, remainingSegments);
+    addMissingRange(current, requiredEnd, maxNumBlocks, false, remainingSegments, maxNumSegments);
   }
 
   return remainingSegments;
@@ -112,6 +115,7 @@ function addMissingRange(
   maxNumBlocks: bigint | "unconstrained",
   isGap: boolean,
   segments: RemainingSegment[],
+  maxNumSegments: number = Infinity,
 ): void {
   if (maxNumBlocks === "unconstrained") {
     segments.push({ fromBlock: start, toBlock: end, isGap });
@@ -123,6 +127,8 @@ function addMissingRange(
       const chunkEnd = potentialChunkEnd <= end ? potentialChunkEnd : end;
       segments.push({ fromBlock: chunkStart, toBlock: chunkEnd, isGap });
       chunkStart = chunkEnd + BigInt(1);
+
+      if (segments.length === maxNumSegments) break;
     }
   }
 }

@@ -19,7 +19,8 @@ import { getStrategyBasedOn, RequestStats } from "@/hooks/use-contract-events/st
 import { useBlockNumbers } from "@/hooks/use-contract-events/use-block-numbers";
 import { getQueryFn } from "@/hooks/use-contract-events/query";
 import { compareBigInts } from "@/lib/utils";
-import { useDeepMemo } from "../use-deep-memo";
+import { useDeepMemo } from "@/hooks/use-deep-memo";
+import { usePing } from "@/hooks/use-contract-events/use-ping";
 
 /**
  * 1. a. useState - {fromBlock: bigint, toBlockMax: bigint}[] **Order determines fetch order for queryFn within a given EventLoop**
@@ -56,10 +57,9 @@ type FromBlockNumber = BlockNumber;
 type ToBlockNumber = BlockNumber;
 type QueryData = UseQueryResult<Awaited<ReturnType<ReturnType<typeof getQueryFn>>>, Error>["data"];
 
-const REQUESTS_PER_SECOND = 5;
+const REQUESTS_PER_BATCH = 33;
 const MAX_REQUESTS_TO_TRACK = 512;
 
-// TODO: If caller holds everything constant, but moves fromBlock earlier, it'll break cache. Moving coalescing to hook start (and updating knownRanges accordingly) should fix this
 /**
  *
  * Wraps around `publicClient.getContractEvents`
@@ -82,6 +82,8 @@ export default function useContractEvents<
 
   // MARK: Ephemeral state
 
+  // Whether we've read from cache yet. `seeds` and `knownRanges` should not be used until this is done.
+  const [didReadCache, setDidReadCache] = useState(false);
   // The keys of `seeds` are our desired `fromBlock`s, and values are the *maximum* `toBlock` to try to fetch.
   // This `toBlock` SHOULD NOT be based on a given RPC's capabilities. Rather, it is intended to (a) fill gaps
   // in `knownRanges` without overlapping existing data and (b) prevent fetching past the global `args.fromBlock`.
@@ -103,7 +105,7 @@ export default function useContractEvents<
 
   // MARK: Computed state -- MUST stay synced with chain (useMemo, or see `useBlockNumbers` for async example)
 
-  // The `queryKey` prefix to which each `seeds`' `fromBlock` is added
+  // The `queryKey` prefix to which each `seeds`' `fromBlock` is appended
   const queryKeyRoot = useDeepMemo(
     () =>
       [
@@ -118,98 +120,104 @@ export default function useContractEvents<
     [publicClient?.chain.id, args.address, args.args, args.eventName],
   );
 
-  const blockNumbersOrTags = useMemo(
-    () => [args.fromBlock ?? "earliest", args.toBlock ?? "latest"] as const,
-    [args.fromBlock, args.toBlock],
-  );
-  const requiredRange = useBlockNumbers({ publicClient, blockNumbersOrTags });
+  const requiredRange = useBlockNumbers({
+    publicClient,
+    blockNumbersOrTags: useMemo(
+      () => [args.fromBlock ?? "earliest", args.toBlock ?? "latest"] as const,
+      [args.fromBlock, args.toBlock],
+    ),
+  });
+
+  const finalizedBlockNumber = useBlockNumbers({ publicClient, blockNumbersOrTags: ["finalized"] as const });
+
+  // MARK: On mount, check for cached data and coalesce all adjacent or overlapping ranges
+
+  {
+    const queryClient = useQueryClient();
+    useEffect(() => {
+      // Cleanup by coalescing queries
+      const data = queryClient.getQueriesData({ queryKey: queryKeyRoot, fetchStatus: "idle" }) as [
+        QueryKey,
+        (typeof queryResults)[number]["data"],
+      ][];
+
+      if (data.length) {
+        const coalesced = coalesceQueries(data);
+
+        // Set coalesced query data *before* removing old query keys in case browser interrupts us
+        queryClient.setQueriesData(
+          {
+            queryKey: queryKeyRoot,
+            fetchStatus: "idle",
+          },
+          (oldData?: { fromBlock: BlockNumber }) => {
+            const x = coalesced.find(([, newData]) => newData.fromBlock === oldData?.fromBlock);
+            return x?.[1];
+          },
+        );
+
+        // Remove old query keys to save space and speed up future coalescing
+        queryClient.removeQueries({
+          queryKey: queryKeyRoot,
+          fetchStatus: "idle",
+          predicate({ queryKey }) {
+            const shouldKeep = coalesced.some(
+              ([coalescedQueryKey]) => queryKey[queryKeyRoot.length] === coalescedQueryKey[queryKeyRoot.length],
+            );
+            return !shouldKeep;
+          },
+        });
+
+        // Update `seeds` and `knownRanges` to make sure cache is used
+        const map = new Map<FromBlockNumber, ToBlockNumber>();
+        coalesced.forEach(([, queryValue]) => map.set(queryValue.fromBlock, queryValue.toBlock));
+        setSeeds(map);
+        setKnownRanges(map);
+      }
+
+      setDidReadCache(true);
+    }, [queryClient, queryKeyRoot]);
+  }
 
   // MARK: Define transport request strategy
 
+  const { data: ping } = usePing();
   const transports = useEIP1193Transports({ publicClient });
-  const strategy = useMemo(() => getStrategyBasedOn(transports, requestStats), [transports, requestStats]);
+  const strategy = useMemo(() => getStrategyBasedOn(transports, requestStats, ping), [transports, requestStats, ping]);
   const strategyMetadata = useDeepMemo(
     () => ({
       strategyLastUpdatedTime: Date.now(),
       maxNumBlocksOptimistic: strategy.at(0)?.maxNumBlocks,
     }),
     [strategy],
-    (a, b) =>  a[0].at(0)?.maxNumBlocks === b[0].at(0)?.maxNumBlocks,
+    (a, b) => a[0].at(0)?.maxNumBlocks === b[0].at(0)?.maxNumBlocks,
   );
-
-  useEffect(() => console.log("strat metadata changed", strategy, requestStats.length), [strategyMetadata]);
 
   // MARK: Schedule blocks to be added to `seeds`
 
   useEffect(() => {
-    if (!requiredRange || strategyMetadata.maxNumBlocksOptimistic === undefined) return;
+    if (!didReadCache || !requiredRange || strategyMetadata.maxNumBlocksOptimistic === undefined) return;
 
-    // If `requestStats.length === 0`, we're still querying the cache serially.
-    // After that, we continue fetching serially a few times to build up data/stats
-    if (requestStats.length === 0 || Date.now() - strategyMetadata.strategyLastUpdatedTime < 2_000) { // TODO: constant
-      // Compute latest `toBlock` that we've fetched (if we haven't fetched any, use `requiredRange[0] - 1n`)
-      const latestToBlock = [...knownRanges.values()].reduce((a, b) => (a > b ? a : b), requiredRange[0] - 1n);
-      // Return early if finished
-      if (latestToBlock === requiredRange[1]) {
-        console.log("DONE!!");
-        return;
-      }
-      // Add a new seed with `fromBlock: latestToBlock + 1n`
-      console.log("Adding single seed with fromBlock", latestToBlock + 1n);
-      setSeeds((x) => {
-        const y = new Map(x);
-        y.set(latestToBlock + 1n, requiredRange[1]);
-        return y;
-      });
-      return;
-    }
+    const numSeedsToCreate = Date.now() - strategyMetadata.strategyLastUpdatedTime > 2_000 ? REQUESTS_PER_BATCH : 1;
 
-    const remainingRanges = getRemainingSegments(requiredRange, knownRanges, strategyMetadata.maxNumBlocksOptimistic);
-    console.log("REMAINING RANGES", remainingRanges);
+    // TODO: Refactor `getRemainingSegments` to allow for reverse-chronological-fetching
+    const remainingRanges = getRemainingSegments(
+      requiredRange,
+      knownRanges,
+      strategyMetadata.maxNumBlocksOptimistic,
+      numSeedsToCreate,
+    );
+
+    if (remainingRanges.length === 0) return;
 
     setSeeds((x) => {
       const y = new Map(x);
-      remainingRanges.slice(0, 200).forEach((v) => y.set(v.fromBlock, v.isGap ? v.toBlock : requiredRange[1]));
+      remainingRanges
+        .slice(0, numSeedsToCreate)
+        .forEach((v) => y.set(v.fromBlock, v.isGap ? v.toBlock : requiredRange[1]));
       return y;
     });
-
-    // if (seeds.size !== knownRanges.size) {
-    //   console.log("Waiting for fetches to complete");
-    //   return;
-    // }
-
-    // const remainingRanges = getRemainingSegments(requiredRange, knownRanges, strategyMetadata.maxNumBlocksOptimistic);
-    // console.log("REMAINING RANGES", remainingRanges);
-
-    // if (args.reverseChronologicalOrder) {
-    //   remainingRanges.reverse();
-    // }
-
-    // const timeouts: NodeJS.Timeout[] = [];
-
-    // for (let i = 0; i < Math.ceil(remainingRanges.length / REQUESTS_PER_SECOND); i += 1) {
-    //   const batch = remainingRanges.slice(i * REQUESTS_PER_SECOND, (i + 1) * REQUESTS_PER_SECOND);
-    //   const delay = i * 1_000;
-
-    //   timeouts.push(
-    //     setTimeout(() => {
-    //       console.log(`Adding batch ${i} to seeds`);
-    //       setSeeds((x) => {
-    //         const y = new Map(x);
-    //         batch.forEach((v) => y.set(v.fromBlock, v.isGap ? v.toBlock : requiredRange[1]));
-    //         return y;
-    //       });
-    //     }, delay),
-    //   );
-    // }
-
-    // return () => {
-    //   console.log("Clearing timeouts");
-    //   for (const timeout of timeouts) {
-    //     clearTimeout(timeout);
-    //   }
-    // };
-  }, [args.reverseChronologicalOrder, requiredRange, knownRanges, requestStats, strategyMetadata]);
+  }, [args.reverseChronologicalOrder, didReadCache, requiredRange, knownRanges, requestStats, strategyMetadata]);
 
   // MARK: Run queries
 
@@ -223,9 +231,9 @@ export default function useContractEvents<
       } as EncodeEventTopicsParameters<abi, eventName>),
       staleTime: Infinity,
       gcTime: Infinity,
-      enabled: args.query?.enabled && strategy.length > 0,
-      meta: { strategy, toBlockMax: seed[1] },
-      retry: false,
+      enabled: args.query?.enabled && strategy.length > 0 && finalizedBlockNumber !== undefined,
+      meta: { strategy, toBlockMax: seed[1], finalizedBlockNumber: finalizedBlockNumber?.[0] },
+      retry: true, // TODO: if strategy were perfect, this would be `false`
       notifyOnChangeProps: ["data" as const],
     })),
   });
@@ -293,49 +301,11 @@ export default function useContractEvents<
     return () => clearTimeout(timeout);
   }, [queryResults, args.query?.debug]);
 
-  // MARK: On dismount, coalesce all adjacent or overlapping `knownRanges`
-
-  const queryClient = useQueryClient();
-  useEffect(() => {
-    // Any setup would go here
-    // ...
-    return () => {
-      // Cleanup by coalescing queries
-      const data = queryClient.getQueriesData({ queryKey: queryKeyRoot, fetchStatus: "idle" }) as [
-        QueryKey,
-        (typeof queryResults)[number]["data"],
-      ][];
-      const coalesced = coalesceQueries(data);
-      console.log("coalesced", coalesced);
-
-      queryClient.removeQueries({
-        queryKey: queryKeyRoot,
-        fetchStatus: "idle",
-        predicate({ queryKey }) {
-          const shouldKeep = coalesced.some(
-            ([coalescedQueryKey]) => queryKey[queryKeyRoot.length] === coalescedQueryKey[queryKeyRoot.length],
-          );
-          return !shouldKeep;
-        },
-      });
-
-      queryClient.setQueriesData(
-        {
-          queryKey: queryKeyRoot,
-          fetchStatus: "idle",
-        },
-        (oldData: { fromBlock: BlockNumber }) => {
-          const x = coalesced.find(([, newData]) => newData.fromBlock === oldData.fromBlock);
-          return x?.[1];
-        },
-      );
-    };
-  }, [queryClient, queryKeyRoot]);
-
   // MARK: Return
 
   return useMemo(() => {
-    // TODO: coalesce here and only return the first contiguous chunk (or all ordered chunks, subject to config arg)
+    // TODO: allow consumer to pass in an arg that determines whether we return only the first coalesced/contiguous chunk,
+    // or all ordered chunks.
     const dataRaw = queryResults.flatMap((result) => result.data?.logs ?? []);
     const isFetching = queryResults.reduce((a, b) => a || b.isFetching, false);
     const [fromBlock, toBlock] = requiredRange ?? [0n, 0n];
@@ -343,7 +313,7 @@ export default function useContractEvents<
       (a, b) => (a > (b.data?.toBlock ?? 0n) ? a : (b.data?.toBlock ?? 0n)),
       fromBlock,
     );
-    const fractionFetched = Number(latestFetched - fromBlock) / Number(toBlock - fromBlock);
+    const fractionFetched = Number(latestFetched - fromBlock) / Number(toBlock - fromBlock); // TODO: not quite right
 
     const data = parseEventLogs<abi, strict, eventName>({
       abi: args.abi,
@@ -359,9 +329,9 @@ export default function useContractEvents<
       else if (a.blockNumber == null) return 1;
       else if (b.blockNumber == null) return -1;
       // Handle standard cases
-      if (a.blockNumber !== b.blockNumber) return Number(a.blockNumber - b.blockNumber);
-      if (a.transactionIndex !== b.transactionIndex) return Number(a.transactionIndex! - b.transactionIndex!);
-      if (a.logIndex !== b.logIndex) return Number(a.logIndex! - b.logIndex!);
+      if (a.blockNumber !== b.blockNumber) return compareBigInts(a.blockNumber, b.blockNumber);
+      if (a.transactionIndex !== b.transactionIndex) return a.transactionIndex! - b.transactionIndex!;
+      if (a.logIndex !== b.logIndex) return a.logIndex! - b.logIndex!;
       return 0;
     });
 
@@ -380,9 +350,18 @@ function coalesceQueries(queries: [QueryKey, QueryData][]) {
 
   const coalesced: typeof sorted = [];
 
-  for (const [queryKey, { fromBlock, toBlock, logs }] of sorted) {
+  for (const [queryKey, queryData] of sorted) {
+    // eslint-disable-next-line prefer-const
+    let { fromBlock, toBlock, logs, finalizedBlockNumber } = queryData;
+    if (toBlock > finalizedBlockNumber) {
+      toBlock = finalizedBlockNumber;
+      logs = logs.filter((log) => log.blockNumber != null && hexToBigInt(log.blockNumber) <= finalizedBlockNumber);
+    } else {
+      logs = [...logs];
+    }
+
     if (coalesced.length === 0) {
-      coalesced.push([queryKey, { fromBlock, toBlock, logs: [...logs], stats: [] }]);
+      coalesced.push([queryKey, { fromBlock, toBlock, logs, finalizedBlockNumber, stats: [] }]);
       continue;
     }
 
@@ -399,7 +378,7 @@ function coalesceQueries(queries: [QueryKey, QueryData][]) {
         last.logs.push(...logs);
       } else {
         // Data has no overlap
-        coalesced.push([queryKey, { fromBlock, toBlock, logs: [...logs], stats: [] }]);
+        coalesced.push([queryKey, { fromBlock, toBlock, logs, finalizedBlockNumber, stats: [] }]);
       }
     }
   }

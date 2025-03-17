@@ -1,5 +1,5 @@
 import { getContractDeploymentInfo } from "@/lib/constants";
-import useContractEvents from "@/hooks/use-contract-events";
+import useContractEvents from "@/hooks/use-contract-events/use-contract-events";
 import { useMemo } from "react";
 import { useAccount, useBlockNumber, useReadContracts } from "wagmi";
 import { Address, erc20Abi, erc4626Abi } from "viem";
