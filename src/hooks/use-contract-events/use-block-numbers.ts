@@ -1,50 +1,77 @@
-import { useEffect, useState } from "react";
+import { QueryKey, useQueries, UseQueryOptions, UseQueryResult } from "@tanstack/react-query";
+import { useCallback, useMemo } from "react";
 import { type BlockNumber, type BlockTag } from "viem";
 import { type UsePublicClientReturnType } from "wagmi";
+
+type Tuple<T> = readonly T[];
+type Mapped<T extends Tuple<unknown>, V> = { [K in keyof T]: V };
 
 /**
  * Concretizes an array of block numbers/tags by converting tags to numbers.
  */
-export function useBlockNumbers<T extends readonly (BlockNumber | BlockTag)[]>({
+export function useBlockNumbers<T extends Tuple<BlockNumber | BlockTag>, U = Mapped<T, BlockNumber>>({
   publicClient,
   blockNumbersOrTags,
+  query,
 }: {
   publicClient: UsePublicClientReturnType;
   blockNumbersOrTags: T;
+  query?: Omit<
+    UseQueryOptions<BlockNumber, Error, BlockNumber>,
+    | "meta"
+    | "queryKey"
+    | "queryFn"
+    | "queryHash"
+    | "queryKeyHashFn"
+    | "notifyOnChangeProps"
+    | "maxPages"
+    | "_defaulted"
+    | "_optimisticResults"
+  >;
 }) {
-  const [blockNumbers, setBlockNumbers] = useState<
-    { data: { [K in keyof T]: BlockNumber }; chainId: number } | undefined
-  >(undefined);
+  const blockTags = useMemo(
+    () => blockNumbersOrTags.filter((blockNumberOrTag) => typeof blockNumberOrTag !== "bigint"),
+    [blockNumbersOrTags],
+  );
 
-  useEffect(() => {
-    if (publicClient === undefined) return;
+  const combine = useCallback(
+    (results: UseQueryResult<BlockNumber, Error>[]) => {
+      results = [...results].reverse();
 
-    const asBlockNumber = async (b: BlockNumber | BlockTag) => {
-      if (typeof b === "bigint") return b;
-      return (await publicClient.getBlock({ blockTag: b, includeTransactions: false })).number!;
-    };
+      const blockNumbers: BlockNumber[] = [];
 
-    (async () => {
-      const newValue = {
-        data: (await Promise.all(blockNumbersOrTags.map(asBlockNumber))) as { [K in keyof T]: BlockNumber },
-        chainId: publicClient.chain.id,
-      };
-      setBlockNumbers((value) => {
-        if (
-          value === undefined ||
-          newValue.data.length !== value.data.length ||
-          newValue.data.some((x, idx) => x !== value.data[idx])
-        ) {
-          return newValue;
-        }
-        return value;
-      });
-    })();
-  }, [publicClient, blockNumbersOrTags]);
+      for (const blockNumberOrTag of blockNumbersOrTags) {
+        const blockNumber = typeof blockNumberOrTag === "bigint" ? blockNumberOrTag : results.pop()?.data;
+        if (blockNumber === undefined) return { data: undefined };
+        blockNumbers.push(blockNumber);
+      }
 
-  if (blockNumbers === undefined || blockNumbers.chainId !== publicClient?.chain.id) {
-    return undefined;
-  } else {
-    return blockNumbers.data
-  }
+      return { data: blockNumbers as U };
+    },
+    [blockNumbersOrTags],
+  );
+
+  return useQueries({
+    queries: blockTags.map((blockTag) => ({
+      ...({
+        // The following options can be overridden by `query` args
+        refetchOnMount: "always",
+        ...(query ?? {}),
+        // The following options cannot be overriden
+        meta: { publicClient },
+        queryKey: ["useBlockNumbers", publicClient?.chain.id, blockTag],
+        async queryFn({ queryKey, meta }: { queryKey: QueryKey; meta: Record<string, unknown> | undefined }) {
+          if (meta === undefined) {
+            throw new Error("useBlockNumbers queryFn requires query `meta` to be defined and well-formed.");
+          }
+          const publicClient = meta.publicClient as NonNullable<UsePublicClientReturnType>;
+          const blockTag = queryKey[2] as BlockTag;
+          return (await publicClient.getBlock({ blockTag, includeTransactions: false })).number!;
+        },
+        enabled: publicClient !== undefined && (query?.enabled ?? true),
+      } as const),
+      notifyOnChangeProps: ["data" as const],
+    })),
+    combine,
+  });
 }

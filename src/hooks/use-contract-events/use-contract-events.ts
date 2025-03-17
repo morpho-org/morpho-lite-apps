@@ -120,7 +120,7 @@ export default function useContractEvents<
     [publicClient?.chain.id, args.address, args.args, args.eventName],
   );
 
-  const requiredRange = useBlockNumbers({
+  const { data: requiredRange } = useBlockNumbers({
     publicClient,
     blockNumbersOrTags: useMemo(
       () => [args.fromBlock ?? "earliest", args.toBlock ?? "latest"] as const,
@@ -128,7 +128,7 @@ export default function useContractEvents<
     ),
   });
 
-  const finalizedBlockNumber = useBlockNumbers({ publicClient, blockNumbersOrTags: ["finalized"] as const });
+  const { data: finalizedBlockNumber } = useBlockNumbers({ publicClient, blockNumbersOrTags: ["finalized"] as const });
 
   // MARK: On mount, check for cached data and coalesce all adjacent or overlapping ranges
 
@@ -181,7 +181,7 @@ export default function useContractEvents<
 
   // MARK: Define transport request strategy
 
-  const { data: ping } = usePing();
+  const { data: ping } = usePing({ query: { staleTime: 30_000, gcTime: 0 } });
   const transports = useEIP1193Transports({ publicClient });
   const strategy = useMemo(() => getStrategyBasedOn(transports, requestStats, ping), [transports, requestStats, ping]);
   const strategyMetadata = useDeepMemo(

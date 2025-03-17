@@ -1,16 +1,26 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, UseQueryOptions } from "@tanstack/react-query";
 
-export function usePing(url = "https://www.google.com/generate_204") {
+export function usePing({
+  url = "https://www.google.com/generate_204",
+  query,
+}: {
+  url?: string;
+  query?: Omit<
+    UseQueryOptions<number, Error, number>,
+    "meta" | "queryKey" | "queryFn" | "queryHash" | "queryKeyHashFn" | "maxPages" | "_defaulted" | "_optimisticResults"
+  >;
+} = {}) {
   return useQuery({
-    queryKey: ["ping", url],
+    // The following options can be overridden by `query` args
+    refetchOnMount: "always",
+    ...(query ?? {}),
+    // The following options cannot be overriden
+    queryKey: ["usePing", url],
     async queryFn({ queryKey }) {
       const t0 = performance.now();
       await fetch(`${queryKey[1]}?cacheBuster=${Math.random()}`, { cache: "no-store", mode: "no-cors" });
       return performance.now() - t0;
     },
-    refetchOnMount: "always",
-    staleTime: 60 * 1_000,
-    gcTime: 0,
-    retry: true,
+    enabled: query?.enabled ?? true,
   });
 }
