@@ -128,7 +128,10 @@ export default function useContractEvents<
     ),
   });
 
-  const { data: finalizedBlockNumber } = useBlockNumbers({ publicClient, blockNumbersOrTags: ["finalized"] as const });
+  const { data: finalizedBlockNumber } = useBlockNumbers({
+    publicClient,
+    blockNumbersOrTags: useMemo(() => ["finalized"] as const, []),
+  });
 
   // MARK: On mount, check for cached data and coalesce all adjacent or overlapping ranges
 

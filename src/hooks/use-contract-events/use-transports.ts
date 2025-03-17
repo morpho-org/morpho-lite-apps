@@ -72,16 +72,32 @@ function eip1193RequestFnWithTimeout<rpcSchema extends RpcSchema | undefined = u
 
 export function useEIP1193Transports({ publicClient }: { publicClient: UsePublicClientReturnType }) {
   const raw = publicClient?.transport === undefined ? undefined : extractTransports(publicClient.transport);
-  // TODO: warn on lack of uniqueness amongst IDs
+
+  {
+    const idSet = new Set<string>();
+    raw?.forEach((transport) => {
+      const id = idForTransport(transport);
+      if (idSet.has(id)) {
+        console.warn(`Transport ID ${id} was included more than once.`);
+        return;
+      }
+      idSet.add(id);
+    });
+  }
+
   const newValue =
     raw?.map((transport) => ({
       id: idForTransport(transport),
       request: eip1193RequestFnWithTimeout<PublicRpcSchema>(transport.request),
     })) ?? [];
 
-  return useDeepMemo(() => newValue, [newValue], (a, b) => {
-    const aIds = new Set(a[0].map((transport) => transport.id));
-    const bIds = new Set(b[0].map((transport) => transport.id));
-    return areSetsEqual(aIds, bIds);
-  });
+  return useDeepMemo(
+    () => newValue,
+    [newValue],
+    (a, b) => {
+      const aIds = new Set(a[0].map((transport) => transport.id));
+      const bIds = new Set(b[0].map((transport) => transport.id));
+      return areSetsEqual(aIds, bIds);
+    },
+  );
 }

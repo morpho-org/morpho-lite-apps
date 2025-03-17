@@ -36,12 +36,12 @@ export function useBlockNumbers<T extends Tuple<BlockNumber | BlockTag>, U = Map
 
   const combine = useCallback(
     (results: UseQueryResult<BlockNumber, Error>[]) => {
-      results = [...results].reverse();
+      results = [...results];
 
       const blockNumbers: BlockNumber[] = [];
 
       for (const blockNumberOrTag of blockNumbersOrTags) {
-        const blockNumber = typeof blockNumberOrTag === "bigint" ? blockNumberOrTag : results.pop()?.data;
+        const blockNumber = typeof blockNumberOrTag === "bigint" ? blockNumberOrTag : results.splice(0, 1)[0].data;
         if (blockNumber === undefined) return { data: undefined };
         blockNumbers.push(blockNumber);
       }
