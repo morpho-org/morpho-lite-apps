@@ -88,6 +88,7 @@ export function useEIP1193Transports({ publicClient }: { publicClient: UsePublic
   const newValue =
     raw?.map((transport) => ({
       id: idForTransport(transport),
+      chainId: publicClient?.chain.id,
       request: eip1193RequestFnWithTimeout<PublicRpcSchema>(transport.request),
     })) ?? [];
 

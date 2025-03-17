@@ -12,15 +12,14 @@ export function getQueryFn<
   }: {
     queryKey: QueryKey;
     client: QueryClient;
-    signal?: AbortSignal;
+    signal?: AbortSignal; // NOTE: Do NOT consume this, otherwise in-flight requests will be wasted on dismount
     meta: Record<string, unknown> | undefined;
   }) => {
     if (meta === undefined) {
       throw new Error("useContractEvents queryFn requires query `meta` to be defined and well-formed.");
     }
 
-    // TODO: `chainId = queryKey[1]` so could verify that each transport is on the right chain
-
+    const chainId = queryKey[1] as number | undefined;
     const fromBlock = queryKey[3] as bigint;
     const { strategy, toBlockMax, finalizedBlockNumber } = meta as {
       strategy: Strategy;
@@ -40,6 +39,12 @@ export function getQueryFn<
 
       if (toBlock < fromBlock) {
         throw new Error("useContractEvents queryFn encountered toBlock < fromBlock");
+      }
+
+      if (transport.chainId !== chainId) {
+        throw new Error(
+          `useContractEvents queryFn got outdated transport(s)--need chainId ${chainId}, got ${transport.chainId}`,
+        );
       }
 
       const numBlocks = 1n + toBlock - fromBlock;
@@ -73,7 +78,7 @@ export function getQueryFn<
           timestamp0,
           timestamp1: Date.now(),
         });
-        // console.info(`Failed to fetch ${fromBlock}->${toBlock} (${numBlocks} blocks) with`, transport);
+        console.warn(`Failed to fetch ${fromBlock}->${toBlock} (${numBlocks} blocks) with`, transport.id);
       }
     }
     return { stats };
