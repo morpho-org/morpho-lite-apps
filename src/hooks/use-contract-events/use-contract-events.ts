@@ -63,8 +63,9 @@ type FromBlockNumber = BlockNumber;
 type ToBlockNumber = BlockNumber;
 type QueryData = UseQueryResult<Awaited<ReturnType<ReturnType<typeof getQueryFn>>>, Error>["data"];
 
-const REQUESTS_PER_BATCH = 33;
-const MAX_REQUESTS_TO_TRACK = 512;
+const STABILIZATION_TIME = 1_000; // Once the strategy's _first_ transport stays constant for this long, start batching
+const REQUESTS_PER_BATCH = 33; // Number of requests to include in each batch (batches are sent on each render)
+const MAX_REQUESTS_TO_TRACK = 512; // Number of requests that are kept to compute statistics and determine strategy
 
 /**
  *
@@ -113,14 +114,6 @@ export default function useContractEvents<
     return () => document.removeEventListener("readystatechange", listener);
   }, []);
 
-  // MARK: Reset state when changing chains
-
-  useEffect(() => {
-    setSeeds(new Map());
-    setKnownRanges(new Map());
-    setRequestStats([]);
-  }, [publicClient?.chain.id]);
-
   // MARK: Computed state -- MUST stay synced with chain (useMemo, or see `useBlockNumbers` for async example)
 
   // The `queryKey` prefix to which each `seeds`' `fromBlock` is appended
@@ -160,13 +153,8 @@ export default function useContractEvents<
     useEffect(() => {
       if (!isBrowserReady) return;
 
-      // Cleanup by coalescing queries
-      const data = queryClient.getQueriesData({ queryKey: queryKeyRoot, fetchStatus: "idle" }) as [
-        QueryKey,
-        (typeof queryResults)[number]["data"],
-      ][];
-
-      if (data.length) {
+      const data = queryClient.getQueriesData<QueryData>({ queryKey: queryKeyRoot, fetchStatus: "idle" });
+      if (data.length > 0) {
         const coalesced = coalesceQueries(data);
 
         // Set coalesced query data *before* removing old query keys in case browser interrupts us
@@ -198,15 +186,19 @@ export default function useContractEvents<
         coalesced.forEach(([, queryValue]) => map.set(queryValue.fromBlock, queryValue.toBlock));
         setSeeds(map);
         setKnownRanges(map);
+      } else {
+        setSeeds(new Map());
+        setKnownRanges(new Map());
       }
 
+      setRequestStats([]);
       setDidReadCache(true);
     }, [isBrowserReady, queryClient, queryKeyRoot]);
   }
 
   // MARK: Define transport request strategy
 
-  const { data: ping } = usePing({ query: { staleTime: 30_000, gcTime: 0 } });
+  const { data: ping } = usePing({ query: { staleTime: 30_000, gcTime: 30_000, placeholderData: keepPreviousData } });
   const transports = useEIP1193Transports({ publicClient });
   const strategy = useMemo(() => getStrategyBasedOn(transports, requestStats, ping), [transports, requestStats, ping]);
   const strategyMetadata = useDeepMemo(
@@ -223,7 +215,8 @@ export default function useContractEvents<
   useEffect(() => {
     if (!didReadCache || !requiredRange || strategyMetadata.maxNumBlocksOptimistic === undefined) return;
 
-    const numSeedsToCreate = Date.now() - strategyMetadata.strategyLastUpdatedTime > 2_000 ? REQUESTS_PER_BATCH : 1;
+    const numSeedsToCreate =
+      Date.now() - strategyMetadata.strategyLastUpdatedTime > STABILIZATION_TIME ? REQUESTS_PER_BATCH : 1;
 
     // TODO: Refactor `getRemainingSegments` to allow for reverse-chronological-fetching
     const remainingRanges = getRemainingSegments(
