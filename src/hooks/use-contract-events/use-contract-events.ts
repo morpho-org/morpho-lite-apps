@@ -82,7 +82,7 @@ export default function useContractEvents<
 
   // MARK: Ephemeral state
 
-  const [browserIsReady, setBrowserIsReady] = useState(false);
+  const [isBrowserReady, setIsBrowserReady] = useState(false);
   // Whether we've read from cache yet. `seeds` and `knownRanges` should not be used until this is done.
   const [didReadCache, setDidReadCache] = useState(false);
   // The keys of `seeds` are our desired `fromBlock`s, and values are the *maximum* `toBlock` to try to fetch.
@@ -99,7 +99,10 @@ export default function useContractEvents<
   // MARK: Detect when the browser is ready (for localStorage)
 
   useEffect(() => {
-    const listener = () => setBrowserIsReady(document.readyState === "complete");
+    if (document.readyState === "complete") {
+      setIsBrowserReady(true);
+    }
+    const listener = () => setIsBrowserReady(document.readyState === "complete");
     document.addEventListener("readystatechange", listener);
     return () => document.removeEventListener("readystatechange", listener);
   }, []);
@@ -135,13 +138,13 @@ export default function useContractEvents<
       () => [args.fromBlock ?? "earliest", args.toBlock ?? "latest"] as const,
       [args.fromBlock, args.toBlock],
     ),
-    query: { placeholderData: keepPreviousData },
+    query: { placeholderData: keepPreviousData }, // TODO: polling
   });
 
   const { data: finalizedBlockNumber } = useBlockNumbers({
     publicClient,
     blockNumbersOrTags: useMemo(() => ["finalized"] as const, []),
-    query: { placeholderData: keepPreviousData },
+    query: { placeholderData: keepPreviousData }, // TODO: polling
   });
 
   // MARK: On mount, check for cached data and coalesce all adjacent or overlapping ranges
@@ -149,7 +152,7 @@ export default function useContractEvents<
   {
     const queryClient = useQueryClient();
     useEffect(() => {
-      if (!browserIsReady) return;
+      if (!isBrowserReady) return;
 
       // Cleanup by coalescing queries
       const data = queryClient.getQueriesData({ queryKey: queryKeyRoot, fetchStatus: "idle" }) as [
@@ -192,7 +195,7 @@ export default function useContractEvents<
       }
 
       setDidReadCache(true);
-    }, [browserIsReady, queryClient, queryKeyRoot]);
+    }, [isBrowserReady, queryClient, queryKeyRoot]);
   }
 
   // MARK: Define transport request strategy
@@ -249,7 +252,7 @@ export default function useContractEvents<
       gcTime: Infinity,
       enabled: args.query?.enabled && strategy.length > 0 && finalizedBlockNumber !== undefined,
       meta: { strategy, toBlockMax: seed[1], finalizedBlockNumber: finalizedBlockNumber?.[0] },
-      retry: true, // TODO: if strategy were perfect, this would be `false`
+      retry: true, // TODO: If strategy were perfect, this could be `false`. Temporary crutch!
       notifyOnChangeProps: ["data" as const],
     })),
   });
@@ -272,8 +275,6 @@ export default function useContractEvents<
     // loading from cache
     const timeout = setTimeout(() => {
       setRequestStats((value) => {
-        // Since `staleTime` and `gcTime` are `Infinity`, individual request stats should only change once.
-        // This implies that length is a sufficient check of equality.
         return newRequestStats.at(-1) !== value.at(-1) ? newRequestStats.slice(-MAX_REQUESTS_TO_TRACK) : value;
       });
       setKnownRanges((value) => {

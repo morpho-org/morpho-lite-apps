@@ -17,7 +17,16 @@ export type AnnotatedTransport = EIP1193Transport & {
   maxNumBlocks: bigint | "unconstrained";
 };
 
-// TODO: Make this more advanced to support random selection and/or Promise.race group for a given num blocks tier
+// TODO: Add fields for requests-per-second (see other TODO) and return transport tiers/groups rather than individuals.
+//       Each tier/group would have an associated property that indicates whether a transport should be randomly
+//       selected (potentially weighted by score) or if transports should be called in parallel with Promise.race.
+//       Random selection would be useful when we have multiple "good" transports to choose from, and Promise.race
+//       would be helpful when 1 or more transports aren't covered by `supportsNumBlocks` and fail to respond --
+//       i.e. they just timeout rather than erroring when asked for eth_getLogs. The race could eliminate these
+//       unnecessary timeouts.
+//
+//       These tweaks mainly improve the worst-case-scenario (slow or novel/untested/user-specified RPCs), so I'm
+//       opting not to implement them for now.
 export type Strategy = AnnotatedTransport[];
 
 const BLOCK_BINS = [1n, 1_000n, 2_000n, 5_000n, 10_000n, "unconstrained" as const];
@@ -35,10 +44,14 @@ function ema(x: number, update: number, alpha: number) {
 function supportsNumBlocks(transportId: string, numBlocks: bigint | "unconstrained") {
   if (transportId.includes("alchemy")) return true;
   if (transportId.includes("tenderly.co")) return true;
-  if (transportId.includes("drpc") || transportId.includes("nodies.app") || transportId.includes("mainnet.base.org")) {
+  if (
+    transportId.includes("drpc") ||
+    transportId.includes("nodies.app") ||
+    transportId.includes("mainnet.base.org") ||
+    transportId.includes("lava.build")
+  ) {
     return numBlocks !== "unconstrained" && numBlocks <= 10_000n;
   }
-  if (transportId.includes("lava.build")) return false;
 
   // default: assume it's supported and allow strategy to figure it out on the fly
   return true;
@@ -57,8 +70,8 @@ export function getStrategyBasedOn<Transport extends EIP1193Transport>(
       // Track successes and failures to determine whether to use each bin.
       // Track latency to set future request timeouts.
       // Track throughput to sort transports within a given bin.
-      // TODO: measure wall clock throughput rather than per-request throughput.
-      // --> This would allow for dynamic parallel requests
+      // TODO: Measure wall clock throughput rather than per-request throughput, specify requests-per-second
+      //       as part of returned obj, and then gradually increase it as long as throughput doesn't suffer.
       blockBinsStats: (
         | {
             success: number;
