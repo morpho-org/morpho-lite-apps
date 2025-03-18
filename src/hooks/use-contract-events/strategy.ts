@@ -89,10 +89,13 @@ export function getStrategyBasedOn<Transport extends EIP1193Transport>(
   const sortedRequestStats = [...requestStats];
   sortedRequestStats.sort((a, b) => a.timestamp0 - b.timestamp0);
 
+  let totalRequestCount = 0;
+
   // Populate `transportStats` using `requestStats`
   const now = Date.now();
   sortedRequestStats.forEach((r) => {
     if (r.timestamp0 < now - LOOKBACK_WINDOW) return;
+    totalRequestCount += 1;
 
     const reliability = r.status === "success" ? 1 : 0;
     const latency = r.timestamp1 - r.timestamp0;
@@ -126,7 +129,7 @@ export function getStrategyBasedOn<Transport extends EIP1193Transport>(
     transportStats.set(r.transportId, mapEntry);
   });
 
-  const strategy: (AnnotatedTransport & { ucbValue: number })[] = [];
+  const strategy: (AnnotatedTransport & { score: number })[] = [];
 
   for (let i = BLOCK_BINS.length - 1; i >= 0; i -= 1) {
     const maxNumBlocks = BLOCK_BINS[i];
@@ -136,36 +139,44 @@ export function getStrategyBasedOn<Transport extends EIP1193Transport>(
 
       const stats = transportStats.get(transport.id);
 
+      const successes = stats?.blockBinsStats[i]?.success ?? 0;
+      const failures = stats?.blockBinsStats[i]?.failure ?? 0;
       const reliability = stats?.blockBinsStats[i]?.reliabilityEma;
       const latency = stats?.blockBinsStats[i]?.latencyEma;
       const throughput = stats?.blockBinsStats[i]?.throughputEma;
 
       let retryCount = EXPLORATORY_RETRIES;
       let retryDelay = EXPLORATORY_RETRY_DELAY;
-      if ((reliability ?? 0) > 0.5 || i === 0) {
+      if (i === 0 || ((reliability ?? 0) > 0.5 && maxNumBlocks !== "unconstrained")) {
         retryCount = ORDINARY_RETRIES;
         retryDelay = ORDINARY_RETRY_DELAY;
       }
 
+      const timeout = latency ? latency * 5 : ping * 10;
+      const c = 0.75; // UCB coefficient (1.0 is standard, lower means less exploration)
+      const k = (maxNumBlocks === "unconstrained" ? 1_000_000 : Number(maxNumBlocks)) / timeout; // UCB scaler
+      const ucbValue = k * c * Math.sqrt(Math.log(totalRequestCount) / (successes + failures));
+      const shouldUseUcb = i > BLOCK_BINS.length / 2 && (successes > 0 || failures < 3);
+
       strategy.push({
         ...transport,
-        timeout: latency ? latency * 5 : ping * 10,
+        timeout,
         retryCount,
         retryDelay,
         maxNumBlocks,
-        ucbValue: throughput ?? 0, // TODO: add UCB exploration score
+        score: (throughput ?? 0) + (shouldUseUcb ? ucbValue : 0),
       });
     }
   }
 
   strategy.sort((a, b) => {
-    if (a.ucbValue === b.ucbValue) {
+    if (a.score === b.score) {
       if (a.maxNumBlocks === b.maxNumBlocks) return a.timeout - b.timeout;
       if (a.maxNumBlocks === "unconstrained") return -1;
       if (b.maxNumBlocks === "unconstrained") return +1;
       return Number(b.maxNumBlocks - a.maxNumBlocks);
     }
-    return b.ucbValue - a.ucbValue;
+    return b.score - a.score;
   });
 
   return strategy as Strategy;
