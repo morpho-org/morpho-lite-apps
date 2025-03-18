@@ -1,4 +1,4 @@
-import { QueryKey, useQueries, useQueryClient, type UseQueryResult } from "@tanstack/react-query";
+import { keepPreviousData, QueryKey, useQueries, useQueryClient, type UseQueryResult } from "@tanstack/react-query";
 import {
   type EncodeEventTopicsParameters,
   type Abi,
@@ -82,6 +82,7 @@ export default function useContractEvents<
 
   // MARK: Ephemeral state
 
+  const [browserIsReady, setBrowserIsReady] = useState(false);
   // Whether we've read from cache yet. `seeds` and `knownRanges` should not be used until this is done.
   const [didReadCache, setDidReadCache] = useState(false);
   // The keys of `seeds` are our desired `fromBlock`s, and values are the *maximum* `toBlock` to try to fetch.
@@ -94,6 +95,14 @@ export default function useContractEvents<
   // `requestStats` are tracked so that we can update our `requestStrategy` to fetch events as quickly as possible
   // Array order has no semantic meaning
   const [requestStats, setRequestStats] = useState<RequestStats>([]);
+
+  // MARK: Detect when the browser is ready (for localStorage)
+
+  useEffect(() => {
+    const listener = () => setBrowserIsReady(document.readyState === "complete");
+    document.addEventListener("readystatechange", listener);
+    return () => document.removeEventListener("readystatechange", listener);
+  }, []);
 
   // MARK: Reset state when changing chains
 
@@ -126,11 +135,13 @@ export default function useContractEvents<
       () => [args.fromBlock ?? "earliest", args.toBlock ?? "latest"] as const,
       [args.fromBlock, args.toBlock],
     ),
+    query: { placeholderData: keepPreviousData },
   });
 
   const { data: finalizedBlockNumber } = useBlockNumbers({
     publicClient,
     blockNumbersOrTags: useMemo(() => ["finalized"] as const, []),
+    query: { placeholderData: keepPreviousData },
   });
 
   // MARK: On mount, check for cached data and coalesce all adjacent or overlapping ranges
@@ -138,6 +149,8 @@ export default function useContractEvents<
   {
     const queryClient = useQueryClient();
     useEffect(() => {
+      if (!browserIsReady) return;
+
       // Cleanup by coalescing queries
       const data = queryClient.getQueriesData({ queryKey: queryKeyRoot, fetchStatus: "idle" }) as [
         QueryKey,
@@ -179,7 +192,7 @@ export default function useContractEvents<
       }
 
       setDidReadCache(true);
-    }, [queryClient, queryKeyRoot]);
+    }, [browserIsReady, queryClient, queryKeyRoot]);
   }
 
   // MARK: Define transport request strategy
@@ -252,6 +265,7 @@ export default function useContractEvents<
       if (result.data.logs !== undefined) newKnownRanges.set(result.data.fromBlock, result.data.toBlock);
       if (result.isFetchedAfterMount) newRequestStats.push(...result.data.stats);
     });
+    newRequestStats.sort((a, b) => a.timestamp0 - b.timestamp0);
 
     // Apply 0-delay timeout just to get updates off the main React component cycle,
     // otherwise React [wrongly] thinks that we're stuck in an infinite loop when
@@ -260,7 +274,7 @@ export default function useContractEvents<
       setRequestStats((value) => {
         // Since `staleTime` and `gcTime` are `Infinity`, individual request stats should only change once.
         // This implies that length is a sufficient check of equality.
-        return newRequestStats.length !== value.length ? newRequestStats.slice(0, MAX_REQUESTS_TO_TRACK) : value;
+        return newRequestStats.at(-1) !== value.at(-1) ? newRequestStats.slice(-MAX_REQUESTS_TO_TRACK) : value;
       });
       setKnownRanges((value) => {
         let shouldUpdate = false;

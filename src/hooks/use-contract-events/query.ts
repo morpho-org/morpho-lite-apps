@@ -43,7 +43,7 @@ export function getQueryFn<
 
       if (transport.chainId !== chainId) {
         throw new Error(
-          `useContractEvents queryFn got outdated transport(s)--need chainId ${chainId}, got ${transport.chainId}`,
+          `useContractEvents queryFn got outdated transport(s) -- need chainId ${chainId}, got ${transport.chainId}`,
         );
       }
 
@@ -70,7 +70,7 @@ export function getQueryFn<
         });
         // console.info(`Successfully fetched ${fromBlock}->${toBlock} (${numBlocks} blocks) with`, transport);
         return { logs, stats, fromBlock, toBlock, finalizedBlockNumber };
-      } catch {
+      } catch (e) {
         stats.push({
           transportId: transport.id,
           status: "failure",
@@ -78,9 +78,10 @@ export function getQueryFn<
           timestamp0,
           timestamp1: Date.now(),
         });
-        console.warn(`Failed to fetch ${fromBlock}->${toBlock} (${numBlocks} blocks) with`, transport.id);
+        console.warn(`Failed to fetch ${fromBlock}->${toBlock} (${numBlocks} blocks) with ${transport.id}\n\n`, e);
       }
     }
-    return { stats };
+
+    throw new Error(`Failed to fetch range starting at fromBlock:${fromBlock} -- all transports errored`);
   };
 }

@@ -66,39 +66,36 @@ export function Footer() {
             <DialogHeader>
               <DialogTitle>IPFS Versions</DialogTitle>
               <DialogDescription>
-                <p>
-                  For better reliability and security, you can use this app through IPFS. It gives you a cryptographic
-                  guarantee that you're using a specific version of the app, which can help prevent future{" "}
-                  <a
-                    className="underline"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    href="https://www.bleepingcomputer.com/news/security/lazarus-hacked-bybit-via-breached-safe-wallet-developer-machine/"
-                  >
-                    supply chain attacks.
-                  </a>
-                </p>
+                For better reliability and security, you can use this app through IPFS. It gives you a cryptographic
+                guarantee that you're using a specific version of the app, which can help prevent future{" "}
+                <a
+                  className="underline"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  href="https://www.bleepingcomputer.com/news/security/lazarus-hacked-bybit-via-breached-safe-wallet-developer-machine/"
+                >
+                  supply chain attacks.
+                </a>
                 <br />
-                <p>
-                  Simply click a version number to access the app through dweb. You can also add it to{" "}
-                  <a
-                    className="underline"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    href="https://rabby.io/?platform=desktop"
-                  >
-                    Rabby Desktop
-                  </a>{" "}
-                  by following the tutorial{" "}
-                  <a
-                    className="underline"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    href="https://github.com/morpho-org/morpho-blue-offchain-public/wiki/IPFS#access-with-rabby-desktop"
-                  >
-                    here.
-                  </a>
-                </p>
+                <br />
+                Simply click a version number to access the app through dweb. You can also add it to{" "}
+                <a
+                  className="underline"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  href="https://rabby.io/?platform=desktop"
+                >
+                  Rabby Desktop
+                </a>{" "}
+                by following the tutorial{" "}
+                <a
+                  className="underline"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  href="https://github.com/morpho-org/morpho-blue-offchain-public/wiki/IPFS#access-with-rabby-desktop"
+                >
+                  here.
+                </a>
               </DialogDescription>
             </DialogHeader>
             <div className="flex min-w-full">
@@ -122,7 +119,7 @@ export function Footer() {
                         : undefined;
 
                     return (
-                      <TableRow className="bg-secondary">
+                      <TableRow className="bg-secondary" key={cid}>
                         <TableCell className="rounded-l-lg p-5">
                           <a
                             className="hover:text-primary/70 flex cursor-pointer items-center gap-1"
