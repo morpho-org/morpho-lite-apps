@@ -173,6 +173,10 @@ export function RequestChart() {
 
   const [activeChart, setActiveChart] = useState(providers.at(0) ?? "Wallet");
 
+  useEffect(() => {
+    if (providers.length > 0 && !providers.includes(activeChart)) setActiveChart(providers[0]);
+  }, [providers, activeChart]);
+
   return (
     <Card className="bg-secondary min-w-min grow">
       <CardHeader className="border-tertiary-dark flex flex-col items-stretch space-y-0 border-b p-0 md:flex-row">
