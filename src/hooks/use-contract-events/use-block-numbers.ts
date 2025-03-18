@@ -1,4 +1,4 @@
-import { QueryKey, useQueries, UseQueryOptions, UseQueryResult } from "@tanstack/react-query";
+import { type QueryKey, useQueries, type UseQueryOptions, type UseQueryResult } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
 import { type BlockNumber, type BlockTag } from "viem";
 import { type UsePublicClientReturnType } from "wagmi";

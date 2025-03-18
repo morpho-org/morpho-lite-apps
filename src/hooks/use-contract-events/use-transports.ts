@@ -1,12 +1,5 @@
 import { areSetsEqual, promiseWithTimeout } from "@/lib/utils";
-import {
-  type Transport,
-  type TransportConfig,
-  type EIP1193Parameters,
-  type EIP1193RequestFn,
-  type RpcSchema,
-  type PublicRpcSchema,
-} from "viem";
+import type { Transport, TransportConfig, EIP1193Parameters, EIP1193RequestFn, RpcSchema, PublicRpcSchema } from "viem";
 import { type UsePublicClientReturnType } from "wagmi";
 import { useDeepMemo } from "@/hooks/use-deep-memo";
 

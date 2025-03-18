@@ -1,4 +1,4 @@
-import { BlockNumber } from "viem";
+import { type BlockNumber } from "viem";
 /**
  * A missing segment, with an indicator:
  * - isGap: true if the segment fills in a gap between known ranges;

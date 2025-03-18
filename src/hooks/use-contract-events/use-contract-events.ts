@@ -1,4 +1,10 @@
-import { keepPreviousData, QueryKey, useQueries, useQueryClient, type UseQueryResult } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  type QueryKey,
+  useQueries,
+  useQueryClient,
+  type UseQueryResult,
+} from "@tanstack/react-query";
 import {
   type EncodeEventTopicsParameters,
   type Abi,
@@ -9,7 +15,7 @@ import {
   type RpcLog,
   hexToBigInt,
   parseEventLogs,
-  ParseEventLogsParameters,
+  type ParseEventLogsParameters,
 } from "viem";
 import { usePublicClient } from "wagmi";
 import { useEffect, useMemo, useState } from "react";

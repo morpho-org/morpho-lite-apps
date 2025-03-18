@@ -6,7 +6,7 @@ import { useContext, useEffect, useState } from "react";
 import { RequestTrackingContext } from "@/lib/request-tracking-context";
 // @ts-expect-error: this package lacks types
 import humanizeDuration from "humanize-duration";
-import { useDebouncedMemo } from "@/hooks/use-debounced";
+import { useDebouncedMemo } from "@/hooks/use-debounced-memo";
 import { useChainId } from "wagmi";
 
 const INITIAL_METHOD_NAMES = ["eth_accounts", "eth_blockNumber", "eth_call", "eth_chainId", "eth_getLogs"];
