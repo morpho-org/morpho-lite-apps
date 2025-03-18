@@ -76,7 +76,7 @@ export function getQueryFn<
         });
         // console.info(`Successfully fetched ${fromBlock}->${toBlock} (${numBlocks} blocks) with`, transport);
         return { logs, stats, fromBlock, toBlock, finalizedBlockNumber };
-      } catch (e) {
+      } catch {
         stats.push({
           transportId: transport.id,
           status: "failure",
@@ -84,7 +84,7 @@ export function getQueryFn<
           timestamp0,
           timestamp1: Date.now(),
         });
-        console.warn(`Failed to fetch ${fromBlock}->${toBlock} (${numBlocks} blocks) with ${transport.id}\n\n`, e);
+        console.warn(`Failed to fetch ${fromBlock}->${toBlock} (${numBlocks} blocks) with ${transport.id}`);
       }
     }
 
