@@ -28,37 +28,6 @@ import { compareBigInts } from "@/lib/utils";
 import { useDeepMemo } from "@/hooks/use-deep-memo";
 import { usePing } from "@/hooks/use-contract-events/use-ping";
 
-/**
- * 1. a. useState - {fromBlock: bigint, toBlockMax: bigint}[] **Order determines fetch order for queryFn within a given EventLoop**
- *    b. useState - Record<fromBlock, actualToBlock>
- * 2. useState that holds transport stats
- * 3. useMemo to compute optimal strategy given current transport stats -- this includes the wait time / backoff for each one, as well as best block range
- * 4. useEffect to schedule (setTimeout) updates to queue based on optimal strategy
- *    - update on: [toBlocks record, strategy]
- *    - if transport stats is undefined, that means we're still querying cache serially. only schedule ONE item, with fromBlock=previous.toBlock
- *    - if transport stats is defined
- *      - determine remaining ranges (including any gaps between existing ranges)
- *      - divide them up OPTIMISTICALLY based on transport stats / strategy
- *      - place fromBlocks on queue -- only specify toBlock if optimistic range is less than strategy's best block range
- *    - on change, make sure to `clearTimeout`
- * 5. useQueries similar to current hook, except queryKey contains only the fromBlock (NO TOBLOCK)
- *    - meta is { toBlockMax, transportStats } -- but note that toBlockMax may be undefined
- *    - queryFn should essentially always be successful. is starts fetching using optimal strategy, but falls back to lower block ranges if necessary
- *    - if toBlockMax is specified, it should be respected
- *    - return logs, new transport stats, and actualToBlock
- * 6. useEffect to update toBlocks record, and [iff isFetchedAfterMount] set new transport stats
- * 7. [OPTIONAL] once fetching is complete, could concatenate+compress to a single query, then garbage collect the other ones. Then on next page load the serial fetching would only take one render rather than many
- * 7. combine all logs, make sure they're sorted, and return
- *
- *
- * Mental model:
- * - While retrieving from cache, we expect only a single `fromBlock` to be fetched at once -- everything happens sequentially
- * - Once done with cache, scheduler lets us start fetching in parallel while also gradually improving our strategy.
- * - Allowing the scheduler to specify toBlockMax helps avoid duplicates when backfilling gaps
- * - Gaps can occur when the scheduler was too optimistic with either maxBlockRange or parallelism
- * - Scheduler can (optionally) have different modes for earliest->latest, latest->earliest, or random fetching order
- */
-
 type FromBlockNumber = BlockNumber;
 type ToBlockNumber = BlockNumber;
 type QueryData = UseQueryResult<Awaited<ReturnType<ReturnType<typeof getQueryFn>>>, Error>["data"];
@@ -68,10 +37,65 @@ const REQUESTS_PER_BATCH = 33; // Number of requests to include in each batch (b
 const MAX_REQUESTS_TO_TRACK = 512; // Number of requests that are kept to compute statistics and determine strategy
 
 /**
+ * Indexes and caches events using the fastest available transport(s) in the `publicClient`.
  *
- * Wraps around `publicClient.getContractEvents`
  * @param args Arguments to pass through to `publicClient.getContractEvents`, along with some extra fields (see below)
  * @param args.query Subset of tanstack query params, specifically `{ enabled: boolean }`
+ *
+ * @dev We don't know ahead of time how many blocks can be fetched per RPC request, as it depends on RPC-specific
+ * rules (an explicit limit on number of blocks, a constraint on number of logs in the response, or both). This
+ * has a few implications:
+ * - The `strategy` should start out requesting large ranges. Upon errors, fallback to smaller ones.
+ * - TanStack queries are uniquely specified by a `fromBlock` -- NOT a `toBlock`, since that can't be known upfront.
+ * - TanStack queries can be "scheduled" optimistically, i.e. if the `strategy` expects to be able to fetch an
+ *   unlimited number of blocks in one request, we only need one query. If, on the other hand, the `strategy`'s
+ *   fastest transport(s) can only handle 10_000 blocks, we need to create more queries. This is an interative
+ *   process with performance implications -- too optimistic and you get hundreds of failed requests, but wait
+ *   too long to schedule and you end up with hundreds of renders and a slow request waterfall.
+ *
+ * Here's an overview of the hook life cycle to help build your mental model of the state machine:
+ * 1. Wait for `document.readyState === "complete"` to ensure `window.localStorage` is ready
+ * 2. Read existing queries from cache. If any queries hold overlapping/adjacent block ranges,
+ *    coalesce them into a single contiguous range. Update `seeds` and `knownRanges` accordingly
+ *    (they match at this point) and reset `requestStats` since none have been made yet.
+ * 3. Determine a request `strategy` given `publicClient` transports and current `requestStats`.
+ * 4. Optimistically compute the next `fromBlock`s to fetch based on the `strategy`, and add them to `seeds`.
+ * 5. Run queries for all `seeds`
+ * 6. Use query results to update `knownRanges` and `requestStats`
+ * 7. Coalesce and return query results.
+ *
+ * @historical_note The following is the author's original \[draft\] plan used to implement this hook, included here
+ * for future LLM context:
+ * 1. a. useState - queued ranges (Record<fromBlock, toBlockMax>)
+ *    b. useState - known ranges (Record<fromBlock, toBlockActual>)
+ *    c. useState - transport stats
+ * 2. useMemo to determine strategy given current transport stats -- this includes wait time / backoff for each one,
+ *    as well as best block range
+ * 3. useEffect to schedule (setTimeout) updates to queue based on strategy
+ *    - update on: [known ranges, strategy]
+ *    - if transport stats is undefined, that means we're still querying cache serially. only schedule ONE item, with
+ *      fromBlock=previous.toBlock
+ *    - if transport stats is defined
+ *      - determine remaining ranges (including any gaps between existing ranges)
+ *      - divide them up OPTIMISTICALLY based on transport stats / strategy
+ *      - place fromBlocks on queue -- only specify toBlock if optimistic range is less than strategy's best block range
+ *    - on change, make sure to `clearTimeout`
+ * 4. useQueries similar to old hook, except queryKey contains only the fromBlock (NO TOBLOCK)
+ *    - meta is { toBlockMax, strategy } -- but note that toBlockMax may be undefined
+ *    - queryFn should essentially always be successful since the strategy should be configured to fallback on error
+ *    - if toBlockMax is specified, it should be respected
+ *    - return logs, new transport stats, and toBlockActual
+ * 5. useEffect to update known ranges, and [iff isFetchedAfterMount] set new transport stats
+ * 6. [OPTIONAL] once fetching is complete, could concatenate+compress to a single query, then garbage collect the
+ *    other ones. Then on next page load the serial fetching would only take one render rather than many
+ * 7. combine all logs, make sure they're sorted, and return
+ *
+ * The author's original mental model:
+ * - While retrieving from cache, we expect only a single `fromBlock` to be fetched at once -- everything happens sequentially
+ * - Once done with cache, scheduler lets us start fetching in parallel while also gradually improving our strategy.
+ * - Allowing the scheduler to specify toBlockMax helps avoid duplicates when backfilling gaps
+ * - Gaps can occur when the scheduler was too optimistic with either maxBlockRange or parallelism
+ * - Scheduler can (optionally) have different modes for earliest->latest, latest->earliest, or random fetching order
  */
 export default function useContractEvents<
   const abi extends Abi | readonly unknown[],
@@ -99,8 +123,8 @@ export default function useContractEvents<
   const [seeds, setSeeds] = useState(new Map<FromBlockNumber, ToBlockNumber>());
   // `knownRanges` are updated based on the results of TanStack queries.
   const [knownRanges, setKnownRanges] = useState(new Map<FromBlockNumber, ToBlockNumber>());
-  // `requestStats` are tracked so that we can update our `requestStrategy` to fetch events as quickly as possible
-  // Array order has no semantic meaning
+  // `requestStats` are tracked so that we can update our `requestStrategy` to fetch events as quickly as possible.
+  // Array order has no semantic meaning.
   const [requestStats, setRequestStats] = useState<RequestStats>([]);
 
   // MARK: Detect when the browser is ready (for localStorage)
