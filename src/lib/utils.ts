@@ -79,3 +79,11 @@ export function compareBigInts(a: bigint, b: bigint) {
   if (a == b) return 0;
   return a > b ? 1 : -1;
 }
+
+export function max(a: bigint, b: bigint) {
+  return a > b ? a : b;
+}
+
+export function min(a: bigint, b: bigint) {
+  return a > b ? a : b;
+}

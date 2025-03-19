@@ -12,7 +12,6 @@ import {
   type BlockTag,
   type ContractEventName,
   type GetContractEventsParameters,
-  type RpcLog,
   hexToBigInt,
   parseEventLogs,
   type ParseEventLogsParameters,
@@ -24,7 +23,7 @@ import { getRemainingSegments } from "@/hooks/use-contract-events/helpers";
 import { getStrategyBasedOn, RequestStats } from "@/hooks/use-contract-events/strategy";
 import { useBlockNumbers } from "@/hooks/use-contract-events/use-block-numbers";
 import { getQueryFn } from "@/hooks/use-contract-events/query";
-import { compareBigInts } from "@/lib/utils";
+import { compareBigInts, max } from "@/lib/utils";
 import { useDeepMemo } from "@/hooks/use-deep-memo";
 import { usePing } from "@/hooks/use-contract-events/use-ping";
 
@@ -155,18 +154,12 @@ export default function useContractEvents<
     [publicClient?.chain.id, args.address, args.args, args.eventName],
   );
 
-  const { data: requiredRange } = useBlockNumbers({
+  const { data: blockNumbers } = useBlockNumbers({
     publicClient,
     blockNumbersOrTags: useMemo(
-      () => [args.fromBlock ?? "earliest", args.toBlock ?? "latest"] as const,
+      () => [args.fromBlock ?? "earliest", args.toBlock ?? "latest", "finalized"] as const,
       [args.fromBlock, args.toBlock],
     ),
-    query: { placeholderData: keepPreviousData }, // TODO: polling
-  });
-
-  const { data: finalizedBlockNumber } = useBlockNumbers({
-    publicClient,
-    blockNumbersOrTags: useMemo(() => ["finalized"] as const, []),
     query: { placeholderData: keepPreviousData }, // TODO: polling
   });
 
@@ -178,27 +171,35 @@ export default function useContractEvents<
       if (!isBrowserReady) return;
 
       const data = queryClient.getQueriesData<QueryData>({ queryKey: queryKeyRoot, fetchStatus: "idle" });
+      const map = new Map<FromBlockNumber, ToBlockNumber>();
+
       if (data.length > 0) {
         const coalesced = coalesceQueries(data);
 
-        // Set coalesced query data *before* removing old query keys in case browser interrupts us
-        queryClient.setQueriesData(
+        // Set finalized, coalesced query data *before* removing old query keys in case browser interrupts us.
+        queryClient.setQueriesData<QueryData>(
           {
             queryKey: queryKeyRoot,
             fetchStatus: "idle",
           },
-          (oldData?: { fromBlock: BlockNumber }) => {
-            const x = coalesced.find(([, newData]) => newData.fromBlock === oldData?.fromBlock);
+          (oldData) => {
+            const x = coalesced.finalized.find(([, newData]) => newData.fromBlock === oldData?.fromBlock);
             return x?.[1];
           },
         );
 
+        // Set tentative, coalesced query data *before* removing old query keys in case browser interrupts us.
+        // We can't use `setQueriesData` for this since some keys may not exist yet.
+        coalesced.tentative.forEach(([queryKey, queryData]) => {
+          queryClient.setQueryData<QueryData>(queryKey, queryData);
+          queryClient.invalidateQueries({ queryKey, exact: true });
+        });
+
         // Remove old query keys to save space and speed up future coalescing
         queryClient.removeQueries({
           queryKey: queryKeyRoot,
-          fetchStatus: "idle",
           predicate({ queryKey }) {
-            const shouldKeep = coalesced.some(
+            const shouldKeep = [...coalesced.finalized, ...coalesced.tentative].some(
               ([coalescedQueryKey]) => queryKey[queryKeyRoot.length] === coalescedQueryKey[queryKeyRoot.length],
             );
             return !shouldKeep;
@@ -206,15 +207,12 @@ export default function useContractEvents<
         });
 
         // Update `seeds` and `knownRanges` to make sure cache is used
-        const map = new Map<FromBlockNumber, ToBlockNumber>();
-        coalesced.forEach(([, queryValue]) => map.set(queryValue.fromBlock, queryValue.toBlock));
-        setSeeds(map);
-        setKnownRanges(map);
-      } else {
-        setSeeds(new Map());
-        setKnownRanges(new Map());
+        coalesced.finalized.forEach(([, queryData]) => map.set(queryData.fromBlock, queryData.toBlock));
+        coalesced.tentative.forEach(([, queryData]) => map.set(queryData.fromBlock, queryData.toBlock));
       }
 
+      setSeeds(map);
+      setKnownRanges(new Map());
       setRequestStats([]);
       setDidReadCache(true);
     }, [isBrowserReady, queryClient, queryKeyRoot]);
@@ -237,14 +235,14 @@ export default function useContractEvents<
   // MARK: Schedule blocks to be added to `seeds`
 
   useEffect(() => {
-    if (!didReadCache || !requiredRange || strategyMetadata.maxNumBlocksOptimistic === undefined) return;
+    if (!didReadCache || !blockNumbers || strategyMetadata.maxNumBlocksOptimistic === undefined) return;
 
     const numSeedsToCreate =
       Date.now() - strategyMetadata.strategyLastUpdatedTime > STABILIZATION_TIME ? REQUESTS_PER_BATCH : 1;
 
     // TODO: Refactor `getRemainingSegments` to allow for reverse-chronological-fetching
     const remainingRanges = getRemainingSegments(
-      requiredRange,
+      [blockNumbers[0], blockNumbers[1]],
       knownRanges,
       strategyMetadata.maxNumBlocksOptimistic,
       numSeedsToCreate,
@@ -254,12 +252,19 @@ export default function useContractEvents<
 
     setSeeds((x) => {
       const y = new Map(x);
-      remainingRanges
-        .slice(0, numSeedsToCreate)
-        .forEach((v) => y.set(v.fromBlock, v.isGap ? v.toBlock : requiredRange[1]));
-      return y;
+      let i = 0;
+      for (const rr of remainingRanges) {
+        const toBlockMax = rr.isGap ? rr.toBlock : blockNumbers[1];
+
+        if (y.get(rr.fromBlock) !== toBlockMax) {
+          y.set(rr.fromBlock, toBlockMax);
+          i += 1;
+          if (i === numSeedsToCreate) break;
+        }
+      }
+      return i > 0 ? y : x;
     });
-  }, [args.reverseChronologicalOrder, didReadCache, requiredRange, knownRanges, requestStats, strategyMetadata]);
+  }, [args.reverseChronologicalOrder, didReadCache, blockNumbers, knownRanges, requestStats, strategyMetadata]);
 
   // MARK: Run queries
 
@@ -273,8 +278,8 @@ export default function useContractEvents<
       } as EncodeEventTopicsParameters<abi, eventName>),
       staleTime: Infinity,
       gcTime: Infinity,
-      enabled: args.query?.enabled && strategy.length > 0 && finalizedBlockNumber !== undefined,
-      meta: { strategy, toBlockMax: seed[1], finalizedBlockNumber: finalizedBlockNumber?.[0] },
+      enabled: args.query?.enabled && strategy.length > 0 && blockNumbers !== undefined,
+      meta: { strategy, toBlockMax: seed[1], finalizedBlock: blockNumbers?.[2] },
       retry: true, // TODO: If strategy were perfect, this could be `false`. Temporary crutch!
       notifyOnChangeProps: ["data" as const],
     })),
@@ -349,7 +354,7 @@ export default function useContractEvents<
     // or all ordered chunks.
     const dataRaw = queryResults.flatMap((result) => result.data?.logs ?? []);
     const isFetching = queryResults.reduce((a, b) => a || b.isFetching, false);
-    const [fromBlock, toBlock] = requiredRange ?? [0n, 0n];
+    const [fromBlock, toBlock] = blockNumbers ?? [0n, 0n];
     const latestFetched = queryResults.reduce(
       (a, b) => (a > (b.data?.toBlock ?? 0n) ? a : (b.data?.toBlock ?? 0n)),
       fromBlock,
@@ -381,46 +386,73 @@ export default function useContractEvents<
 }
 
 function coalesceQueries(queries: [QueryKey, QueryData][]) {
-  // Filter out any unsuccessful queries
-  const sorted = queries.filter((query) => query[1]?.logs !== undefined) as [
-    QueryKey,
-    Extract<QueryData, { logs: RpcLog[] }>,
-  ][];
+  // Filter out any unsuccessful queries and split queries that span their self-specified `finalizedBlock` in two.
+  // NOTE: For any such queries, **new query keys will be returned** for the tentative span (the part after the
+  // `finalizedBlock`)
+  type NonNullEntry = [QueryKey, NonNullable<QueryData>];
+  const sorted = (queries.filter((query) => query[1] !== undefined) as NonNullEntry[]).flatMap(
+    ([queryKey, queryData]) => {
+      // Block range is either fully finalized or fully tentative
+      if (queryData.toBlock <= queryData.finalizedBlock || queryData.fromBlock > queryData.finalizedBlock) {
+        return [[queryKey, queryData] as NonNullEntry];
+      }
+      // Block range spans whatever block was finalized at fetch-time
+      const finalized: NonNullEntry = [queryKey, { ...queryData, toBlock: queryData.finalizedBlock, logs: [] }];
+      const tentative: NonNullEntry = [
+        [...queryKey.slice(0, -1), queryData.finalizedBlock + 1n],
+        { ...queryData, fromBlock: queryData.finalizedBlock + 1n, logs: [], stats: [] },
+      ];
+
+      for (const log of queryData.logs) {
+        if (log.blockNumber == null) continue;
+        const ref = hexToBigInt(log.blockNumber) <= finalized[1].toBlock ? finalized : tentative;
+        ref[1].logs.push(log);
+      }
+
+      return [finalized, tentative];
+    },
+  );
   // Sort by `fromBlock` in chronological order
   sorted.sort((a, b) => compareBigInts(a[1].fromBlock, b[1].fromBlock));
 
-  const coalesced: typeof sorted = [];
+  const coalesced = {
+    finalized: <typeof sorted>[],
+    tentative: <typeof sorted>[],
+  };
 
-  for (const [queryKey, queryData] of sorted) {
-    // eslint-disable-next-line prefer-const
-    let { fromBlock, toBlock, logs, finalizedBlockNumber } = queryData;
-    if (toBlock > finalizedBlockNumber) {
-      toBlock = finalizedBlockNumber;
-      logs = logs.filter((log) => log.blockNumber != null && hexToBigInt(log.blockNumber) <= finalizedBlockNumber);
-    } else {
-      logs = [...logs];
-    }
-
-    if (coalesced.length === 0) {
-      coalesced.push([queryKey, { fromBlock, toBlock, logs, finalizedBlockNumber, stats: [] }]);
+  for (const [queryKey, { fromBlock, toBlock, logs, finalizedBlock }] of sorted) {
+    if (toBlock < fromBlock) {
+      console.warn("useContractEvents coalesce encountered toBlock < fromBlock");
       continue;
     }
 
-    const last = coalesced[coalesced.length - 1][1];
+    const isFinalized = toBlock <= finalizedBlock;
+    const ref = isFinalized ? coalesced.finalized : coalesced.tentative;
 
-    if (toBlock > last.toBlock) {
-      if (fromBlock < last.toBlock + 1n) {
-        // Data has some overlap
-        last.toBlock = toBlock;
-        last.logs.push(...logs.filter((log) => hexToBigInt(log.blockNumber!) > last.toBlock));
-      } else if (fromBlock === last.toBlock + 1n) {
-        // Data aligns perfectly
-        last.toBlock = toBlock;
-        last.logs.push(...logs);
+    const last = ref.at(-1)?.[1];
+
+    if (last === undefined || last.toBlock + 1n < fromBlock) {
+      // Data covers a new range
+      ref.push([
+        queryKey,
+        { fromBlock, toBlock, logs, finalizedBlock: isFinalized ? toBlock : fromBlock - 1n, stats: [] },
+      ]);
+    } else if (last.toBlock + 1n === fromBlock) {
+      // Data aligns perfectly with the previous range
+      last.logs.push(...logs);
+      last.toBlock = toBlock;
+      if (isFinalized) last.finalizedBlock = last.toBlock;
+    } else {
+      // Data overlaps the previous range or is entirely inside it
+      if (last.finalizedBlock < finalizedBlock) {
+        // Incoming logs take precedence
+        last.logs = last.logs.filter((log) => hexToBigInt(log.blockNumber!) < fromBlock).concat(logs);
       } else {
-        // Data has no overlap
-        coalesced.push([queryKey, { fromBlock, toBlock, logs, finalizedBlockNumber, stats: [] }]);
+        // Existing logs take precedence
+        last.logs.push(...logs.filter((log) => hexToBigInt(log.blockNumber!) > last.toBlock));
       }
+      last.toBlock = max(last.toBlock, toBlock);
+      if (isFinalized) last.finalizedBlock = last.toBlock;
     }
   }
 

@@ -27,10 +27,10 @@ export function getQueryFn<
 
     const chainId = queryKey[1] as number | undefined;
     const fromBlock = queryKey[3] as bigint;
-    const { strategy, toBlockMax, finalizedBlockNumber } = meta as {
+    const { strategy, toBlockMax, finalizedBlock } = meta as {
       strategy: Strategy;
       toBlockMax: bigint;
-      finalizedBlockNumber: bigint;
+      finalizedBlock: bigint;
     };
 
     const stats: RequestStats = [];
@@ -75,7 +75,7 @@ export function getQueryFn<
           timestamp1: Date.now(),
         });
         // console.info(`Successfully fetched ${fromBlock}->${toBlock} (${numBlocks} blocks) with`, transport);
-        return { logs, stats, fromBlock, toBlock, finalizedBlockNumber };
+        return { logs, stats, fromBlock, toBlock, finalizedBlock };
       } catch {
         stats.push({
           transportId: transport.id,
