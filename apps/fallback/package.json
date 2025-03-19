@@ -44,6 +44,7 @@
     "wagmi": "^2.14.11"
   },
   "devDependencies": {
+    "@fleek-platform/cli": "^3.8.2",
     "@tailwindcss/vite": "^4.0.6",
     "@vitejs/plugin-react": "^4.3.4",
     "tailwindcss": "^4.0.6",

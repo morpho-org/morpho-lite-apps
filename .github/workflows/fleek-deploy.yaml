@@ -36,5 +36,6 @@ jobs:
       - name: Build & deploy sites
         id: build-and-deploy
         run: |
+          cd apps/fallback
           fleek sites deploy
-          echo "ipfs_cid=https://$(fleek sites deployments --slug morpho-blue-offchain-public | tail -n +4 | head -n 1 | awk '{print $NF}').ipfs.dweb.link/" >> $GITHUB_OUTPUT
+          echo "ipfs_cid=https://$(fleek sites deployments --slug morpho-fallback-app | tail -n +4 | head -n 1 | awk '{print $NF}').ipfs.dweb.link/" >> $GITHUB_OUTPUT

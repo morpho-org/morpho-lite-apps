@@ -3,7 +3,7 @@ import { FleekConfig } from "@fleek-platform/cli";
 export default {
   sites: [
     {
-      slug: "morpho-blue-offchain-public",
+      slug: "morpho-fallback-app",
       distDir: "dist",
       buildCommand: "pnpm run build",
     },
