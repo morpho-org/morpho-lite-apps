@@ -16,12 +16,7 @@
       "prettier --write --ignore-unknown"
     ]
   },
-  "dependencies": {
-    "@morpho-org/blue-sdk": "^2.3.1",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "viem": "~2.23.5"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@eslint/js": "^9.21.0",
     "@types/node": "^22.13.1",
