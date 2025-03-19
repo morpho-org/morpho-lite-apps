@@ -141,7 +141,7 @@ const persister = createSyncStoragePersister({
 function App() {
   return (
     <WagmiProvider config={wagmiConfig}>
-      <PersistQueryClientProvider client={queryClient} persistOptions={{ persister }}>
+      <PersistQueryClientProvider client={queryClient} persistOptions={{ persister, buster: "v1" }}>
         <RequestTrackingProvider>
           <DashboardPage />
         </RequestTrackingProvider>

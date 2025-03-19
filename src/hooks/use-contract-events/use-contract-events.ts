@@ -147,7 +147,7 @@ export default function useContractEvents<
   const queryKeyRoot = useDeepMemo(
     () =>
       [
-        "useBetterContractEvents",
+        "useContractEvents",
         publicClient?.chain.id,
         {
           // TODO: make ABI part of queryKey so it doesn't have to be passed into `queryFn` separately?
