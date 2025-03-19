@@ -1,5 +1,6 @@
 import {
   type Abi,
+  type Address,
   type ContractEventName,
   encodeEventTopics,
   type EncodeEventTopicsParameters,
@@ -11,7 +12,7 @@ import type { QueryClient, QueryKey } from "@tanstack/react-query";
 export function getQueryFn<
   const abi extends Abi | readonly unknown[],
   eventName extends ContractEventName<abi> | undefined = undefined,
->(args: EncodeEventTopicsParameters<abi, eventName>) {
+>(abi: abi) {
   return async ({
     queryKey,
     meta,
@@ -26,6 +27,11 @@ export function getQueryFn<
     }
 
     const chainId = queryKey[1] as number | undefined;
+    const topics = encodeEventTopics({ abi, ...(queryKey[2] as object) } as EncodeEventTopicsParameters<
+      abi,
+      eventName
+    >);
+    const address = (queryKey[2] as { address?: Address | Address[] }).address;
     const fromBlock = queryKey[3] as bigint;
     const { strategy, toBlockMax, finalizedBlock } = meta as {
       strategy: Strategy;
@@ -60,9 +66,7 @@ export function getQueryFn<
         const logs = await transport.request(
           {
             method: "eth_getLogs",
-            params: [
-              { topics: encodeEventTopics(args), fromBlock: numberToHex(fromBlock), toBlock: numberToHex(toBlock) },
-            ],
+            params: [{ address, topics, fromBlock: numberToHex(fromBlock), toBlock: numberToHex(toBlock) }],
           },
           { timeout: transport.timeout, retryCount: transport.retryCount, retryDelay: transport.retryDelay },
         );

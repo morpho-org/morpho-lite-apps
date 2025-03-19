@@ -6,7 +6,6 @@ import {
   type UseQueryResult,
 } from "@tanstack/react-query";
 import {
-  type EncodeEventTopicsParameters,
   type Abi,
   type BlockNumber,
   type BlockTag,
@@ -151,6 +150,7 @@ export default function useContractEvents<
         "useBetterContractEvents",
         publicClient?.chain.id,
         {
+          // TODO: make ABI part of queryKey so it doesn't have to be passed into `queryFn` separately?
           address: args.address,
           args: args.args,
           eventName: args.eventName,
@@ -276,11 +276,7 @@ export default function useContractEvents<
   const queryResults = useQueries({
     queries: [...seeds.entries()].map((seed) => ({
       queryKey: [...queryKeyRoot, seed[0]] as const,
-      queryFn: getQueryFn({
-        abi: args.abi,
-        eventName: args.eventName,
-        args: args.args,
-      } as EncodeEventTopicsParameters<abi, eventName>),
+      queryFn: getQueryFn<abi, eventName>(args.abi),
       staleTime: Infinity,
       gcTime: Infinity,
       enabled: args.query?.enabled && strategy.length > 0 && blockNumbers !== undefined,
