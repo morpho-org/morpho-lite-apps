@@ -15,8 +15,10 @@ import {
   hexToBigInt,
   parseEventLogs,
   type ParseEventLogsParameters,
+  type RpcLog,
+  type Log,
 } from "viem";
-import { usePublicClient } from "wagmi";
+import { deepEqual, usePublicClient } from "wagmi";
 import { useEffect, useMemo, useState } from "react";
 import { useEIP1193Transports } from "@/hooks/use-contract-events/use-transports";
 import { getRemainingSegments } from "@/hooks/use-contract-events/helpers";
@@ -40,6 +42,8 @@ const MAX_REQUESTS_TO_TRACK = 512; // Number of requests that are kept to comput
  *
  * @param args Arguments to pass through to `publicClient.getContractEvents`, along with some extra fields (see below)
  * @param args.query Subset of tanstack query params, specifically `{ enabled: boolean }`
+ * @param args.returnInOrder By default (false) chunks may be non-contiguous while fetching. Set this to true to only
+ * return the *first* contiguous chunk, thereby guaranteeing you have the complete chain state up to some block number.
  *
  * @dev We don't know ahead of time how many blocks can be fetched per RPC request, as it depends on RPC-specific
  * rules (an explicit limit on number of blocks, a constraint on number of logs in the response, or both). This
@@ -105,6 +109,7 @@ export default function useContractEvents<
 >(
   args: Omit<GetContractEventsParameters<abi, eventName, strict, fromBlock, toBlock>, "blockHash"> & {
     query?: { enabled?: boolean; debug?: boolean };
+    returnInOrder?: boolean;
     reverseChronologicalOrder?: boolean;
   },
 ) {
@@ -349,40 +354,68 @@ export default function useContractEvents<
 
   // MARK: Return
 
-  return useMemo(() => {
-    // TODO: allow consumer to pass in an arg that determines whether we return only the first coalesced/contiguous chunk,
-    // or all ordered chunks.
-    const dataRaw = queryResults.flatMap((result) => result.data?.logs ?? []);
-    const isFetching = queryResults.reduce((a, b) => a || b.isFetching, false);
-    const [fromBlock, toBlock] = blockNumbers ?? [0n, 0n];
-    const latestFetched = queryResults.reduce(
-      (a, b) => (a > (b.data?.toBlock ?? 0n) ? a : (b.data?.toBlock ?? 0n)),
-      fromBlock,
-    );
-    const fractionFetched = Number(latestFetched - fromBlock) / Number(toBlock - fromBlock); // TODO: not quite right
+  return useDeepMemo(
+    () => {
+      // The `coalesce` function expects entries of the form [QueryKey, QueryData]
+      const fakeQueries = queryResults
+        .filter((r) => r.status === "success")
+        .map((result) => [[], result.data] as [QueryKey, QueryData]);
 
-    const data = parseEventLogs<abi, strict, eventName>({
-      abi: args.abi,
-      logs: dataRaw,
-      args: args.args,
-      eventName: args.eventName,
-      strict: args.strict,
-    } as ParseEventLogsParameters<abi, eventName, strict>);
+      // Coalesce queries to ensure we have the latest data with no overlapping ranges
+      const coalesced = coalesceQueries(fakeQueries);
+      const finalized = coalesced.finalized.map((x) => x[1]);
+      const tentative = coalesced.tentative.map((x) => x[1]);
 
-    data.sort((a, b) => {
-      // Handle case where one or both events are pending
-      if (a.blockNumber == null && b.blockNumber == null) return 0;
-      else if (a.blockNumber == null) return 1;
-      else if (b.blockNumber == null) return -1;
-      // Handle standard cases
-      if (a.blockNumber !== b.blockNumber) return compareBigInts(a.blockNumber, b.blockNumber);
-      if (a.transactionIndex !== b.transactionIndex) return a.transactionIndex! - b.transactionIndex!;
-      if (a.logIndex !== b.logIndex) return a.logIndex! - b.logIndex!;
-      return 0;
-    });
+      // Combine `finalized` and `tentative` ranges
+      const all = [...finalized];
+      const last = all.at(-1);
+      if (all.length > 0 && tentative.length > 0 && last!.toBlock + 1n === tentative.at(0)!.fromBlock) {
+        last!.logs = last!.logs.concat(tentative.at(0)!.logs);
+        last!.toBlock = tentative.at(0)!.toBlock;
+        all.push(...tentative.slice(1));
+      } else {
+        all.push(...tentative);
+      }
 
-    return { data, isFetching, fractionFetched };
-  }, [queryResults]);
+      const parse = (rpcLogs: RpcLog[]) =>
+        parseEventLogs<abi, strict, eventName>({
+          abi: args.abi,
+          logs: rpcLogs,
+          args: args.args,
+          eventName: args.eventName,
+          strict: args.strict,
+        } as ParseEventLogsParameters<abi, eventName, strict>);
+
+      const logs = {
+        all: parse(args.returnInOrder ? (all.at(0)?.logs ?? []) : all.flatMap((x) => x.logs)),
+        finalized: parse(finalized.flatMap((x) => x.logs)),
+      };
+      const finalizedBlock = finalized.at(-1)?.finalizedBlock;
+      const isFetching =
+        all.length !== 1 || all[0].fromBlock !== blockNumbers?.[0] || all[0].toBlock !== blockNumbers?.[1];
+      const numBlocksFetched = all.reduce((a, b) => a + (b.toBlock - b.fromBlock + 1n), 0n);
+      const fractionFetched =
+        blockNumbers === undefined
+          ? 0
+          : Number(numBlocksFetched) / (Number(blockNumbers[1]) - Number(blockNumbers[0]) + 1);
+
+      const sort = (a: Log<bigint, number, false>, b: Log<bigint, number, false>) => {
+        if (a.blockNumber !== b.blockNumber) return compareBigInts(a.blockNumber, b.blockNumber);
+        if (a.transactionIndex !== b.transactionIndex) return a.transactionIndex - b.transactionIndex;
+        if (a.logIndex !== b.logIndex) return a.logIndex - b.logIndex;
+        return 0;
+      };
+
+      logs.all.sort(sort);
+      logs.finalized.sort(sort);
+
+      return { logs, finalizedBlock, isFetching, fractionFetched };
+    },
+    [blockNumbers, queryResults, args.abi, args.args, args.eventName, args.returnInOrder, args.strict] as const,
+    (a, b) => {
+      return deepEqual(a[0], b[0]) && a[1] === b[1] && a[2] === b[2] && deepEqual(a.slice(3), b.slice(3));
+    },
+  );
 }
 
 function coalesceQueries(queries: [QueryKey, QueryData][]) {
@@ -435,7 +468,7 @@ function coalesceQueries(queries: [QueryKey, QueryData][]) {
       // Data covers a new range
       ref.push([
         queryKey,
-        { fromBlock, toBlock, logs, finalizedBlock: isFinalized ? toBlock : fromBlock - 1n, stats: [] },
+        { fromBlock, toBlock, logs: [...logs], finalizedBlock: isFinalized ? toBlock : fromBlock - 1n, stats: [] },
       ]);
     } else if (last.toBlock + 1n === fromBlock) {
       // Data aligns perfectly with the previous range

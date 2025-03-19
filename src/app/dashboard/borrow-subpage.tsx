@@ -47,7 +47,7 @@ export function BorrowSubPage() {
   const morpho = useMemo(() => getContractDeploymentInfo(chainId, "Morpho"), [chainId]);
 
   const {
-    data: supplyCollateralEvents,
+    logs: { all: supplyCollateralEvents },
     isFetching: isFetchingSupplyCollateralEvents,
     fractionFetched: ffSupplyCollateralEvents,
   } = useContractEvents({

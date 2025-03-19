@@ -54,7 +54,7 @@ export function EarnSubPage() {
 
   // MARK: Fetch `MetaMorphoFactory.CreateMetaMorpho` on all factory versions so that we have all deployments
   const {
-    data: createMetaMorphoEvents,
+    logs: { all: createMetaMorphoEvents },
     isFetching: isFetchingCreateMetaMorphoEvents,
     fractionFetched: ffCreateMetaMorphoEvents,
   } = useContractEvents({
@@ -73,7 +73,7 @@ export function EarnSubPage() {
 
   // MARK: Fetch `ERC4626.Deposit` so that we know where user has deposited. Includes non-MetaMorpho ERC4626 deposits
   const {
-    data: depositEvents,
+    logs: { all: depositEvents },
     isFetching: isFetchingDepositEvents,
     fractionFetched: ffDepositEvents,
   } = useContractEvents({
