@@ -13,9 +13,9 @@ import {
 } from "@morpho-blue-offchain-public/uikit/components/shadcn/chart";
 import { useDebouncedMemo } from "@morpho-blue-offchain-public/uikit/hooks/use-debounced-memo";
 import { RequestTrackingContext } from "@morpho-blue-offchain-public/uikit/lib/request-tracking-context";
+// @ts-expect-error: this package lacks types
 import humanizeDuration from "humanize-duration";
 import { useContext, useEffect, useState } from "react";
-// @ts-expect-error: this package lacks types
 import { Area, AreaChart, CartesianGrid, RadialBar, RadialBarChart, XAxis } from "recharts";
 import { useChainId } from "wagmi";
 

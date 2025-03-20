@@ -1,3 +1,4 @@
+import { ChainIcon } from "@morpho-blue-offchain-public/uikit/components/chain-icon";
 import { Avatar, AvatarImage } from "@morpho-blue-offchain-public/uikit/components/shadcn/avatar";
 import { Button } from "@morpho-blue-offchain-public/uikit/components/shadcn/button";
 import {
@@ -24,8 +25,6 @@ import { useEffect, useState } from "react";
 import { Address } from "viem";
 import { mainnet } from "viem/chains";
 import { useAccount, useConnect, useDisconnect, useEnsAvatar, useEnsName, useSwitchChain } from "wagmi";
-
-import { ChainIcon } from "@/components/chain-icon";
 
 function ConnectWalletButton() {
   const { connectors, connect } = useConnect();

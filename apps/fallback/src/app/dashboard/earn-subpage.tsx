@@ -1,3 +1,5 @@
+import { metaMorphoAbi } from "@morpho-blue-offchain-public/uikit/assets/abis/meta-morpho";
+import { metaMorphoFactoryAbi } from "@morpho-blue-offchain-public/uikit/assets/abis/meta-morpho-factory";
 import { Avatar, AvatarFallback, AvatarImage } from "@morpho-blue-offchain-public/uikit/components/shadcn/avatar";
 import { Card, CardContent } from "@morpho-blue-offchain-public/uikit/components/shadcn/card";
 import { Progress } from "@morpho-blue-offchain-public/uikit/components/shadcn/progress";
@@ -21,8 +23,6 @@ import { useMemo } from "react";
 import { Address, erc20Abi, erc4626Abi } from "viem";
 import { useAccount, useBlockNumber, useReadContracts } from "wagmi";
 
-import { metaMorphoAbi } from "@/assets/abis/meta-morpho";
-import { metaMorphoFactoryAbi } from "@/assets/abis/meta-morpho-factory";
 import { CtaCard } from "@/components/cta-card";
 import { EarnSheetContent } from "@/components/earn-sheet-content";
 import { RequestChart } from "@/components/request-chart";

@@ -1,3 +1,4 @@
+import MorphoLogoSvg from "@morpho-blue-offchain-public/uikit/assets/morpho.svg?react";
 import { Button } from "@morpho-blue-offchain-public/uikit/components/shadcn/button";
 import { ExternalLink } from "lucide-react";
 import { useState } from "react";
@@ -5,7 +6,6 @@ import { useState } from "react";
 import { BorrowSubPage } from "./borrow-subpage";
 import { EarnSubPage } from "./earn-subpage";
 
-import MorphoLogoSvg from "@/assets/morpho.svg?react";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { WalletMenu } from "@/components/wallet-menu";

@@ -7,7 +7,8 @@
   "types": "dist/main.d.ts",
   "module": "dist/main.js",
   "exports": {
-    "./*": "./dist/*.js"
+    "./*": "./dist/*.js",
+    "./*.svg": "./dist/*.svg"
   },
   "files": [
     "dist"
@@ -42,10 +43,10 @@
   },
   "peerDependencies": {
     "@tanstack/react-query": "^5.66.0",
-    "sonner": "^2.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "recharts": "^2.15.1",
+    "sonner": "^2.0.0",
     "viem": "~2.23.5",
     "wagmi": "^2.14.11"
   },
@@ -67,6 +68,7 @@
     "viem": "~2.23.5",
     "vite": "^6.2.0",
     "vite-plugin-dts": "^4.5.3",
+    "vite-plugin-svgr": "^4.3.0",
     "wagmi": "^2.14.11"
   }
 }

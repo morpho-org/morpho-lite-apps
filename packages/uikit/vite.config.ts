@@ -5,10 +5,13 @@ import react from "@vitejs/plugin-react";
 import { glob } from "glob";
 import { defineConfig } from "vite";
 import dts from "vite-plugin-dts";
+import svgr from "vite-plugin-svgr";
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), dts({ tsconfigPath: "./tsconfig.package.json" })],
+  // NOTE: Can use `svgr({ include: "**/*.svg" })` and add `,svg` to the rollup glob pattern to transpile _all_
+  // SVGs to JS rather than only those which are used in components
+  plugins: [svgr(), react(), dts({ tsconfigPath: "./tsconfig.package.json" })],
   resolve: {
     alias: {
       "@": resolve(__dirname, "./src"),

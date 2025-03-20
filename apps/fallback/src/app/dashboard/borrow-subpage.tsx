@@ -1,3 +1,4 @@
+import { morphoAbi } from "@morpho-blue-offchain-public/uikit/assets/abis/morpho";
 import { Avatar, AvatarFallback, AvatarImage } from "@morpho-blue-offchain-public/uikit/components/shadcn/avatar";
 import { Card, CardContent } from "@morpho-blue-offchain-public/uikit/components/shadcn/card";
 import { Progress } from "@morpho-blue-offchain-public/uikit/components/shadcn/progress";
@@ -32,7 +33,6 @@ import { useMemo } from "react";
 import { Address, erc20Abi } from "viem";
 import { useAccount, useBlockNumber, useReadContracts } from "wagmi";
 
-import { morphoAbi } from "@/assets/abis/morpho";
 import { BorrowSheetContent } from "@/components/borrow-sheet-content";
 import { CtaCard } from "@/components/cta-card";
 import { RequestChart } from "@/components/request-chart";

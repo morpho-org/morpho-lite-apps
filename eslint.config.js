@@ -32,7 +32,7 @@ export default tseslint.config({ ignores: ["**/dist", "**/fleek.config.ts"] }, e
   rules: {
     ...reactHooks.configs.recommended.rules,
     "@typescript-eslint/no-floating-promises": "error",
-    "import-x/no-unresolved": ["error", { ignore: ["\\.svg\\?react$"] }],
+    "import-x/no-unresolved": ["error", { ignore: ["\\.svg\\?react$", "\\.svg\\?no-inline$"] }],
     "import-x/order": [
       "error",
       {

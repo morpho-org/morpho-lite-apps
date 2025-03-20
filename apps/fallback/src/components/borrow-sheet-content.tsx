@@ -1,3 +1,5 @@
+import { morphoAbi } from "@morpho-blue-offchain-public/uikit/assets/abis/morpho";
+import { oracleAbi } from "@morpho-blue-offchain-public/uikit/assets/abis/oracle";
 import { Button } from "@morpho-blue-offchain-public/uikit/components/shadcn/button";
 import {
   SheetContent,
@@ -17,8 +19,6 @@ import { Toaster } from "sonner";
 import { Address, erc20Abi, extractChain, parseUnits } from "viem";
 import { useAccount, useChainId, useChains, useReadContract, useReadContracts } from "wagmi";
 
-import { morphoAbi } from "@/assets/abis/morpho";
-import { oracleAbi } from "@/assets/abis/oracle";
 import { TokenAmountInput } from "@/components/token-amount-input";
 import { TransactionButton } from "@/components/transaction-button";
 import { getContractDeploymentInfo } from "@/lib/constants";
