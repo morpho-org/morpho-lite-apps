@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "@morpho-blue-offchain-public/uikit/components/shadcn/button";
 import {
   SheetContent,
   SheetHeader,
@@ -6,13 +6,13 @@ import {
   SheetDescription,
   SheetFooter,
   SheetClose,
-} from "@/components/ui/sheet";
+} from "@morpho-blue-offchain-public/uikit/components/shadcn/sheet";
 import { AccrualPosition, IMarket, Market, MarketId, MarketParams, Position } from "@morpho-org/blue-sdk";
-import { formatBalance, formatLtv, Token } from "@/lib/utils";
+import { formatBalance, formatLtv, Token } from "@morpho-blue-offchain-public/uikit/lib/utils";
 import { Address, erc20Abi, extractChain, parseUnits } from "viem";
 import { useAccount, useChainId, useChains, useReadContract, useReadContracts } from "wagmi";
 import { CircleArrowLeft } from "lucide-react";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@morpho-blue-offchain-public/uikit/components/shadcn/tabs";
 import { getContractDeploymentInfo } from "@/lib/constants";
 import { morphoAbi } from "@/assets/abis/morpho";
 import { keepPreviousData } from "@tanstack/react-query";

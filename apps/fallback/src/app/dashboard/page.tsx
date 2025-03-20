@@ -1,5 +1,5 @@
 import { Header } from "@/components/header";
-import { Button } from "@/components/ui/button";
+import { Button } from "@morpho-blue-offchain-public/uikit/components/shadcn/button";
 import { ExternalLink } from "lucide-react";
 import MorphoLogoSvg from "@/assets/morpho.svg?react";
 

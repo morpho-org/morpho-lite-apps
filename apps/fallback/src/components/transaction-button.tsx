@@ -10,7 +10,7 @@ import {
   useWriteContract,
 } from "wagmi";
 import { type WriteContractVariables } from "wagmi/query";
-import { Button } from "@/components/ui/button";
+import { Button } from "@morpho-blue-offchain-public/uikit/components/shadcn/button";
 import { toast } from "sonner";
 import { Loader } from "lucide-react";
 

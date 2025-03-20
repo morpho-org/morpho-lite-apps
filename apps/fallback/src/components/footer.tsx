@@ -1,5 +1,5 @@
-import { useGhDeployments } from "@/hooks/use-gh-deployments";
-import { cn } from "@/lib/utils";
+import { useGhDeployments } from "@morpho-blue-offchain-public/uikit/hooks/use-gh-deployments";
+import { cn } from "@morpho-blue-offchain-public/uikit/lib/utils";
 import { BadgeAlert, BadgeCheck, CheckCheck, Copy, ExternalLink } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -9,8 +9,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
+} from "@morpho-blue-offchain-public/uikit/components/shadcn/dialog";
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@morpho-blue-offchain-public/uikit/components/shadcn/table";
 import { GITHUB_OWNER, GITHUB_REPO, GITHUB_REPO_URL } from "@/lib/constants";
 
 export function Footer() {

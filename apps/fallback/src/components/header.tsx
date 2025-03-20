@@ -1,6 +1,6 @@
-import { cn } from "@/lib/utils";
+import { cn } from "@morpho-blue-offchain-public/uikit/lib/utils";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@morpho-blue-offchain-public/uikit/components/shadcn/button";
 import { XIcon } from "lucide-react";
 import { GITHUB_REPO_URL } from "@/lib/constants";
 

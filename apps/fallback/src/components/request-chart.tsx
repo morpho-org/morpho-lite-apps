@@ -1,12 +1,12 @@
 import { Area, AreaChart, CartesianGrid, RadialBar, RadialBarChart, XAxis } from "recharts";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@morpho-blue-offchain-public/uikit/components/shadcn/card";
+import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@morpho-blue-offchain-public/uikit/components/shadcn/chart";
 import { useContext, useEffect, useState } from "react";
-import { RequestTrackingContext } from "@/lib/request-tracking-context";
+import { RequestTrackingContext } from "@morpho-blue-offchain-public/uikit/lib/request-tracking-context";
 // @ts-expect-error: this package lacks types
 import humanizeDuration from "humanize-duration";
-import { useDebouncedMemo } from "@/hooks/use-debounced-memo";
+import { useDebouncedMemo } from "@morpho-blue-offchain-public/uikit/hooks/use-debounced-memo";
 import { useChainId } from "wagmi";
 
 const INITIAL_METHOD_NAMES = ["eth_accounts", "eth_blockNumber", "eth_call", "eth_chainId", "eth_getLogs"];

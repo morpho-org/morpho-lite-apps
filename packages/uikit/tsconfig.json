@@ -4,5 +4,12 @@
     { "path": "./tsconfig.package.json" },
     { "path": "./tsconfig.example.json" },
     { "path": "./tsconfig.node.json" }
-  ]
+  ],
+  "compilerOptions": {
+    "strict": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  }
 }

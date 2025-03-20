@@ -1,13 +1,13 @@
 import { getContractDeploymentInfo } from "@/lib/constants";
-import useContractEvents from "@/hooks/use-contract-events/use-contract-events";
+import useContractEvents from "@morpho-blue-offchain-public/uikit/hooks/use-contract-events/use-contract-events";
 import { useMemo } from "react";
 import { useAccount, useBlockNumber, useReadContracts } from "wagmi";
 import { Address, erc20Abi, erc4626Abi } from "viem";
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@morpho-blue-offchain-public/uikit/components/shadcn/table";
+import { Avatar, AvatarFallback, AvatarImage } from "@morpho-blue-offchain-public/uikit/components/shadcn/avatar";
 import { blo } from "blo";
-import { formatBalanceWithSymbol, getTokenSymbolURI, Token } from "@/lib/utils";
-import { Sheet, SheetTrigger } from "@/components/ui/sheet";
+import { formatBalanceWithSymbol, getTokenSymbolURI, Token } from "@morpho-blue-offchain-public/uikit/lib/utils";
+import { Sheet, SheetTrigger } from "@morpho-blue-offchain-public/uikit/components/shadcn/sheet";
 import { keepPreviousData } from "@tanstack/react-query";
 import { metaMorphoFactoryAbi } from "@/assets/abis/meta-morpho-factory";
 import { metaMorphoAbi } from "@/assets/abis/meta-morpho";
@@ -15,8 +15,8 @@ import { metaMorphoAbi } from "@/assets/abis/meta-morpho";
 import humanizeDuration from "humanize-duration";
 import { EarnSheetContent } from "@/components/earn-sheet-content";
 import { RequestChart } from "@/components/request-chart";
-import { Progress } from "@/components/ui/progress";
-import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@morpho-blue-offchain-public/uikit/components/shadcn/progress";
+import { Card, CardContent } from "@morpho-blue-offchain-public/uikit/components/shadcn/card";
 import { CtaCard } from "@/components/cta-card";
 
 function TokenTableCell({ address, symbol, imageSrc }: Token) {

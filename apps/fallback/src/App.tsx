@@ -30,8 +30,8 @@ import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import DashboardPage from "./app/dashboard/page";
 import type { Chain, HttpTransportConfig } from "viem";
-import { RequestTrackingProvider } from "./hooks/use-request-tracking";
-import { cyrb64Hash } from "@/lib/cyrb64";
+import { RequestTrackingProvider } from "@morpho-blue-offchain-public/uikit/hooks/use-request-tracking";
+import { cyrb64Hash } from "@morpho-blue-offchain-public/uikit/lib/cyrb64";
 
 const httpConfig: HttpTransportConfig = {
   retryDelay: 0,

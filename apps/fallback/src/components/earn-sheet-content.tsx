@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "@morpho-blue-offchain-public/uikit/components/shadcn/button";
 import {
   SheetContent,
   SheetHeader,
@@ -6,12 +6,12 @@ import {
   SheetDescription,
   SheetFooter,
   SheetClose,
-} from "@/components/ui/sheet";
-import { formatBalance, Token } from "@/lib/utils";
+} from "@morpho-blue-offchain-public/uikit/components/shadcn/sheet";
+import { formatBalance, Token } from "@morpho-blue-offchain-public/uikit/lib/utils";
 import { Address, erc4626Abi, extractChain, parseUnits } from "viem";
 import { useAccount, useChainId, useChains, useReadContracts } from "wagmi";
 import { CircleArrowLeft } from "lucide-react";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@morpho-blue-offchain-public/uikit/components/shadcn/tabs";
 import { keepPreviousData } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import { useMemo, useState } from "react";

@@ -7,7 +7,7 @@ import eslintPluginImportX from "eslint-plugin-import-x";
 import eslintPluginPrettierRecommended from "eslint-plugin-prettier/recommended";
 import { createNextImportResolver } from "eslint-import-resolver-next";
 
-export default tseslint.config({ ignores: ["dist"] }, eslint.configs.recommended, {
+export default tseslint.config({ ignores: ["**/dist"] }, eslint.configs.recommended, {
   extends: [
     tseslint.configs.recommended,
     eslintPluginImportX.flatConfigs.recommended,
