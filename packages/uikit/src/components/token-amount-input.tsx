@@ -1,5 +1,6 @@
-import { Input } from "@morpho-blue-offchain-public/uikit/components/shadcn/input";
 import { formatUnits } from "viem";
+
+import { Input } from "@/components/shadcn/input";
 
 function validateTokenAmountInput(input: string, maxDecimals: number): string | null {
   if (input === "" || input === "0") {

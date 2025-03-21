@@ -1,4 +1,3 @@
-import { Button } from "@morpho-blue-offchain-public/uikit/components/shadcn/button";
 import { Loader } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -13,6 +12,8 @@ import {
   useWriteContract,
 } from "wagmi";
 import { type WriteContractVariables } from "wagmi/query";
+
+import { Button } from "@/components/shadcn/button";
 
 export function TransactionButton<
   const abi extends Abi | readonly unknown[],

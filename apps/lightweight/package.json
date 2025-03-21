@@ -1,0 +1,41 @@
+{
+  "name": "@morpho-blue-offchain-public/lightweight-app",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint . --fix",
+    "format": "prettier --write --ignore-unknown .",
+    "format:check": "prettier --check --ignore-unknown .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@morpho-blue-offchain-public/uikit": "workspace:*",
+    "@morpho-org/blue-sdk": "^2.3.1",
+    "@tanstack/query-sync-storage-persister": "^5.66.0",
+    "@tanstack/react-query": "^5.66.0",
+    "@tanstack/react-query-persist-client": "^5.66.0",
+    "blo": "^1.2.0",
+    "humanize-duration": "^3.32.1",
+    "lucide-react": "^0.475.0",
+    "ohash": "^1.1.4",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router": "^7.4.0",
+    "recharts": "^2.15.1",
+    "sonner": "^2.0.0",
+    "tailwindcss-animate": "^1.0.7",
+    "viem": "~2.23.5",
+    "wagmi": "^2.14.11"
+  },
+  "devDependencies": {
+    "@fleek-platform/cli": "^3.8.2",
+    "@tailwindcss/vite": "^4.0.6",
+    "@vitejs/plugin-react": "^4.3.4",
+    "tailwindcss": "^4.0.6",
+    "vite": "^6.2.0",
+    "vite-plugin-svgr": "^4.3.0"
+  }
+}

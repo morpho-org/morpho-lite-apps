@@ -1,6 +1,13 @@
-import { ChainIcon } from "@morpho-blue-offchain-public/uikit/components/chain-icon";
-import { Avatar, AvatarImage } from "@morpho-blue-offchain-public/uikit/components/shadcn/avatar";
-import { Button } from "@morpho-blue-offchain-public/uikit/components/shadcn/button";
+import { blo } from "blo";
+import { PowerOff } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Address } from "viem";
+import { mainnet } from "viem/chains";
+import { useAccount, useConnect, useDisconnect, useEnsAvatar, useEnsName, useSwitchChain } from "wagmi";
+
+import { ChainIcon } from "@/components/chain-icon";
+import { Avatar, AvatarImage } from "@/components/shadcn/avatar";
+import { Button } from "@/components/shadcn/button";
 import {
   Dialog,
   DialogContent,
@@ -9,22 +16,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@morpho-blue-offchain-public/uikit/components/shadcn/dialog";
-import { Popover, PopoverContent, PopoverTrigger } from "@morpho-blue-offchain-public/uikit/components/shadcn/popover";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@morpho-blue-offchain-public/uikit/components/shadcn/select";
-import { blo } from "blo";
-import { PowerOff } from "lucide-react";
-import { useEffect, useState } from "react";
-import { Address } from "viem";
-import { mainnet } from "viem/chains";
-import { useAccount, useConnect, useDisconnect, useEnsAvatar, useEnsName, useSwitchChain } from "wagmi";
+} from "@/components/shadcn/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/shadcn/popover";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/select";
 
 function ConnectWalletButton() {
   const { connectors, connect } = useConnect();

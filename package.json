@@ -7,6 +7,7 @@
     "uikit:build": "pnpm --filter '@morpho-blue-offchain-public/uikit' build",
     "uikit:example": "pnpm uikit:build && pnpm --filter '@morpho-blue-offchain-public/uikit' '/^(dev|example)$/'",
     "fallback-app:dev": "pnpm uikit:build && pnpm --parallel --filter '@morpho-blue-offchain-public/fallback-app'... dev",
+    "lightweight-app:dev": "pnpm uikit:build && pnpm --parallel --filter '@morpho-blue-offchain-public/lightweight-app'... dev",
     "lint": "pnpm --filter '@morpho-blue-offchain-public/*' lint",
     "prepare": "husky"
   },
