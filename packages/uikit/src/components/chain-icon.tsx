@@ -32,35 +32,35 @@ import SonicSvg from "@/assets/chains/sonic.svg?react";
 import UnichainSvg from "@/assets/chains/unichain.svg?react";
 import WorldchainSvg from "@/assets/chains/worldchain.svg?react";
 
-export function ChainIcon({ name }: { name: string }): JSX.Element {
-  switch (name) {
-    case mainnet.name:
+export function ChainIcon({ id }: { id: number | undefined }): JSX.Element {
+  switch (id) {
+    case mainnet.id:
       return <EthereumChainSvg />;
-    case base.name:
+    case base.id:
       return <BaseChainSvg />;
-    case arbitrum.name:
+    case arbitrum.id:
       return <ArbitrumSvg />;
-    case fraxtal.name:
+    case fraxtal.id:
       return <FraxtalSvg />;
-    case ink.name:
+    case ink.id:
       return <InkSvg />;
-    case optimism.name:
+    case optimism.id:
       return <OptimismSvg />;
-    case polygon.name:
+    case polygon.id:
       return <PolygonSvg />;
-    case scrollMainnet.name:
+    case scrollMainnet.id:
       return <ScrollSvg />;
-    case worldchain.name:
+    case worldchain.id:
       return <WorldchainSvg className="text-white" />;
-    case unichain.name:
+    case unichain.id:
       return <UnichainSvg className="rounded-sm" />;
-    case sonic.name:
+    case sonic.id:
       return <SonicSvg />;
-    case modeMainnet.name:
+    case modeMainnet.id:
       return <ModeSvg />;
-    case hemi.name:
+    case hemi.id:
       return <HemiSvg />;
-    case corn.name:
+    case corn.id:
       return <CornSvg />;
     default:
       return <CircleHelpIcon />;

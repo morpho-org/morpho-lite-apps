@@ -1,7 +1,7 @@
 import { blo } from "blo";
 import { PowerOff } from "lucide-react";
-import { useEffect, useState } from "react";
-import { Address } from "viem";
+import { useEffect, useMemo, useState } from "react";
+import { Address, Chain } from "viem";
 import { mainnet } from "viem/chains";
 import { useAccount, useConnect, useDisconnect, useEnsAvatar, useEnsName, useSwitchChain } from "wagmi";
 
@@ -19,6 +19,7 @@ import {
 } from "@/components/shadcn/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/shadcn/popover";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/select";
+import { getChainSlug } from "@/lib/utils";
 
 function ConnectWalletButton() {
   const { connectors, connect } = useConnect();
@@ -101,47 +102,49 @@ function WalletButton({ address }: { address: Address }) {
 }
 
 export function WalletMenu({
-  selectedChainName,
-  setSelectedChainName,
+  selectedChainSlug,
+  setSelectedChainSlug,
+  defaultChain = mainnet,
 }: {
-  selectedChainName: string;
-  setSelectedChainName: (value: string) => void;
+  selectedChainSlug: string;
+  setSelectedChainSlug: (value: string) => void;
+  defaultChain?: Chain;
 }) {
-  const { chainId: currentChainId, isConnected, address } = useAccount();
+  const { chain: chainInWallet, address, connector, isConnected } = useAccount();
   const { chains, switchChain } = useSwitchChain();
 
+  const chainInUi = useMemo(
+    () => chains.find((chain) => getChainSlug(chain) === selectedChainSlug) ?? defaultChain,
+    [chains, selectedChainSlug, defaultChain],
+  );
+
   useEffect(() => {
-    if (currentChainId === undefined) return;
-
-    const chainInUi = chains.find((chain) => chain.name === selectedChainName) ?? mainnet;
-    const chainInWallet = chains.find((chain) => chain.id === currentChainId)!;
-
-    if (chainInUi.id !== chainInWallet.id) {
-      setSelectedChainName(chainInWallet.name);
+    if (connector?.switchChain !== undefined && chainInWallet !== undefined && chainInWallet.id !== chainInUi.id) {
+      switchChain({ chainId: chainInUi.id });
     }
-  }, [currentChainId, chains, selectedChainName, setSelectedChainName]);
+  }, [connector?.switchChain, chainInUi, chainInWallet, switchChain]);
 
   return (
     <>
       <Select
-        value={selectedChainName}
+        value={selectedChainSlug}
         onValueChange={(value: string) => {
-          const target = chains.find((chain) => chain.name === value);
-          if (target && target.id !== currentChainId) {
-            switchChain({ chainId: target.id });
+          const target = chains.find((chain) => getChainSlug(chain) === value);
+          if (target && getChainSlug(target) !== selectedChainSlug) {
+            setSelectedChainSlug(getChainSlug(target));
           }
         }}
       >
         <SelectTrigger className="bg-tertiary-dark h-[40px] w-16 rounded-full">
-          <SelectValue aria-label={selectedChainName}>
-            <ChainIcon name={selectedChainName} />
+          <SelectValue aria-label={chainInWallet?.name}>
+            <ChainIcon id={chainInWallet?.id} />
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
           <SelectGroup>
             {chains.map((chain, idx) => (
-              <SelectItem key={idx} value={chain.name}>
-                <ChainIcon name={chain.name} /> {chain.name}
+              <SelectItem key={idx} value={getChainSlug(chain)}>
+                <ChainIcon id={chain.id} /> {chain.name}
               </SelectItem>
             ))}
           </SelectGroup>

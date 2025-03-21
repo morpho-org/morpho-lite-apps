@@ -1,6 +1,10 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { Address, formatUnits } from "viem";
+import { Address, Chain, formatUnits } from "viem";
+
+export function getChainSlug(chain: Pick<Chain, "name">) {
+  return chain.name.toLowerCase().replace(" ", "-");
+}
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

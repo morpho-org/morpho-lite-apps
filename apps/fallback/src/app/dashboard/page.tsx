@@ -17,7 +17,7 @@ enum SubPage {
 
 export default function Page() {
   const [selectedSubPage, setSelectedSubPage] = useState(SubPage.Earn);
-  const [selectedChainName, setSelectedChainName] = useState("Ethereum");
+  const [selectedChainSlug, setSelectedChainSlug] = useState("Ethereum");
 
   return (
     <div className="bg-gray-200 dark:bg-neutral-900">
@@ -53,7 +53,7 @@ export default function Page() {
             className="rounded-full font-light"
             onClick={() =>
               window.open(
-                `https://app.morpho.org/${selectedChainName.toLowerCase()}/${selectedSubPage}`,
+                `https://app.morpho.org/${selectedChainSlug}/${selectedSubPage}`,
                 "_blank",
                 "noopener,noreferrer",
               )
@@ -61,7 +61,7 @@ export default function Page() {
           >
             Full App <ExternalLink />
           </Button>
-          <WalletMenu selectedChainName={selectedChainName} setSelectedChainName={setSelectedChainName} />
+          <WalletMenu selectedChainSlug={selectedChainSlug} setSelectedChainSlug={setSelectedChainSlug} />
         </div>
       </Header>
       {selectedSubPage === SubPage.Earn ? <EarnSubPage /> : <BorrowSubPage />}

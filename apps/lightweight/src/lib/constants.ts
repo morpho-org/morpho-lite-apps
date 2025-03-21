@@ -94,6 +94,8 @@ export const DEPLOYMENTS: Deployments = {
   },
 };
 
+export const DEFAULT_CHAIN = polygon;
+
 export const CORE_DEPLOYMENTS = new Set<keyof Deployments>([mainnet.id, base.id]);
 
 export const BATCH1_DEPLOYMENTS = new Set<keyof Deployments>([

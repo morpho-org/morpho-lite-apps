@@ -2,7 +2,7 @@ import { cyrb64Hash } from "@morpho-blue-offchain-public/uikit/lib/cyrb64";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
-import { useParams } from "react-router";
+import { Outlet } from "react-router";
 import type { Chain, HttpTransportConfig } from "viem";
 import {
   arbitrum,
@@ -31,8 +31,6 @@ import {
   unstable_connector,
   WagmiProvider,
 } from "wagmi";
-
-import DashboardPage from "./app/dashboard/page";
 
 const httpConfig: HttpTransportConfig = {
   retryDelay: 0,
@@ -140,13 +138,10 @@ const persister = createSyncStoragePersister({
 });
 
 function App() {
-  const params = useParams();
-  console.log(params);
-
   return (
     <WagmiProvider config={wagmiConfig}>
       <PersistQueryClientProvider client={queryClient} persistOptions={{ persister, buster: "v1" }}>
-        <DashboardPage />
+        <Outlet />
       </PersistQueryClientProvider>
     </WagmiProvider>
   );

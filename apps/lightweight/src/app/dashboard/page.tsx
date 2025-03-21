@@ -1,14 +1,11 @@
 import MorphoLogoSvg from "@morpho-blue-offchain-public/uikit/assets/morpho.svg?react";
 import { Button } from "@morpho-blue-offchain-public/uikit/components/shadcn/button";
 import { WalletMenu } from "@morpho-blue-offchain-public/uikit/components/wallet-menu";
-import { ExternalLink } from "lucide-react";
-import { useState } from "react";
-
-import { BorrowSubPage } from "./borrow-subpage";
-import { EarnSubPage } from "./earn-subpage";
+import { Link, Outlet, useLocation, useNavigate, useParams } from "react-router";
 
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
+import { DEFAULT_CHAIN } from "@/lib/constants";
 
 enum SubPage {
   Earn = "earn",
@@ -16,8 +13,12 @@ enum SubPage {
 }
 
 export default function Page() {
-  const [selectedSubPage, setSelectedSubPage] = useState(SubPage.Earn);
-  const [selectedChainName, setSelectedChainName] = useState("Ethereum");
+  const navigate = useNavigate();
+  const { chain: selectedChainSlug } = useParams();
+
+  const location = useLocation();
+  const locationSegments = location.pathname.toLowerCase().split("/").slice(1);
+  const selectedSubPage = locationSegments.at(1) === SubPage.Borrow ? SubPage.Borrow : SubPage.Earn;
 
   return (
     <div className="bg-gray-200 dark:bg-neutral-900">
@@ -28,43 +29,37 @@ export default function Page() {
             Morpho
           </div>
           <div className="flex items-center gap-2 rounded-full bg-transparent p-1">
-            <Button
-              variant={selectedSubPage === SubPage.Earn ? "tertiary" : "secondaryTab"}
-              size="lg"
-              className="rounded-full font-light"
-              onClick={() => setSelectedSubPage(SubPage.Earn)}
-            >
-              Earn
-            </Button>
-            <Button
-              variant={selectedSubPage === SubPage.Borrow ? "tertiary" : "secondaryTab"}
-              size="lg"
-              className="rounded-full font-light"
-              onClick={() => setSelectedSubPage(SubPage.Borrow)}
-            >
-              Borrow
-            </Button>
+            <Link to={SubPage.Earn} relative="path">
+              <Button
+                variant={selectedSubPage === SubPage.Earn ? "tertiary" : "secondaryTab"}
+                size="lg"
+                className="rounded-full font-light"
+              >
+                Earn
+              </Button>
+            </Link>
+            <Link to={SubPage.Borrow} relative="path">
+              <Button
+                variant={selectedSubPage === SubPage.Borrow ? "tertiary" : "secondaryTab"}
+                size="lg"
+                className="rounded-full font-light"
+              >
+                Borrow
+              </Button>
+            </Link>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            variant="tertiary"
-            size="lg"
-            className="rounded-full font-light"
-            onClick={() =>
-              window.open(
-                `https://app.morpho.org/${selectedChainName.toLowerCase()}/${selectedSubPage}`,
-                "_blank",
-                "noopener,noreferrer",
-              )
+          <WalletMenu
+            selectedChainSlug={selectedChainSlug!}
+            setSelectedChainSlug={(value) =>
+              navigate(`../${value}/${selectedSubPage}`, { replace: true, relative: "path" })
             }
-          >
-            Full App <ExternalLink />
-          </Button>
-          <WalletMenu selectedChainName={selectedChainName} setSelectedChainName={setSelectedChainName} />
+            defaultChain={DEFAULT_CHAIN}
+          />
         </div>
       </Header>
-      {selectedSubPage === SubPage.Earn ? <EarnSubPage /> : <BorrowSubPage />}
+      <Outlet />
       <Footer />
     </div>
   );
