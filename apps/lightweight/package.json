@@ -9,7 +9,10 @@
     "lint": "eslint . --fix",
     "format": "prettier --write --ignore-unknown .",
     "format:check": "prettier --check --ignore-unknown .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "tada:doctor": "gql-tada doctor",
+    "tada:gen": "gql-tada generate-output",
+    "tada:cache": "gql-tada turbo"
   },
   "dependencies": {
     "@morpho-blue-offchain-public/uikit": "workspace:*",
@@ -19,6 +22,7 @@
     "@tanstack/react-query-persist-client": "^5.66.0",
     "blo": "^1.2.0",
     "connectkit": "^1.8.2",
+    "gql.tada": "^1.8.10",
     "humanize-duration": "^3.32.1",
     "lucide-react": "^0.475.0",
     "ohash": "^1.1.4",
@@ -28,6 +32,7 @@
     "recharts": "^2.15.1",
     "sonner": "^2.0.0",
     "tailwindcss-animate": "^1.0.7",
+    "urql": "^4.2.2",
     "viem": "~2.23.5",
     "wagmi": "^2.14.11"
   },

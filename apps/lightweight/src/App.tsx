@@ -4,7 +4,8 @@ import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { ConnectKitProvider, getDefaultConfig } from "connectkit";
 import { Outlet } from "react-router";
-import type { Chain, HttpTransportConfig } from "viem";
+import { Client as UrqlClient, Provider as UrqlProvider, fetchExchange } from "urql";
+import type { HttpTransportConfig } from "viem";
 import {
   arbitrum,
   base,
@@ -18,9 +19,9 @@ import {
   polygon,
   scroll as scrollMainnet,
   sonic,
+  unichain,
   worldchain,
 } from "viem/chains";
-import { unichain } from "viem/op-stack";
 import { createConfig, deserialize, fallback, http, serialize, type Transport, WagmiProvider } from "wagmi";
 
 const httpConfig: HttpTransportConfig = {
@@ -45,7 +46,7 @@ const chains = [
   optimism,
   arbitrum,
   polygon,
-  unichain as Chain,
+  unichain,
   worldchain,
   scrollMainnet,
   fraxtal,
@@ -159,12 +160,20 @@ const persister = createSyncStoragePersister({
   deserialize,
 });
 
+const urqlClient = new UrqlClient({
+  url: "https://blue-api.morpho.org/graphql",
+  // NOTE: *Not* providing `cacheExchange` because we're only using "@urql/core". TanStack Query covers caching needs.
+  exchanges: [fetchExchange],
+});
+
 function App() {
   return (
     <WagmiProvider config={wagmiConfig}>
       <PersistQueryClientProvider client={queryClient} persistOptions={{ persister, buster: "v1" }}>
         <ConnectKitProvider theme="auto" mode="dark">
-          <Outlet />
+          <UrqlProvider value={urqlClient}>
+            <Outlet />
+          </UrqlProvider>
         </ConnectKitProvider>
       </PersistQueryClientProvider>
     </WagmiProvider>
