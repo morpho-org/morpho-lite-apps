@@ -13,10 +13,10 @@ import { TransactionButton } from "@morpho-blue-offchain-public/uikit/components
 import { formatBalance, Token } from "@morpho-blue-offchain-public/uikit/lib/utils";
 import { keepPreviousData } from "@tanstack/react-query";
 import { CircleArrowLeft } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Toaster } from "sonner";
-import { Address, erc4626Abi, extractChain, parseUnits } from "viem";
-import { useAccount, useChainId, useChains, useReadContracts } from "wagmi";
+import { Address, erc20Abi, erc4626Abi, extractChain, parseUnits } from "viem";
+import { useAccount, useChainId, useChains, useReadContract, useReadContracts } from "wagmi";
 
 enum Actions {
   Deposit = "Deposit",
@@ -29,42 +29,66 @@ export function EarnSheetContent({ vaultAddress, asset }: { vaultAddress: Addres
   const chain = extractChain({ chains, id: chainId });
   const { address: userAddress } = useAccount();
 
-  const [selectedTab, setSelectedTab] = useState(Actions.Withdraw);
+  const [selectedTab, setSelectedTab] = useState(Actions.Deposit);
   const [textInputValue, setTextInputValue] = useState("");
+
+  const { data: allowance, refetch: refetchAllowance } = useReadContract({
+    address: asset.address,
+    abi: erc20Abi,
+    functionName: "allowance",
+    args: [userAddress ?? "0x", vaultAddress],
+    query: { enabled: !!userAddress, staleTime: 5_000, gcTime: 5_000 },
+  });
 
   const { data: maxes, refetch: refetchMaxes } = useReadContracts({
     contracts: [
       { address: vaultAddress, abi: erc4626Abi, functionName: "maxWithdraw", args: [userAddress ?? "0x"] },
       { address: vaultAddress, abi: erc4626Abi, functionName: "maxRedeem", args: [userAddress ?? "0x"] },
+      { address: asset.address, abi: erc20Abi, functionName: "balanceOf", args: [userAddress ?? "0x"] },
     ],
     allowFailure: false,
     query: { enabled: !!userAddress, staleTime: 1 * 60 * 1000, placeholderData: keepPreviousData },
   });
 
-  const { inputValue, withdrawTxnConfig } = useMemo(() => {
-    const inputValue = asset.decimals !== undefined ? parseUnits(textInputValue, asset.decimals) : undefined;
-    const isReadyForConfig = userAddress !== undefined && inputValue !== undefined;
-    const isMaxed = inputValue === maxes?.[0];
+  const inputValue = asset.decimals !== undefined ? parseUnits(textInputValue, asset.decimals) : undefined;
+  const isMaxed = inputValue === maxes?.[0];
 
-    return {
-      inputValue,
-      withdrawTxnConfig: isReadyForConfig
-        ? isMaxed
-          ? ({
-              address: vaultAddress,
-              abi: erc4626Abi,
-              functionName: "redeem",
-              args: [maxes![1], userAddress, userAddress],
-            } as const)
-          : ({
-              address: vaultAddress,
-              abi: erc4626Abi,
-              functionName: "withdraw",
-              args: [inputValue, userAddress, userAddress],
-            } as const)
-        : undefined,
-    };
-  }, [vaultAddress, userAddress, asset, textInputValue, maxes]);
+  const approvalTxnConfig =
+    userAddress !== undefined && inputValue !== undefined && allowance !== undefined && allowance < inputValue
+      ? ({
+          address: asset.address,
+          abi: erc20Abi,
+          functionName: "approve",
+          args: [vaultAddress, inputValue],
+        } as const)
+      : undefined;
+
+  const depositTxnConfig =
+    userAddress !== undefined && inputValue !== undefined
+      ? ({
+          address: vaultAddress,
+          abi: erc4626Abi,
+          functionName: "deposit",
+          args: [inputValue, userAddress],
+        } as const)
+      : undefined;
+
+  const withdrawTxnConfig =
+    userAddress !== undefined && inputValue !== undefined
+      ? isMaxed
+        ? ({
+            address: vaultAddress,
+            abi: erc4626Abi,
+            functionName: "redeem",
+            args: [maxes![1], userAddress, userAddress],
+          } as const)
+        : ({
+            address: vaultAddress,
+            abi: erc4626Abi,
+            functionName: "withdraw",
+            args: [inputValue, userAddress, userAddress],
+          } as const)
+      : undefined;
 
   return (
     <SheetContent className="z-[9999] gap-3 overflow-y-scroll dark:bg-neutral-900">
@@ -103,10 +127,10 @@ export function EarnSheetContent({ vaultAddress, asset }: { vaultAddress: Addres
         }}
       >
         <TabsList className="grid w-full grid-cols-2 bg-transparent p-0">
-          {/* <TabsTrigger className="rounded-full" value={Actions.Deposit} disabled>
+          <TabsTrigger className="rounded-full" value={Actions.Deposit}>
             {Actions.Deposit}
-          </TabsTrigger> */}
-          <TabsTrigger className="col-span-2 rounded-full" value={Actions.Withdraw}>
+          </TabsTrigger>
+          <TabsTrigger className="rounded-full" value={Actions.Withdraw}>
             {Actions.Withdraw}
           </TabsTrigger>
         </TabsList>
@@ -116,11 +140,33 @@ export function EarnSheetContent({ vaultAddress, asset }: { vaultAddress: Addres
               Deposit {asset.symbol ?? ""}
               <img className="rounded-full" height={16} width={16} src={asset.imageSrc} />
             </div>
-            <TokenAmountInput decimals={asset.decimals} value={textInputValue} onChange={setTextInputValue} />
+            <TokenAmountInput
+              decimals={asset.decimals}
+              value={textInputValue}
+              maxValue={maxes?.[2]}
+              onChange={setTextInputValue}
+            />
           </div>
-          <Button className="text-md mt-3 h-12 w-full rounded-full font-light" variant="blue">
-            Deposit
-          </Button>
+          {approvalTxnConfig ? (
+            <TransactionButton
+              variables={approvalTxnConfig}
+              disabled={inputValue === 0n}
+              onTxnReceipt={() => refetchAllowance()}
+            >
+              Approve
+            </TransactionButton>
+          ) : (
+            <TransactionButton
+              variables={depositTxnConfig}
+              disabled={!inputValue}
+              onTxnReceipt={() => {
+                setTextInputValue("");
+                void refetchMaxes();
+              }}
+            >
+              Deposit
+            </TransactionButton>
+          )}
         </TabsContent>
         <TabsContent value={Actions.Withdraw}>
           <div className="bg-secondary flex flex-col gap-4 rounded-2xl p-4">
