@@ -2,6 +2,7 @@ import { cyrb64Hash } from "@morpho-blue-offchain-public/uikit/lib/cyrb64";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
+import { ConnectKitProvider, getDefaultConfig } from "connectkit";
 import { Outlet } from "react-router";
 import type { Chain, HttpTransportConfig } from "viem";
 import {
@@ -106,19 +107,26 @@ const transports: Record<(typeof chains)[number]["id"], Transport> = {
   [hemi.id]: createFallbackTransport([{ url: "https://rpc.hemi.network/rpc", batch: false }]),
 };
 
-const wagmiConfig = createConfig({
-  chains,
-  transports,
-  connectors: [injected({ shimDisconnect: true })],
-  batch: {
-    multicall: {
-      batchSize: 2048,
-      wait: 100,
+const wagmiConfig = createConfig(
+  getDefaultConfig({
+    chains,
+    transports,
+    walletConnectProjectId: import.meta.env.VITE_WALLET_KIT_PROJECT_ID!,
+    appName: "Morpho | Lightweight App",
+    appDescription: "", // TODO:
+    appUrl: "https://lightweight.morpho.org",
+    appIcon: "", // TODO:
+    batch: {
+      multicall: {
+        batchSize: 2048,
+        wait: 100,
+      },
     },
-  },
-  cacheTime: 250,
-  pollingInterval: 4000,
-});
+    cacheTime: 250,
+    pollingInterval: 4000,
+    ssr: import.meta.env.SSR,
+  }),
+);
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -141,7 +149,9 @@ function App() {
   return (
     <WagmiProvider config={wagmiConfig}>
       <PersistQueryClientProvider client={queryClient} persistOptions={{ persister, buster: "v1" }}>
-        <Outlet />
+        <ConnectKitProvider theme="auto" mode="dark">
+          <Outlet />
+        </ConnectKitProvider>
       </PersistQueryClientProvider>
     </WagmiProvider>
   );

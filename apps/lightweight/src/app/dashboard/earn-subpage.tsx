@@ -63,6 +63,7 @@ export function EarnSubPage() {
     isFetching: isFetchingCreateMetaMorphoEvents,
     fractionFetched: ffCreateMetaMorphoEvents,
   } = useContractEvents({
+    chainId,
     abi: metaMorphoFactoryAbi,
     address: [factoryV1_1.address].concat(factory ? [factory.address] : []),
     fromBlock: factory?.fromBlock ?? factoryV1_1.fromBlock,
@@ -82,6 +83,7 @@ export function EarnSubPage() {
     isFetching: isFetchingDepositEvents,
     fractionFetched: ffDepositEvents,
   } = useContractEvents({
+    chainId,
     abi: erc4626Abi,
     fromBlock: factory?.fromBlock ?? factoryV1_1.fromBlock,
     toBlock: blockNumber,

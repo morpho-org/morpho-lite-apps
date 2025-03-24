@@ -66,6 +66,7 @@ export function BorrowSubPage() {
     isFetching: isFetchingSupplyCollateralEvents,
     fractionFetched: ffSupplyCollateralEvents,
   } = useContractEvents({
+    chainId,
     abi: morphoAbi,
     address: morpho.address,
     fromBlock: morpho.fromBlock,

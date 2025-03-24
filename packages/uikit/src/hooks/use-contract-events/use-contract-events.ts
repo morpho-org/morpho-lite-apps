@@ -108,7 +108,7 @@ export default function useContractEvents<
   toBlock extends BlockNumber | BlockTag = "latest",
 >(
   args: Omit<GetContractEventsParameters<abi, eventName, strict, fromBlock, toBlock>, "blockHash"> & {
-    chainId: number;
+    chainId?: number;
     query?: { enabled?: boolean; debug?: boolean };
     returnInOrder?: boolean;
     reverseChronologicalOrder?: boolean;

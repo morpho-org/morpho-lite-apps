@@ -1,8 +1,7 @@
 import { blo } from "blo";
 import { PowerOff } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
-import { Address, Chain } from "viem";
-import { mainnet } from "viem/chains";
+import { ReactNode, useEffect, useMemo, useState } from "react";
+import { type Address } from "viem";
 import { useAccount, useConnect, useDisconnect, useEnsAvatar, useEnsName, useSwitchChain } from "wagmi";
 
 import { ChainIcon } from "@/components/chain-icon";
@@ -104,25 +103,54 @@ function WalletButton({ address }: { address: Address }) {
 export function WalletMenu({
   selectedChainSlug,
   setSelectedChainSlug,
-  defaultChain = mainnet,
+  connectWalletButton = <ConnectWalletButton />,
 }: {
   selectedChainSlug: string;
   setSelectedChainSlug: (value: string) => void;
-  defaultChain?: Chain;
+  connectWalletButton?: ReactNode;
 }) {
-  const { chain: chainInWallet, address, connector, isConnected } = useAccount();
+  const { chain: chainInWallet, address, status } = useAccount();
   const { chains, switchChain } = useSwitchChain();
 
+  // The chain currently selected and shown in the UI, as specified by `[selectedChainSlug, setSelectedChainSlug]`,
+  // which may come from a simple `useState` or URL parsing + navigation.
   const chainInUi = useMemo(
-    () => chains.find((chain) => getChainSlug(chain) === selectedChainSlug) ?? defaultChain,
-    [chains, selectedChainSlug, defaultChain],
+    () => chains.find((chain) => getChainSlug(chain) === selectedChainSlug),
+    [chains, selectedChainSlug],
   );
 
+  // The chain we're about to switch to. On mount, we assume wallet is out-of-sync, so `chainInUi` is pending.
+  const [pendingChain, setPendingChain] = useState(chainInUi);
+
+  // Use `switchChain` to ensure `pendingChain` is applied to wallet
   useEffect(() => {
-    if (connector?.switchChain !== undefined && chainInWallet !== undefined && chainInWallet.id !== chainInUi.id) {
-      switchChain({ chainId: chainInUi.id });
+    switch (status) {
+      case "connected":
+        // Wallet is connected. Ask it to switch to the `pendingChain` if it's out-of-sync.
+        if (pendingChain !== undefined && pendingChain.id !== chainInWallet?.id) {
+          switchChain({ chainId: pendingChain.id }, { onSuccess: () => setPendingChain(undefined) });
+        }
+        break;
     }
-  }, [connector?.switchChain, chainInUi, chainInWallet, switchChain]);
+  }, [status, pendingChain, chainInWallet?.id, switchChain]);
+
+  // Use `setSelectedChainSlug` to keep UI in sync with wallet
+  useEffect(() => {
+    switch (status) {
+      case "connected":
+        // Wallet is connected. As long as there's no `pendingChain`, we keep UI in sync with it.
+        if (pendingChain === undefined && chainInWallet !== undefined && chainInWallet.id !== chainInUi?.id) {
+          setSelectedChainSlug(getChainSlug(chainInWallet));
+        }
+        break;
+      case "disconnected":
+        // Wallet is disconnected. It can't switch to the `pendingChain`, so we bypass it.
+        if (pendingChain !== undefined && pendingChain.id !== chainInUi?.id) {
+          setSelectedChainSlug(getChainSlug(pendingChain));
+        }
+        break;
+    }
+  }, [status, pendingChain, chainInWallet, chainInUi?.id, setSelectedChainSlug]);
 
   return (
     <>
@@ -131,13 +159,13 @@ export function WalletMenu({
         onValueChange={(value: string) => {
           const target = chains.find((chain) => getChainSlug(chain) === value);
           if (target && getChainSlug(target) !== selectedChainSlug) {
-            setSelectedChainSlug(getChainSlug(target));
+            setPendingChain(target);
           }
         }}
       >
         <SelectTrigger className="bg-tertiary-dark h-[40px] w-16 rounded-full">
-          <SelectValue aria-label={chainInWallet?.name}>
-            <ChainIcon id={chainInWallet?.id} />
+          <SelectValue aria-label={chainInUi?.name}>
+            <ChainIcon id={chainInUi?.id} />
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
@@ -150,7 +178,7 @@ export function WalletMenu({
           </SelectGroup>
         </SelectContent>
       </Select>
-      {isConnected && address ? <WalletButton address={address} /> : <ConnectWalletButton />}
+      {status === "connected" && address ? <WalletButton address={address} /> : connectWalletButton}
     </>
   );
 }
