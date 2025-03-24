@@ -26,6 +26,7 @@ import { getContractDeploymentInfo } from "@/lib/constants";
 enum Actions {
   SupplyCollateral = "Supply",
   WithdrawCollateral = "Withdraw",
+  Borrow = "Borrow",
   Repay = "Repay",
 }
 
@@ -112,7 +113,9 @@ export function BorrowSheetContent({
   );
 
   const { token, inputValue } = useMemo(() => {
-    const token = tokens.get(marketParams[selectedTab === Actions.Repay ? "loanToken" : "collateralToken"]);
+    const token = tokens.get(
+      marketParams[[Actions.Borrow, Actions.Repay].includes(selectedTab) ? "loanToken" : "collateralToken"],
+    );
     return {
       token,
       inputValue: token?.decimals !== undefined ? parseUnits(textInputValue, token.decimals) : undefined,
@@ -123,7 +126,7 @@ export function BorrowSheetContent({
     token !== undefined &&
     inputValue !== undefined &&
     allowances !== undefined &&
-    allowances[selectedTab === Actions.Repay ? 1 : 0] < inputValue
+    allowances[[Actions.Borrow, Actions.Repay].includes(selectedTab) ? 1 : 0] < inputValue
       ? ({
           address: token.address,
           abi: erc20Abi,
@@ -152,6 +155,16 @@ export function BorrowSheetContent({
         } as const)
       : undefined;
 
+  const borrowTxnConfig =
+    inputValue !== undefined && userAddress !== undefined
+      ? ({
+          address: morpho,
+          abi: morphoAbi,
+          functionName: "borrow",
+          args: [{ ...marketParams }, inputValue, 0n, userAddress, userAddress],
+        } as const)
+      : undefined;
+
   const repayTxnConfig =
     inputValue !== undefined && userAddress !== undefined
       ? ({
@@ -174,6 +187,7 @@ export function BorrowSheetContent({
 
   let withdrawCollateralMax = accrualPosition?.withdrawableCollateral;
   if (withdrawCollateralMax !== undefined) withdrawCollateralMax = (withdrawCollateralMax * 999n) / 1000n; // safety
+  const borrowMax = accrualPosition?.maxBorrowableAssets;
   const repayMax = accrualPosition?.borrowAssets;
 
   return (
@@ -229,12 +243,15 @@ export function BorrowSheetContent({
           setTextInputValue("");
         }}
       >
-        <TabsList className="grid w-full grid-cols-3 bg-transparent p-0">
+        <TabsList className="grid w-full grid-cols-4 bg-transparent p-0">
           <TabsTrigger className="rounded-full" value={Actions.SupplyCollateral}>
             {Actions.SupplyCollateral}
           </TabsTrigger>
           <TabsTrigger className="rounded-full" value={Actions.WithdrawCollateral}>
             {Actions.WithdrawCollateral}
+          </TabsTrigger>
+          <TabsTrigger className="rounded-full" value={Actions.Borrow}>
+            {Actions.Borrow}
           </TabsTrigger>
           <TabsTrigger className="rounded-full" value={Actions.Repay}>
             {Actions.Repay}
@@ -243,8 +260,8 @@ export function BorrowSheetContent({
         <TabsContent value={Actions.SupplyCollateral}>
           <div className="bg-secondary flex flex-col gap-4 rounded-2xl p-4">
             <div className="text-primary/70 flex items-center justify-between text-xs font-light">
-              Supply Collateral {collateralSymbol ?? ""}
-              <img className="rounded-full" height={16} width={16} src={collateralImgSrc} />
+              Supply Collateral {token?.symbol ?? ""}
+              <img className="rounded-full" height={16} width={16} src={token?.imageSrc} />
             </div>
             <TokenAmountInput decimals={token?.decimals} value={textInputValue} onChange={setTextInputValue} />
           </div>
@@ -272,8 +289,8 @@ export function BorrowSheetContent({
         <TabsContent value={Actions.WithdrawCollateral}>
           <div className="bg-secondary flex flex-col gap-4 rounded-2xl p-4">
             <div className="text-primary/70 flex items-center justify-between text-xs font-light">
-              Withdraw Collateral {collateralSymbol ?? ""}
-              <img className="rounded-full" height={16} width={16} src={collateralImgSrc} />
+              Withdraw Collateral {token?.symbol ?? ""}
+              <img className="rounded-full" height={16} width={16} src={token?.imageSrc} />
             </div>
             <TokenAmountInput
               decimals={token?.decimals}
@@ -293,11 +310,35 @@ export function BorrowSheetContent({
             Withdraw Collateral
           </TransactionButton>
         </TabsContent>
+        <TabsContent value={Actions.Borrow}>
+          <div className="bg-secondary flex flex-col gap-4 rounded-2xl p-4">
+            <div className="text-primary/70 flex items-center justify-between text-xs font-light">
+              Borrow {token?.symbol ?? ""}
+              <img className="rounded-full" height={16} width={16} src={token?.imageSrc} />
+            </div>
+            <TokenAmountInput
+              decimals={token?.decimals}
+              value={textInputValue}
+              maxValue={borrowMax}
+              onChange={setTextInputValue}
+            />
+          </div>
+          <TransactionButton
+            variables={borrowTxnConfig}
+            disabled={!inputValue}
+            onTxnReceipt={() => {
+              setTextInputValue("");
+              void refetchPosition();
+            }}
+          >
+            Borrow
+          </TransactionButton>
+        </TabsContent>
         <TabsContent value={Actions.Repay}>
           <div className="bg-secondary flex flex-col gap-4 rounded-2xl p-4">
             <div className="text-primary/70 flex items-center justify-between text-xs font-light">
-              Repay Loan {loanSymbol ?? ""}
-              <img className="rounded-full" height={16} width={16} src={loanImgSrc} />
+              Repay {token?.symbol ?? ""}
+              <img className="rounded-full" height={16} width={16} src={token?.imageSrc} />
             </div>
             <TokenAmountInput
               decimals={token?.decimals}
