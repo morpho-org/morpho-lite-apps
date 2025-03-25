@@ -1,5 +1,5 @@
-import { type QueryKey, useQueries, type UseQueryOptions, type UseQueryResult } from "@tanstack/react-query";
-import { useCallback, useMemo } from "react";
+import { type QueryKey, useQueries, type UseQueryOptions } from "@tanstack/react-query";
+import { useMemo } from "react";
 import { type BlockNumber, type BlockTag } from "viem";
 import { type UsePublicClientReturnType } from "wagmi";
 
@@ -34,24 +34,7 @@ export function useBlockNumbers<T extends Tuple<BlockNumber | BlockTag>, U = Map
     [blockNumbersOrTags],
   );
 
-  const combine = useCallback(
-    (results: UseQueryResult<BlockNumber, Error>[]) => {
-      results = [...results];
-
-      const blockNumbers: BlockNumber[] = [];
-
-      for (const blockNumberOrTag of blockNumbersOrTags) {
-        const blockNumber = typeof blockNumberOrTag === "bigint" ? blockNumberOrTag : results.splice(0, 1)[0].data;
-        if (blockNumber === undefined) return { data: undefined };
-        blockNumbers.push(blockNumber);
-      }
-
-      return { data: blockNumbers as U };
-    },
-    [blockNumbersOrTags],
-  );
-
-  return useQueries({
+  const results = useQueries({
     queries: blockTags.map((blockTag) => ({
       ...({
         // The following options can be overridden by `query` args
@@ -72,6 +55,19 @@ export function useBlockNumbers<T extends Tuple<BlockNumber | BlockTag>, U = Map
       } as const),
       notifyOnChangeProps: ["data" as const],
     })),
-    combine,
   });
+
+  return useMemo(() => {
+    const r = [...results];
+
+    const blockNumbers: BlockNumber[] = [];
+
+    for (const blockNumberOrTag of blockNumbersOrTags) {
+      const blockNumber = typeof blockNumberOrTag === "bigint" ? blockNumberOrTag : r.splice(0, 1)[0].data;
+      if (blockNumber === undefined) return { data: undefined };
+      blockNumbers.push(blockNumber);
+    }
+
+    return { data: blockNumbers as U };
+  }, [blockNumbersOrTags, results]);
 }
