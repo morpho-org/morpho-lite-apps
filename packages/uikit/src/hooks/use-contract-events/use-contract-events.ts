@@ -20,7 +20,6 @@ import {
 } from "viem";
 import { deepEqual, usePublicClient } from "wagmi";
 
-import { useChainStateR } from "@/hooks/use-chain-state";
 import { getRemainingSegments } from "@/hooks/use-contract-events/helpers";
 import { getQueryFn } from "@/hooks/use-contract-events/query";
 import { getStrategyBasedOn, RequestStats } from "@/hooks/use-contract-events/strategy";
@@ -28,6 +27,7 @@ import { useBlockNumbers } from "@/hooks/use-contract-events/use-block-numbers";
 import { usePing } from "@/hooks/use-contract-events/use-ping";
 import { useEIP1193Transports } from "@/hooks/use-contract-events/use-transports";
 import { useDeepMemo } from "@/hooks/use-deep-memo";
+import { useKeyedState } from "@/hooks/use-keyed-state";
 import { compareBigInts, max, min } from "@/lib/utils";
 
 type FromBlockNumber = BlockNumber;
@@ -122,17 +122,17 @@ export default function useContractEvents<
 
   const [isBrowserReady, setIsBrowserReady] = useState(false);
   // Whether we've read from cache yet. `seeds` and `knownRanges` should not be used until this is done.
-  const [didReadCache, setDidReadCache] = useChainStateR(false, chainId);
+  const [didReadCache, setDidReadCache] = useKeyedState(false, chainId);
   // The keys of `seeds` are our desired `fromBlock`s, and values are the *maximum* `toBlock` to try to fetch.
   // This `toBlock` SHOULD NOT be based on a given RPC's capabilities. Rather, it is intended to (a) fill gaps
   // in `knownRanges` without overlapping existing data and (b) prevent fetching past the global `args.fromBlock`.
   // TanStack query keys are derived from these `fromBlock`s.
-  const [seeds, setSeeds] = useChainStateR(new Map<FromBlockNumber, ToBlockNumber>(), chainId);
+  const [seeds, setSeeds] = useKeyedState(new Map<FromBlockNumber, ToBlockNumber>(), chainId);
   // `knownRanges` are updated based on the results of TanStack queries.
-  const [knownRanges, setKnownRanges] = useChainStateR(new Map<FromBlockNumber, ToBlockNumber>(), chainId);
+  const [knownRanges, setKnownRanges] = useKeyedState(new Map<FromBlockNumber, ToBlockNumber>(), chainId);
   // `requestStats` are tracked so that we can update our `requestStrategy` to fetch events as quickly as possible.
   // Array order has no semantic meaning.
-  const [requestStats, setRequestStats] = useChainStateR<RequestStats>([], chainId);
+  const [requestStats, setRequestStats] = useKeyedState<RequestStats>([], chainId);
 
   // MARK: Detect when the browser is ready (for localStorage)
 
