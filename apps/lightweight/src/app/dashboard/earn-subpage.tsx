@@ -1,18 +1,21 @@
 import { metaMorphoAbi } from "@morpho-blue-offchain-public/uikit/assets/abis/meta-morpho";
 import { metaMorphoFactoryAbi } from "@morpho-blue-offchain-public/uikit/assets/abis/meta-morpho-factory";
 import { Avatar, AvatarFallback, AvatarImage } from "@morpho-blue-offchain-public/uikit/components/shadcn/avatar";
-import { Card, CardContent } from "@morpho-blue-offchain-public/uikit/components/shadcn/card";
-import { Progress } from "@morpho-blue-offchain-public/uikit/components/shadcn/progress";
 import { Sheet, SheetTrigger } from "@morpho-blue-offchain-public/uikit/components/shadcn/sheet";
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from "@morpho-blue-offchain-public/uikit/components/shadcn/table";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@morpho-blue-offchain-public/uikit/components/shadcn/tooltip";
 import useContractEvents from "@morpho-blue-offchain-public/uikit/hooks/use-contract-events/use-contract-events";
 import { formatBalanceWithSymbol, getTokenSymbolURI, Token } from "@morpho-blue-offchain-public/uikit/lib/utils";
 import { keepPreviousData } from "@tanstack/react-query";
@@ -20,24 +23,138 @@ import { blo } from "blo";
 // @ts-expect-error: this package lacks types
 import humanizeDuration from "humanize-duration";
 import { useMemo } from "react";
-import { Address, erc20Abi, erc4626Abi } from "viem";
+import { Address, erc20Abi, isAddressEqual } from "viem";
 import { useAccount, useBlockNumber, useReadContracts } from "wagmi";
 
 import { CtaCard } from "@/components/cta-card";
 import { EarnSheetContent } from "@/components/earn-sheet-content";
-import { getContractDeploymentInfo } from "@/lib/constants";
+import { useTopNCurators } from "@/hooks/use-top-n-curators";
+import { CORE_DEPLOYMENTS, getContractDeploymentInfo } from "@/lib/constants";
 
-function TokenTableCell({ address, symbol, imageSrc }: Token) {
+type Vault = {
+  address: `0x${string}`;
+  imageSrc: string;
+  info:
+    | {
+        owner: Address;
+        timelock: bigint;
+        name: string;
+        totalAssets: bigint;
+        maxWithdraw: bigint;
+      }
+    | undefined;
+  asset: Token;
+  curator?: {
+    address: Address;
+    name: string;
+    url: string | null;
+    imageSrc: string | null;
+  };
+};
+
+function VaultTableCell({ address, symbol, imageSrc }: Token) {
   return (
-    <div className="flex items-center gap-2">
-      <Avatar className="h-4 w-4 rounded-sm">
-        <AvatarImage src={imageSrc} alt="Avatar" />
-        <AvatarFallback delayMs={500}>
-          <img src={blo(address)} />
-        </AvatarFallback>
-      </Avatar>
-      {symbol ?? "－"}
-      <span className="text-primary/30 font-mono">{`${address.slice(0, 6)}...${address.slice(-4)}`}</span>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div className="hover:bg-tertiary/15 flex w-min items-center gap-2 rounded-sm p-2">
+            <Avatar className="h-4 w-4 rounded-sm">
+              <AvatarImage src={imageSrc} alt="Avatar" />
+              <AvatarFallback delayMs={500}>
+                <img src={blo(address)} />
+              </AvatarFallback>
+            </Avatar>
+            {symbol ?? "－"}
+          </div>
+        </TooltipTrigger>
+        <TooltipContent className="text-primary rounded-3xl p-4 font-mono shadow-2xl">{`${address.slice(0, 6)}...${address.slice(-4)}`}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
+function CuratorTableCell({ address, symbol, imageSrc }: Token) {
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div className="hover:bg-tertiary/15 flex w-min items-center gap-2 rounded-sm p-2">
+            <Avatar className="h-4 w-4 rounded-sm">
+              <AvatarImage src={imageSrc} alt="Avatar" />
+              <AvatarFallback delayMs={500}>
+                <img src={blo(address)} />
+              </AvatarFallback>
+            </Avatar>
+            {symbol ?? "－"}
+          </div>
+        </TooltipTrigger>
+        <TooltipContent className="text-primary rounded-3xl p-4 font-mono shadow-2xl">{`${address.slice(0, 6)}...${address.slice(-4)}`}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
+function VaultTable({ vaults, depositsMode }: { vaults: Vault[]; depositsMode: "totalAssets" | "maxWithdraw" }) {
+  return (
+    <div className="text-primary w-full max-w-5xl px-8 pt-8">
+      <Table className="border-separate border-spacing-y-3">
+        <TableHeader className="bg-secondary">
+          <TableRow>
+            <TableHead className="text-primary rounded-l-lg pl-4 text-xs font-light">Vault</TableHead>
+            <TableHead className="text-primary text-nowrap text-xs font-light">Deposits</TableHead>
+            <TableHead className="text-primary text-xs font-light">Curator</TableHead>
+            <TableHead className="text-primary rounded-r-lg text-xs font-light">Timelock</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {vaults.map((vault) => {
+            const ownerText = vault.info?.owner
+              ? `${vault.info.owner.slice(0, 6)}...${vault.info.owner.slice(-4)}`
+              : "－";
+            return (
+              <Sheet key={vault.address}>
+                <SheetTrigger asChild>
+                  <TableRow className="bg-secondary hover:bg-accent">
+                    <TableCell className="rounded-l-lg p-3">
+                      <VaultTableCell
+                        address={vault.address}
+                        symbol={vault.info?.name}
+                        imageSrc={vault.asset.imageSrc}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      {vault.info?.[depositsMode] && vault.asset.decimals
+                        ? formatBalanceWithSymbol(
+                            vault.info[depositsMode],
+                            vault.asset.decimals,
+                            vault.asset.symbol,
+                            5,
+                            true,
+                          )
+                        : "－"}
+                    </TableCell>
+                    <TableCell>
+                      {vault.curator ? (
+                        <CuratorTableCell
+                          address={vault.curator.address}
+                          symbol={vault.curator.name}
+                          imageSrc={vault.curator.imageSrc ?? ""}
+                        />
+                      ) : (
+                        ownerText
+                      )}
+                    </TableCell>
+                    <TableCell className="rounded-r-lg">
+                      {vault.info ? humanizeDuration(Number(vault.info.timelock) * 1000) : "－"}
+                    </TableCell>
+                  </TableRow>
+                </SheetTrigger>
+                <EarnSheetContent vaultAddress={vault.address} asset={vault.asset} />
+              </Sheet>
+            );
+          })}
+        </TableBody>
+      </Table>
     </div>
   );
 }
@@ -61,7 +178,6 @@ export function EarnSubPage() {
   const {
     logs: { all: createMetaMorphoEvents },
     isFetching: isFetchingCreateMetaMorphoEvents,
-    fractionFetched: ffCreateMetaMorphoEvents,
   } = useContractEvents({
     chainId,
     abi: metaMorphoFactoryAbi,
@@ -77,41 +193,60 @@ export function EarnSubPage() {
     },
   });
 
-  // MARK: Fetch `ERC4626.Deposit` so that we know where user has deposited. Includes non-MetaMorpho ERC4626 deposits
-  const {
-    logs: { all: depositEvents },
-    isFetching: isFetchingDepositEvents,
-    fractionFetched: ffDepositEvents,
-  } = useContractEvents({
-    chainId,
-    abi: erc4626Abi,
-    fromBlock: factory?.fromBlock ?? factoryV1_1.fromBlock,
-    toBlock: blockNumber,
-    reverseChronologicalOrder: true,
-    eventName: "Deposit", // ERC-4626
-    args: { receiver: userAddress },
-    strict: true,
+  // MARK: Fetch metadata for every MetaMorpho vault
+  const { data: vaultInfos } = useReadContracts({
+    contracts: createMetaMorphoEvents
+      .map((ev) => [
+        { address: ev.args.metaMorpho, abi: metaMorphoAbi, functionName: "owner" } as const,
+        { address: ev.args.metaMorpho, abi: metaMorphoAbi, functionName: "timelock" } as const,
+        { address: ev.args.metaMorpho, abi: metaMorphoAbi, functionName: "name" } as const,
+        { address: ev.args.metaMorpho, abi: metaMorphoAbi, functionName: "totalAssets" } as const,
+        {
+          address: ev.args.metaMorpho,
+          abi: metaMorphoAbi,
+          functionName: "maxWithdraw",
+          args: [userAddress ?? "0x"],
+        } as const,
+      ])
+      .flat(),
+    allowFailure: false,
     query: {
-      enabled:
-        chainId !== undefined &&
-        blockNumber !== undefined &&
-        userAddress !== undefined &&
-        // Wait to fetch so we don't get rate-limited.
-        !isFetchingCreateMetaMorphoEvents,
+      refetchOnMount: "always",
+      placeholderData: keepPreviousData,
+      enabled: !isFetchingCreateMetaMorphoEvents && userAddress !== undefined,
     },
   });
 
-  // MARK: Figure out what vaults the user is actually in, and the set of assets involved
-  const [filteredCreateMetaMorphoArgs, assets] = useMemo(() => {
-    const args = createMetaMorphoEvents
-      .filter((ev) => depositEvents.some((deposit) => deposit.address === ev.args.metaMorpho.toLowerCase()))
-      .map((ev) => ev.args);
-    const unique = Array.from(new Set(args.map((x) => x.asset)));
-    return [args, unique];
-  }, [createMetaMorphoEvents, depositEvents]);
+  // MARK: Only include vaults owned by the top 5 curators from core deployments, or in which the user has deposits.
+  const top5Curators = useTopNCurators({ n: 5, verifiedOnly: true, chainIds: [...CORE_DEPLOYMENTS] });
+  const [filteredCreateMetaMorphoArgs, filteredVaultInfos, vaultCurators, assets] = useMemo(() => {
+    const args: (typeof createMetaMorphoEvents)[number]["args"][] = [];
+    const infos: NonNullable<typeof vaultInfos> = [];
+    const curators: (NonNullable<typeof top5Curators>[number] | undefined)[] = [];
+
+    if (vaultInfos !== undefined) {
+      for (let i = 0; i < createMetaMorphoEvents.length; i += 1) {
+        const owner = vaultInfos[i * 5 + 0] as Address;
+        const maxWithdraw = vaultInfos[i * 5 + 4] as bigint;
+
+        const curator = (top5Curators ?? []).find((curator) =>
+          (curator.addresses ?? []).find((v) => isAddressEqual(v.address as Address, owner)),
+        );
+
+        if (curator !== undefined || maxWithdraw > 0n) {
+          args.push(createMetaMorphoEvents[i].args);
+          infos.push(...vaultInfos.slice(i * 5, (i + 1) * 5));
+          curators.push(curator);
+        }
+      }
+    }
+
+    const assets = Array.from(new Set(args.map((x) => x.asset)));
+    return [args, infos, curators, assets];
+  }, [createMetaMorphoEvents, vaultInfos, top5Curators]);
 
   // MARK: Fetch metadata for every ERC20 asset
-  const { data: assetsInfo, isFetching: isFetchingAssetsInfo } = useReadContracts({
+  const { data: assetsInfo } = useReadContracts({
     contracts: assets
       .map((asset) => [
         { address: asset, abi: erc20Abi, functionName: "symbol" } as const,
@@ -122,28 +257,6 @@ export function EarnSubPage() {
     query: { staleTime: Infinity, gcTime: Infinity },
   });
 
-  // MARK: Fetch metadata for every MetaMorpho vault
-  const { data: vaultsInfo, isFetching: isFetchingVaultsInfo } = useReadContracts({
-    contracts: filteredCreateMetaMorphoArgs
-      .map((args) => [
-        { address: args.metaMorpho, abi: metaMorphoAbi, functionName: "owner" } as const,
-        { address: args.metaMorpho, abi: metaMorphoAbi, functionName: "curator" } as const,
-        { address: args.metaMorpho, abi: metaMorphoAbi, functionName: "guardian" } as const,
-        { address: args.metaMorpho, abi: metaMorphoAbi, functionName: "timelock" } as const,
-        { address: args.metaMorpho, abi: metaMorphoAbi, functionName: "name" } as const,
-        { address: args.metaMorpho, abi: metaMorphoAbi, functionName: "totalAssets" } as const,
-        {
-          address: args.metaMorpho,
-          abi: metaMorphoAbi,
-          functionName: "maxWithdraw",
-          args: [userAddress ?? "0x"],
-        } as const,
-      ])
-      .flat(),
-    allowFailure: false,
-    query: { staleTime: 10 * 60 * 1000, gcTime: Infinity, placeholderData: keepPreviousData },
-  });
-
   const vaults = useMemo(() => {
     const arr = filteredCreateMetaMorphoArgs.map((args, idx) => {
       const assetIdx = assets.indexOf(args.asset);
@@ -152,15 +265,13 @@ export function EarnSubPage() {
       return {
         address: args.metaMorpho,
         imageSrc: blo(args.metaMorpho),
-        info: vaultsInfo
+        info: filteredVaultInfos
           ? {
-              owner: vaultsInfo[idx * 7 + 0] as Address,
-              curator: vaultsInfo[idx * 7 + 1] as Address,
-              guardian: vaultsInfo[idx * 7 + 2] as Address,
-              timelock: vaultsInfo[idx * 7 + 3] as bigint,
-              name: vaultsInfo[idx * 7 + 4] as string,
-              totalAssets: vaultsInfo[idx * 7 + 5] as bigint,
-              maxWithdraw: vaultsInfo[idx * 7 + 6] as bigint,
+              owner: filteredVaultInfos[idx * 5 + 0] as Address,
+              timelock: filteredVaultInfos[idx * 5 + 1] as bigint,
+              name: filteredVaultInfos[idx * 5 + 2] as string,
+              totalAssets: filteredVaultInfos[idx * 5 + 3] as bigint,
+              maxWithdraw: filteredVaultInfos[idx * 5 + 4] as bigint,
             }
           : undefined,
         asset: {
@@ -169,6 +280,14 @@ export function EarnSubPage() {
           symbol,
           decimals,
         } as Token,
+        curator: vaultCurators[idx]
+          ? {
+              address: filteredVaultInfos[idx * 5 + 0] as Address,
+              name: vaultCurators[idx].name,
+              url: vaultCurators[idx].url,
+              imageSrc: vaultCurators[idx].image,
+            }
+          : undefined,
       };
     });
     // Sort vaults so that ones with an open balance appear first
@@ -179,40 +298,7 @@ export function EarnSubPage() {
       return 0;
     });
     return arr;
-  }, [filteredCreateMetaMorphoArgs, assets, assetsInfo, vaultsInfo]);
-
-  let totalProgress = isFetchingCreateMetaMorphoEvents
-    ? ffCreateMetaMorphoEvents
-    : isFetchingDepositEvents
-      ? 1 + ffDepositEvents
-      : isFetchingAssetsInfo
-        ? 2
-        : isFetchingVaultsInfo
-          ? 3
-          : 4;
-  if (!userAddress) totalProgress = 0;
-
-  const progressCard = (
-    <Card className="bg-secondary h-min md:h-full">
-      <CardContent className="flex h-full flex-col gap-2 p-6 text-xs font-light">
-        <div className="flex justify-between">
-          <span>Indexing vaults</span>
-          {(ffCreateMetaMorphoEvents * 100).toFixed(2)}%
-        </div>
-        <Progress finalColor="bg-green-400" value={ffCreateMetaMorphoEvents * 100} />
-        <div className="flex justify-between">
-          <span>Indexing your deposits</span>
-          {(ffDepositEvents * 100).toFixed(2)}%
-        </div>
-        <Progress finalColor="bg-green-400" value={ffDepositEvents * 100} className="mb-auto" />
-        <div className="bottom-0 flex justify-between">
-          <i>Total Progress</i>
-          {((totalProgress * 100) / 4).toFixed(2)}%
-        </div>
-        <Progress finalColor="bg-green-400" value={(totalProgress * 100) / 4} />
-      </CardContent>
-    </Card>
-  );
+  }, [filteredCreateMetaMorphoArgs, filteredVaultInfos, assets, assetsInfo, vaultCurators]);
 
   return (
     <div className="flex min-h-screen flex-col px-2.5">
@@ -227,75 +313,12 @@ export function EarnSubPage() {
           }}
         />
       ) : (
-        <div className="flex h-96 w-full max-w-5xl flex-col gap-4 px-8 pb-14 pt-24 md:m-auto md:px-0 md:pt-32 dark:bg-neutral-900">
-          {progressCard}
+        <div className="flex h-fit min-h-96 w-full max-w-5xl flex-col gap-4 px-8 pb-14 pt-24 md:m-auto md:px-0 md:pt-32 dark:bg-neutral-900">
+          <VaultTable vaults={vaults.filter((v) => !!v.info?.maxWithdraw)} depositsMode="maxWithdraw" />
         </div>
       )}
-      <div className="bg-background dark:bg-background/30 flex grow justify-center rounded-t-xl">
-        <div className="text-primary w-full max-w-5xl px-8 pb-32 pt-8">
-          <Table className="border-separate border-spacing-y-3">
-            <TableCaption>
-              Showing vaults where you've deposited.
-              <br />
-              Click on a vault to manage your deposit.
-            </TableCaption>
-            <TableHeader className="bg-secondary">
-              <TableRow>
-                <TableHead className="text-primary rounded-l-lg pl-4 text-xs font-light">Vault</TableHead>
-                <TableHead className="text-primary text-xs font-light">Asset</TableHead>
-                <TableHead className="text-primary text-nowrap text-xs font-light">Total Supply</TableHead>
-                <TableHead className="text-primary text-nowrap text-xs font-light">Balance</TableHead>
-                <TableHead className="text-primary text-xs font-light">Curator</TableHead>
-                <TableHead className="text-primary rounded-r-lg text-xs font-light">Timelock</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {vaults.map((vault) => (
-                <Sheet key={vault.address}>
-                  <SheetTrigger asChild>
-                    <TableRow className="bg-secondary">
-                      <TableCell className="rounded-l-lg p-5">
-                        <TokenTableCell address={vault.address} symbol={vault.info?.name} imageSrc={vault.imageSrc} />
-                      </TableCell>
-                      <TableCell>
-                        <TokenTableCell {...vault.asset} />
-                      </TableCell>
-                      <TableCell>
-                        {vault.info?.totalAssets && vault.asset.decimals
-                          ? formatBalanceWithSymbol(
-                              vault.info.totalAssets,
-                              vault.asset.decimals,
-                              vault.asset.symbol,
-                              5,
-                              true,
-                            )
-                          : "－"}
-                      </TableCell>
-                      <TableCell>
-                        {vault.info?.maxWithdraw && vault.asset.decimals
-                          ? formatBalanceWithSymbol(
-                              vault.info.maxWithdraw,
-                              vault.asset.decimals,
-                              vault.asset.symbol,
-                              5,
-                              true,
-                            )
-                          : "－"}
-                      </TableCell>
-                      <TableCell>
-                        {vault.info?.owner ? `${vault.info.owner.slice(0, 6)}...${vault.info.owner.slice(-4)}` : "－"}
-                      </TableCell>
-                      <TableCell className="rounded-r-lg">
-                        {vault.info ? humanizeDuration(Number(vault.info.timelock) * 1000) : "－"}
-                      </TableCell>
-                    </TableRow>
-                  </SheetTrigger>
-                  <EarnSheetContent vaultAddress={vault.address} asset={vault.asset} />
-                </Sheet>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+      <div className="bg-background dark:bg-background/30 flex grow justify-center rounded-t-xl pb-32">
+        <VaultTable vaults={vaults} depositsMode="totalAssets" />
       </div>
     </div>
   );
