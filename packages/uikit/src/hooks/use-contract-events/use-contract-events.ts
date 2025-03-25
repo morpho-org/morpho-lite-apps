@@ -20,6 +20,7 @@ import {
 } from "viem";
 import { deepEqual, usePublicClient } from "wagmi";
 
+import { useChainStateR } from "@/hooks/use-chain-state";
 import { getRemainingSegments } from "@/hooks/use-contract-events/helpers";
 import { getQueryFn } from "@/hooks/use-contract-events/query";
 import { getStrategyBasedOn, RequestStats } from "@/hooks/use-contract-events/strategy";
@@ -115,22 +116,23 @@ export default function useContractEvents<
   },
 ) {
   const publicClient = usePublicClient({ chainId: args.chainId });
+  const chainId = publicClient?.chain.id;
 
   // MARK: Ephemeral state
 
   const [isBrowserReady, setIsBrowserReady] = useState(false);
   // Whether we've read from cache yet. `seeds` and `knownRanges` should not be used until this is done.
-  const [didReadCache, setDidReadCache] = useState(false);
+  const [didReadCache, setDidReadCache] = useChainStateR(false, chainId);
   // The keys of `seeds` are our desired `fromBlock`s, and values are the *maximum* `toBlock` to try to fetch.
   // This `toBlock` SHOULD NOT be based on a given RPC's capabilities. Rather, it is intended to (a) fill gaps
   // in `knownRanges` without overlapping existing data and (b) prevent fetching past the global `args.fromBlock`.
   // TanStack query keys are derived from these `fromBlock`s.
-  const [seeds, setSeeds] = useState(new Map<FromBlockNumber, ToBlockNumber>());
+  const [seeds, setSeeds] = useChainStateR(new Map<FromBlockNumber, ToBlockNumber>(), chainId);
   // `knownRanges` are updated based on the results of TanStack queries.
-  const [knownRanges, setKnownRanges] = useState(new Map<FromBlockNumber, ToBlockNumber>());
+  const [knownRanges, setKnownRanges] = useChainStateR(new Map<FromBlockNumber, ToBlockNumber>(), chainId);
   // `requestStats` are tracked so that we can update our `requestStrategy` to fetch events as quickly as possible.
   // Array order has no semantic meaning.
-  const [requestStats, setRequestStats] = useState<RequestStats>([]);
+  const [requestStats, setRequestStats] = useChainStateR<RequestStats>([], chainId);
 
   // MARK: Detect when the browser is ready (for localStorage)
 
@@ -150,7 +152,7 @@ export default function useContractEvents<
     () =>
       [
         "useContractEvents",
-        publicClient?.chain.id,
+        chainId,
         {
           // TODO: make ABI part of queryKey so it doesn't have to be passed into `queryFn` separately?
           address: args.address,
@@ -158,7 +160,7 @@ export default function useContractEvents<
           eventName: args.eventName,
         },
       ] as const,
-    [publicClient?.chain.id, args.address, args.args, args.eventName],
+    [chainId, args.address, args.args, args.eventName],
   );
 
   const { data: blockNumbers } = useBlockNumbers({
@@ -222,7 +224,7 @@ export default function useContractEvents<
       setKnownRanges(new Map());
       setRequestStats([]);
       setDidReadCache(true);
-    }, [isBrowserReady, queryClient, queryKeyRoot]);
+    }, [isBrowserReady, queryClient, queryKeyRoot, setDidReadCache, setSeeds, setKnownRanges, setRequestStats]);
   }
 
   // MARK: Define transport request strategy
@@ -271,7 +273,15 @@ export default function useContractEvents<
       }
       return i > 0 ? y : x;
     });
-  }, [args.reverseChronologicalOrder, didReadCache, blockNumbers, knownRanges, requestStats, strategyMetadata]);
+  }, [
+    args.reverseChronologicalOrder,
+    didReadCache,
+    blockNumbers,
+    knownRanges,
+    requestStats,
+    strategyMetadata,
+    setSeeds,
+  ]);
 
   // MARK: Run queries
 
@@ -348,7 +358,7 @@ export default function useContractEvents<
     }, 0);
 
     return () => clearTimeout(timeout);
-  }, [queryResults, args.query?.debug]);
+  }, [queryResults, args.query?.debug, setKnownRanges, setRequestStats]);
 
   // MARK: Return
 
