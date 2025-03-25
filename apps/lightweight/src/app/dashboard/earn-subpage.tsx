@@ -18,13 +18,12 @@ import {
 } from "@morpho-blue-offchain-public/uikit/components/shadcn/tooltip";
 import useContractEvents from "@morpho-blue-offchain-public/uikit/hooks/use-contract-events/use-contract-events";
 import { formatBalanceWithSymbol, getTokenSymbolURI, Token } from "@morpho-blue-offchain-public/uikit/lib/utils";
-import { keepPreviousData } from "@tanstack/react-query";
 import { blo } from "blo";
 // @ts-expect-error: this package lacks types
 import humanizeDuration from "humanize-duration";
 import { useMemo } from "react";
 import { Address, erc20Abi, isAddressEqual } from "viem";
-import { useAccount, useBlockNumber, useReadContracts } from "wagmi";
+import { useAccount, useReadContracts } from "wagmi";
 
 import { CtaCard } from "@/components/cta-card";
 import { EarnSheetContent } from "@/components/earn-sheet-content";
@@ -161,10 +160,6 @@ function VaultTable({ vaults, depositsMode }: { vaults: Vault[]; depositsMode: "
 
 export function EarnSubPage() {
   const { chainId, address: userAddress } = useAccount();
-  const { data: blockNumber } = useBlockNumber({
-    watch: false,
-    query: { staleTime: Infinity, gcTime: Infinity, refetchOnMount: "always" },
-  });
 
   const [factory, factoryV1_1] = useMemo(
     () => [
@@ -183,14 +178,10 @@ export function EarnSubPage() {
     abi: metaMorphoFactoryAbi,
     address: [factoryV1_1.address].concat(factory ? [factory.address] : []),
     fromBlock: factory?.fromBlock ?? factoryV1_1.fromBlock,
-    toBlock: blockNumber,
     reverseChronologicalOrder: true,
     eventName: "CreateMetaMorpho",
     strict: true,
-    query: {
-      // Wait to fetch so we don't get rate-limited.
-      enabled: chainId !== undefined && blockNumber !== undefined,
-    },
+    query: { enabled: chainId !== undefined },
   });
 
   // MARK: Fetch metadata for every MetaMorpho vault
@@ -212,7 +203,6 @@ export function EarnSubPage() {
     allowFailure: false,
     query: {
       refetchOnMount: "always",
-      placeholderData: keepPreviousData,
       enabled: !isFetchingCreateMetaMorphoEvents && userAddress !== undefined,
     },
   });
