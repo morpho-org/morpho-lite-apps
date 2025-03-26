@@ -77,7 +77,7 @@ function CuratorTableCell({ address, symbol, imageSrc }: Token) {
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <div className="hover:bg-tertiary/15 flex w-min items-center gap-2 rounded-sm p-2">
+          <div className="hover:bg-tertiary/15 ml-[-8px] flex w-min items-center gap-2 rounded-sm p-2">
             <Avatar className="h-4 w-4 rounded-sm">
               <AvatarImage src={imageSrc} alt="Avatar" />
               <AvatarFallback delayMs={500}>
@@ -114,7 +114,7 @@ function VaultTable({ vaults, depositsMode }: { vaults: Vault[]; depositsMode: "
               <Sheet key={vault.address}>
                 <SheetTrigger asChild>
                   <TableRow className="bg-secondary hover:bg-accent">
-                    <TableCell className="rounded-l-lg p-3">
+                    <TableCell className="rounded-l-lg py-3">
                       <VaultTableCell
                         address={vault.address}
                         symbol={vault.info?.name}
