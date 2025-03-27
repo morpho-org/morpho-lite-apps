@@ -20,6 +20,7 @@
     "@tanstack/query-sync-storage-persister": "^5.66.0",
     "@tanstack/react-query": "^5.66.0",
     "@tanstack/react-query-persist-client": "^5.66.0",
+    "@tevm/ts-plugin": "1.0.0-next.140",
     "blo": "^1.2.0",
     "connectkit": "^1.8.2",
     "gql.tada": "^1.8.10",
@@ -32,6 +33,7 @@
     "recharts": "^2.15.1",
     "sonner": "^2.0.0",
     "tailwindcss-animate": "^1.0.7",
+    "tevm": "1.0.0-next.140",
     "urql": "^4.2.2",
     "viem": "~2.23.5",
     "wagmi": "^2.14.11"

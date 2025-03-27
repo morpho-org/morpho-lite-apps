@@ -7,13 +7,6 @@
     "paths": {
       "@/*": ["./src/*"]
     },
-    "plugins": [
-      {
-        "name": "gql.tada/ts-plugin",
-        "schema": "https://blue-api.morpho.org/graphql",
-        "tadaOutputLocation": "./src/graphql/graphql-env.d.ts",
-        "tadaTurboLocation": "./src/graphql/graphql-cache.d.ts"
-      }
-    ]
+    "plugins": [{ "name": "@tevm/ts-plugin" }]
   }
 }

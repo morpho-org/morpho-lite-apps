@@ -17,13 +17,15 @@ import {
   TooltipTrigger,
 } from "@morpho-blue-offchain-public/uikit/components/shadcn/tooltip";
 import useContractEvents from "@morpho-blue-offchain-public/uikit/hooks/use-contract-events/use-contract-events";
+import { useReadContracts } from "@morpho-blue-offchain-public/uikit/hooks/use-read-contracts";
+import { readWithdrawQueue } from "@morpho-blue-offchain-public/uikit/lens/read-withdraw-queue";
 import { formatBalanceWithSymbol, getTokenSymbolURI, Token } from "@morpho-blue-offchain-public/uikit/lib/utils";
 import { blo } from "blo";
 // @ts-expect-error: this package lacks types
 import humanizeDuration from "humanize-duration";
 import { useMemo } from "react";
 import { Address, erc20Abi, isAddressEqual } from "viem";
-import { useAccount, useReadContracts } from "wagmi";
+import { useAccount } from "wagmi";
 
 import { CtaCard } from "@/components/cta-card";
 import { EarnSheetContent } from "@/components/earn-sheet-content";
@@ -115,11 +117,7 @@ function VaultTable({ vaults, depositsMode }: { vaults: Vault[]; depositsMode: "
                 <SheetTrigger asChild>
                   <TableRow className="bg-secondary hover:bg-accent">
                     <TableCell className="rounded-l-lg py-3">
-                      <VaultTableCell
-                        address={vault.address}
-                        symbol={vault.info?.name}
-                        imageSrc={vault.asset.imageSrc}
-                      />
+                      <VaultTableCell address={vault.address} symbol={vault.info?.name} imageSrc={vault.imageSrc} />
                     </TableCell>
                     <TableCell>
                       {vault.info?.[depositsMode] && vault.asset.decimals
@@ -198,6 +196,7 @@ export function EarnSubPage() {
           functionName: "maxWithdraw",
           args: [userAddress ?? "0x"],
         } as const,
+        readWithdrawQueue(ev.args.metaMorpho),
       ])
       .flat(),
     allowFailure: false,
@@ -216,8 +215,8 @@ export function EarnSubPage() {
 
     if (vaultInfos !== undefined) {
       for (let i = 0; i < createMetaMorphoEvents.length; i += 1) {
-        const owner = vaultInfos[i * 5 + 0] as Address;
-        const maxWithdraw = vaultInfos[i * 5 + 4] as bigint;
+        const owner = vaultInfos[i * 6 + 0] as Address;
+        const maxWithdraw = vaultInfos[i * 6 + 4] as bigint;
 
         const curator = (top5Curators ?? []).find((curator) =>
           (curator.addresses ?? []).find((v) => isAddressEqual(v.address as Address, owner)),
@@ -225,7 +224,7 @@ export function EarnSubPage() {
 
         if (curator !== undefined || maxWithdraw > 0n) {
           args.push(createMetaMorphoEvents[i].args);
-          infos.push(...vaultInfos.slice(i * 5, (i + 1) * 5));
+          infos.push(...vaultInfos.slice(i * 6, (i + 1) * 6));
           curators.push(curator);
         }
       }
@@ -254,14 +253,14 @@ export function EarnSubPage() {
       const decimals = assetIdx > -1 ? (assetsInfo?.[assetIdx * 2 + 1].result as number) : undefined;
       return {
         address: args.metaMorpho,
-        imageSrc: blo(args.metaMorpho),
+        imageSrc: getTokenSymbolURI(symbol),
         info: filteredVaultInfos
           ? {
-              owner: filteredVaultInfos[idx * 5 + 0] as Address,
-              timelock: filteredVaultInfos[idx * 5 + 1] as bigint,
-              name: filteredVaultInfos[idx * 5 + 2] as string,
-              totalAssets: filteredVaultInfos[idx * 5 + 3] as bigint,
-              maxWithdraw: filteredVaultInfos[idx * 5 + 4] as bigint,
+              owner: filteredVaultInfos[idx * 6 + 0] as Address,
+              timelock: filteredVaultInfos[idx * 6 + 1] as bigint,
+              name: filteredVaultInfos[idx * 6 + 2] as string,
+              totalAssets: filteredVaultInfos[idx * 6 + 3] as bigint,
+              maxWithdraw: filteredVaultInfos[idx * 6 + 4] as bigint,
             }
           : undefined,
         asset: {
@@ -272,7 +271,7 @@ export function EarnSubPage() {
         } as Token,
         curator: vaultCurators[idx]
           ? {
-              address: filteredVaultInfos[idx * 5 + 0] as Address,
+              address: filteredVaultInfos[idx * 6 + 0] as Address,
               name: vaultCurators[idx].name,
               url: vaultCurators[idx].url,
               imageSrc: vaultCurators[idx].image,

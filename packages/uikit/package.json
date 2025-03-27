@@ -8,16 +8,18 @@
   "module": "dist/main.js",
   "exports": {
     "./*": "./dist/*.js",
-    "./*.svg": "./dist/*.svg"
+    "./*.svg": "./dist/*.svg",
+    "./*.sol": "./dist/*.sol"
   },
   "files": [
     "dist"
   ],
   "scripts": {
     "dev": "vite build --minify false --sourcemap inline --watch",
-    "build": "tsc -b ./tsconfig.package.json && vite build",
+    "build": "vite build",
     "example": "vite",
-    "lint": "eslint . --fix"
+    "lint": "eslint . --fix",
+    "typecheck": "tsc -b ./tsconfig.package.json"
   },
   "dependencies": {
     "@octokit/plugin-retry": "^7.1.4",
@@ -35,6 +37,7 @@
     "@radix-ui/react-slot": "^1.1.2",
     "@radix-ui/react-tabs": "^1.1.3",
     "@radix-ui/react-tooltip": "^1.1.8",
+    "@wagmi/core": "^2.16.7",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.475.0",
@@ -48,12 +51,14 @@
     "react-dom": "^19.0.0",
     "recharts": "^2.15.1",
     "sonner": "^2.0.0",
+    "tevm": "1.0.0-next.140",
     "viem": "~2.23.5",
     "wagmi": "^2.14.11"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
     "@tanstack/react-query": "^5.66.0",
+    "@tevm/ts-plugin": "1.0.0-next.140",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^4.3.4",
@@ -67,11 +72,13 @@
     "react-dom": "^19.0.0",
     "recharts": "^2.15.1",
     "sonner": "^2.0.0",
+    "tevm": "1.0.0-next.140",
     "typescript": "~5.7.2",
     "typescript-eslint": "^8.24.1",
     "viem": "~2.23.5",
     "vite": "^6.2.0",
     "vite-plugin-dts": "^4.5.3",
+    "vite-plugin-static-copy": "^2.3.0",
     "vite-plugin-svgr": "^4.3.0",
     "wagmi": "^2.14.11"
   }

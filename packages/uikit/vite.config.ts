@@ -3,15 +3,32 @@ import { extname, relative, resolve } from "path";
 
 import react from "@vitejs/plugin-react";
 import { glob } from "glob";
+import { vitePluginTevm } from "tevm/bundler/vite-plugin";
 import { defineConfig } from "vite";
 import dts from "vite-plugin-dts";
+import { viteStaticCopy } from "vite-plugin-static-copy";
 import svgr from "vite-plugin-svgr";
 
 // https://vite.dev/config/
 export default defineConfig({
   // NOTE: Can use `svgr({ include: "**/*.svg" })` and add `,svg` to the rollup glob pattern to transpile _all_
   // SVGs to JS rather than only those which are used in components
-  plugins: [svgr(), react(), dts({ tsconfigPath: "./tsconfig.package.json" })],
+  plugins: [
+    viteStaticCopy({
+      structured: false,
+      targets: [
+        {
+          src: "src/**/*.sol",
+          dest: "",
+          rename: (_fileName, _fileExtension, fullPath) => relative("src", fullPath),
+        },
+      ],
+    }),
+    svgr(),
+    react(),
+    vitePluginTevm(),
+    dts({ tsconfigPath: "./tsconfig.package.json" }),
+  ],
   resolve: {
     alias: {
       "@": resolve(__dirname, "./src"),
