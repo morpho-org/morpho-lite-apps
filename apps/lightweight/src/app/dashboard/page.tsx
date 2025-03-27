@@ -74,6 +74,7 @@ export default function Page() {
             selectedChainSlug={selectedChainSlug!}
             setSelectedChainSlug={setSelectedChainSlug}
             connectWalletButton={<ConnectWalletButton />}
+            enableChainSwitcher={false}
           />
         </div>
       </Header>

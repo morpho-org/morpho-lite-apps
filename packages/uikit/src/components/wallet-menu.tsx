@@ -104,10 +104,12 @@ export function WalletMenu({
   selectedChainSlug,
   setSelectedChainSlug,
   connectWalletButton = <ConnectWalletButton />,
+  enableChainSwitcher = true,
 }: {
   selectedChainSlug: string;
   setSelectedChainSlug: (value: string) => void;
   connectWalletButton?: ReactNode;
+  enableChainSwitcher?: boolean;
 }) {
   const { chain: chainInWallet, address, status } = useAccount();
   const { chains, switchChain } = useSwitchChain();
@@ -154,30 +156,36 @@ export function WalletMenu({
 
   return (
     <>
-      <Select
-        value={selectedChainSlug}
-        onValueChange={(value: string) => {
-          const target = chains.find((chain) => getChainSlug(chain) === value);
-          if (target && getChainSlug(target) !== selectedChainSlug) {
-            setPendingChain(target);
-          }
-        }}
-      >
-        <SelectTrigger className="bg-tertiary-dark h-[40px] w-16 rounded-full">
-          <SelectValue aria-label={chainInUi?.name}>
-            <ChainIcon id={chainInUi?.id} />
-          </SelectValue>
-        </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            {chains.map((chain, idx) => (
-              <SelectItem key={idx} value={getChainSlug(chain)}>
-                <ChainIcon id={chain.id} /> {chain.name}
-              </SelectItem>
-            ))}
-          </SelectGroup>
-        </SelectContent>
-      </Select>
+      {enableChainSwitcher ? (
+        <Select
+          value={selectedChainSlug}
+          onValueChange={(value: string) => {
+            const target = chains.find((chain) => getChainSlug(chain) === value);
+            if (target && getChainSlug(target) !== selectedChainSlug) {
+              setPendingChain(target);
+            }
+          }}
+        >
+          <SelectTrigger className="bg-tertiary-dark h-[40px] w-16 rounded-full">
+            <SelectValue aria-label={chainInUi?.name}>
+              <ChainIcon id={chainInUi?.id} />
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              {chains.map((chain, idx) => (
+                <SelectItem key={idx} value={getChainSlug(chain)}>
+                  <ChainIcon id={chain.id} /> {chain.name}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+      ) : (
+        <div className="bg-tertiary-dark ring-ring/10 dark:ring-ring/20 dark:outline-ring/40 outline-ring/50 shadow-xs flex h-[40px] w-[40px] items-center justify-center rounded-full border [&_svg:not([class*='size-'])]:size-6 [&_svg]:pointer-events-none [&_svg]:shrink-0">
+          <ChainIcon id={chainInUi?.id} />
+        </div>
+      )}
       {status === "connected" && address ? <WalletButton address={address} /> : connectWalletButton}
     </>
   );
