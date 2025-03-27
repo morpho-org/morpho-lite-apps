@@ -147,7 +147,7 @@ const wagmiConfig = createConfig(
     batch: {
       multicall: {
         batchSize: 8192,
-        wait: 20,
+        wait: 100,
       },
     },
     cacheTime: 250,

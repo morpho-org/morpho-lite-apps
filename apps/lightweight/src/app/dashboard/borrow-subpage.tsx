@@ -1,7 +1,7 @@
+import { metaMorphoAbi } from "@morpho-blue-offchain-public/uikit/assets/abis/meta-morpho";
+import { metaMorphoFactoryAbi } from "@morpho-blue-offchain-public/uikit/assets/abis/meta-morpho-factory";
 import { morphoAbi } from "@morpho-blue-offchain-public/uikit/assets/abis/morpho";
 import { Avatar, AvatarFallback, AvatarImage } from "@morpho-blue-offchain-public/uikit/components/shadcn/avatar";
-import { Card, CardContent } from "@morpho-blue-offchain-public/uikit/components/shadcn/card";
-import { Progress } from "@morpho-blue-offchain-public/uikit/components/shadcn/progress";
 import { Sheet, SheetTrigger } from "@morpho-blue-offchain-public/uikit/components/shadcn/sheet";
 import {
   Table,
@@ -19,6 +19,8 @@ import {
   TooltipTrigger,
 } from "@morpho-blue-offchain-public/uikit/components/shadcn/tooltip";
 import useContractEvents from "@morpho-blue-offchain-public/uikit/hooks/use-contract-events/use-contract-events";
+import { useReadContracts } from "@morpho-blue-offchain-public/uikit/hooks/use-read-contracts";
+import { readWithdrawQueue } from "@morpho-blue-offchain-public/uikit/lens/read-withdraw-queue";
 import {
   formatBalanceWithSymbol,
   formatLtv,
@@ -30,12 +32,13 @@ import { keepPreviousData } from "@tanstack/react-query";
 import { blo } from "blo";
 import { Eye, Info } from "lucide-react";
 import { useMemo } from "react";
-import { Address, erc20Abi } from "viem";
-import { useAccount, useBlockNumber, useReadContracts } from "wagmi";
+import { Address, erc20Abi, isAddressEqual, Hex } from "viem";
+import { useAccount } from "wagmi";
 
 import { BorrowSheetContent } from "@/components/borrow-sheet-content";
 import { CtaCard } from "@/components/cta-card";
-import { getContractDeploymentInfo } from "@/lib/constants";
+import { useTopNCurators } from "@/hooks/use-top-n-curators";
+import { CORE_DEPLOYMENTS, getContractDeploymentInfo } from "@/lib/constants";
 
 function TokenTableCell({ address, symbol, imageSrc }: Token) {
   return (
@@ -54,41 +57,82 @@ function TokenTableCell({ address, symbol, imageSrc }: Token) {
 
 export function BorrowSubPage() {
   const { chainId, address: userAddress } = useAccount();
-  const { data: blockNumber } = useBlockNumber({
-    watch: false,
-    query: { staleTime: Infinity, gcTime: Infinity, refetchOnMount: "always" },
-  });
 
-  const morpho = useMemo(() => getContractDeploymentInfo(chainId, "Morpho"), [chainId]);
+  const [morpho, factory, factoryV1_1] = useMemo(
+    () => [
+      getContractDeploymentInfo(chainId, "Morpho"),
+      getContractDeploymentInfo(chainId, "MetaMorphoFactory"),
+      getContractDeploymentInfo(chainId, "MetaMorphoV1_1Factory"),
+    ],
+    [chainId],
+  );
 
+  // MARK: Fetch `MetaMorphoFactory.CreateMetaMorpho` on all factory versions so that we have all deployments
   const {
-    logs: { all: supplyCollateralEvents },
-    isFetching: isFetchingSupplyCollateralEvents,
-    fractionFetched: ffSupplyCollateralEvents,
+    logs: { all: createMetaMorphoEvents },
+    isFetching: isFetchingCreateMetaMorphoEvents,
   } = useContractEvents({
     chainId,
-    abi: morphoAbi,
-    address: morpho.address,
-    fromBlock: morpho.fromBlock,
-    toBlock: blockNumber,
+    abi: metaMorphoFactoryAbi,
+    address: [factoryV1_1.address].concat(factory ? [factory.address] : []),
+    fromBlock: factory?.fromBlock ?? factoryV1_1.fromBlock,
     reverseChronologicalOrder: true,
-    eventName: "SupplyCollateral",
-    args: { onBehalf: userAddress },
+    eventName: "CreateMetaMorpho",
     strict: true,
+    query: { enabled: chainId !== undefined },
+  });
+
+  // MARK: Fetch metadata for every MetaMorpho vault
+  const { data: vaultInfos } = useReadContracts({
+    contracts: createMetaMorphoEvents
+      .map((ev) => [
+        { address: ev.args.metaMorpho, abi: metaMorphoAbi, functionName: "owner" } as const,
+        { address: ev.args.metaMorpho, abi: metaMorphoAbi, functionName: "timelock" } as const,
+        { address: ev.args.metaMorpho, abi: metaMorphoAbi, functionName: "name" } as const,
+        { address: ev.args.metaMorpho, abi: metaMorphoAbi, functionName: "totalAssets" } as const,
+        {
+          address: ev.args.metaMorpho,
+          abi: metaMorphoAbi,
+          functionName: "maxWithdraw",
+          args: [userAddress ?? "0x"],
+        } as const,
+        readWithdrawQueue(ev.args.metaMorpho),
+      ])
+      .flat(),
+    allowFailure: false,
     query: {
-      enabled: chainId !== undefined && blockNumber !== undefined && userAddress !== undefined,
+      refetchOnMount: "always",
+      enabled: !isFetchingCreateMetaMorphoEvents && userAddress !== undefined,
     },
   });
 
+  // MARK: Only include vaults owned by the top 5 curators from core deployments, or in which the user has deposits.
+  const top5Curators = useTopNCurators({ n: 5, verifiedOnly: true, chainIds: [...CORE_DEPLOYMENTS] });
   const marketIds = useMemo(() => {
-    // Get unique set of all marketIds the user has interacted with
-    const ids = Array.from(new Set(supplyCollateralEvents.map((ev) => ev.args.id)));
-    // Sort them so that queryKey is consistent in the `useReadContracts` hooks below
-    ids.sort();
-    return ids;
-  }, [supplyCollateralEvents]);
+    const marketIdsSet = new Set<Hex>();
 
-  const { data: marketParamsRaw, isFetching: isFetchingMarketParams } = useReadContracts({
+    if (vaultInfos !== undefined) {
+      for (let i = 0; i < createMetaMorphoEvents.length; i += 1) {
+        const owner = vaultInfos[i * 6 + 0] as Address;
+        const withdrawQueue = vaultInfos[i * 6 + 5] as Hex[];
+
+        const curator = (top5Curators ?? []).find((curator) =>
+          (curator.addresses ?? []).find((v) => isAddressEqual(v.address as Address, owner)),
+        );
+
+        if (curator !== undefined) {
+          withdrawQueue.forEach((market) => marketIdsSet.add(market));
+        }
+      }
+    }
+
+    const marketIds = Array.from(marketIdsSet);
+    // Sort them so that queryKey is consistent in the `useReadContracts` hooks below
+    marketIds.sort();
+    return marketIds;
+  }, [createMetaMorphoEvents, vaultInfos, top5Curators]);
+
+  const { data: marketParamsRaw } = useReadContracts({
     contracts: marketIds.map(
       (marketId) =>
         ({
@@ -117,7 +161,7 @@ export function BorrowSubPage() {
     [marketIds, marketParamsRaw],
   );
 
-  const { data: erc20Symbols, isFetching: isFetchingErc20Symbols } = useReadContracts({
+  const { data: erc20Symbols } = useReadContracts({
     contracts: filteredCreateMarketArgs
       .map((args) => [
         { address: args.marketParams.collateralToken, abi: erc20Abi, functionName: "symbol" } as const,
@@ -128,7 +172,7 @@ export function BorrowSubPage() {
     query: { staleTime: Infinity, gcTime: Infinity },
   });
 
-  const { data: erc20Decimals, isFetching: isFetchingErc20Decimals } = useReadContracts({
+  const { data: erc20Decimals } = useReadContracts({
     contracts: filteredCreateMarketArgs
       .map((args) => [
         { address: args.marketParams.collateralToken, abi: erc20Abi, functionName: "decimals" } as const,
@@ -139,7 +183,7 @@ export function BorrowSubPage() {
     query: { staleTime: Infinity, gcTime: Infinity },
   });
 
-  const { data: markets, isFetching: isFetchingMarkets } = useReadContracts({
+  const { data: markets } = useReadContracts({
     contracts: filteredCreateMarketArgs.map(
       (args) =>
         ({
@@ -164,7 +208,7 @@ export function BorrowSubPage() {
         }) as const,
     ),
     allowFailure: false,
-    query: { staleTime: 1 * 60 * 1000, placeholderData: keepPreviousData },
+    query: { staleTime: 1 * 60 * 1000, gcTime: Infinity, placeholderData: keepPreviousData },
   });
 
   const tokens = useMemo(() => {
@@ -188,36 +232,6 @@ export function BorrowSubPage() {
     return map;
   }, [filteredCreateMarketArgs, erc20Symbols, erc20Decimals]);
 
-  let totalProgress = isFetchingSupplyCollateralEvents
-    ? ffSupplyCollateralEvents
-    : isFetchingMarketParams
-      ? 1
-      : isFetchingErc20Symbols
-        ? 2
-        : isFetchingErc20Decimals
-          ? 3
-          : isFetchingMarkets
-            ? 4
-            : 5;
-  if (!userAddress) totalProgress = 0;
-
-  const progressCard = (
-    <Card className="bg-secondary h-min md:h-full">
-      <CardContent className="flex h-full flex-col gap-2 p-6 text-xs font-light">
-        <div className="flex justify-between">
-          <span>Indexing your positions</span>
-          {(ffSupplyCollateralEvents * 100).toFixed(2)}%
-        </div>
-        <Progress finalColor="bg-green-400" value={ffSupplyCollateralEvents * 100} className="mb-auto" />
-        <div className="bottom-0 flex justify-between">
-          <i>Total Progress</i>
-          {((totalProgress * 100) / 5).toFixed(2)}%
-        </div>
-        <Progress finalColor="bg-green-400" value={(totalProgress * 100) / 5} />
-      </CardContent>
-    </Card>
-  );
-
   return (
     <div className="flex min-h-screen flex-col px-2.5">
       {userAddress === undefined ? (
@@ -231,9 +245,7 @@ export function BorrowSubPage() {
           }}
         />
       ) : (
-        <div className="flex h-96 w-full max-w-5xl flex-col gap-4 px-8 pb-14 pt-24 md:m-auto md:px-0 md:pt-32 dark:bg-neutral-900">
-          {progressCard}
-        </div>
+        <div className="flex h-96 w-full max-w-5xl flex-col gap-4 px-8 pb-14 pt-24 md:m-auto md:px-0 md:pt-32 dark:bg-neutral-900"></div>
       )}
       <div className="bg-background dark:bg-background/30 flex grow justify-center rounded-t-xl">
         <div className="text-primary w-full max-w-5xl px-8 pb-32 pt-8">
