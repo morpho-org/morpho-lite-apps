@@ -1,7 +1,13 @@
-import { ResolvedRegister } from "@wagmi/core";
 import { useMemo } from "react";
 import type { ContractFunctionParameters, Hex } from "viem";
-import { Config, useConfig, useChainId, UseReadContractsParameters, UseReadContractsReturnType } from "wagmi";
+import {
+  Config,
+  useConfig,
+  useChainId,
+  UseReadContractsParameters,
+  UseReadContractsReturnType,
+  ResolvedRegister,
+} from "wagmi";
 import { ReadContractsData, readContractsQueryOptions, structuralSharing, useQuery } from "wagmi/query";
 
 function xor(a: boolean, b: boolean) {

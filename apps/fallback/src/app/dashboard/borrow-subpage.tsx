@@ -31,7 +31,7 @@ import { blo } from "blo";
 import { Eye, Info } from "lucide-react";
 import { useMemo } from "react";
 import { Address, erc20Abi } from "viem";
-import { useAccount, useBlockNumber, useReadContracts } from "wagmi";
+import { useAccount, useReadContracts } from "wagmi";
 
 import { BorrowSheetContent } from "@/components/borrow-sheet-content";
 import { CtaCard } from "@/components/cta-card";
@@ -55,10 +55,6 @@ function TokenTableCell({ address, symbol, imageSrc }: Token) {
 
 export function BorrowSubPage() {
   const { chainId, address: userAddress } = useAccount();
-  const { data: blockNumber } = useBlockNumber({
-    watch: false,
-    query: { staleTime: Infinity, gcTime: Infinity, refetchOnMount: "always" },
-  });
 
   const urlSearchParams = new URLSearchParams(window.location.search);
   const isDev = urlSearchParams.has("dev");
@@ -71,15 +67,14 @@ export function BorrowSubPage() {
     fractionFetched: ffSupplyCollateralEvents,
   } = useContractEvents({
     abi: morphoAbi,
-    address: morpho.address,
-    fromBlock: morpho.fromBlock,
-    toBlock: blockNumber,
+    address: morpho?.address,
+    fromBlock: morpho?.fromBlock,
     reverseChronologicalOrder: true,
     eventName: "SupplyCollateral",
     args: { onBehalf: userAddress },
     strict: true,
     query: {
-      enabled: chainId !== undefined && blockNumber !== undefined && userAddress !== undefined,
+      enabled: chainId !== undefined && userAddress !== undefined,
     },
   });
 
@@ -95,14 +90,14 @@ export function BorrowSubPage() {
     contracts: marketIds.map(
       (marketId) =>
         ({
-          address: morpho.address,
+          address: morpho?.address ?? "0x",
           abi: morphoAbi,
           functionName: "idToMarketParams",
           args: [marketId],
         }) as const,
     ),
     allowFailure: false,
-    query: { staleTime: Infinity, gcTime: Infinity },
+    query: { staleTime: Infinity, gcTime: Infinity, enabled: !!morpho },
   });
 
   const filteredCreateMarketArgs = useMemo(
@@ -146,28 +141,28 @@ export function BorrowSubPage() {
     contracts: filteredCreateMarketArgs.map(
       (args) =>
         ({
-          address: morpho.address,
+          address: morpho?.address ?? "0x",
           abi: morphoAbi,
           functionName: "market",
           args: [args.id],
         }) as const,
     ),
     allowFailure: false,
-    query: { staleTime: 10 * 60 * 1000, gcTime: Infinity, placeholderData: keepPreviousData },
+    query: { staleTime: 10 * 60 * 1000, gcTime: Infinity, placeholderData: keepPreviousData, enabled: !!morpho },
   });
 
   const { data: positionsRaw, refetch: refetchPositionsRaw } = useReadContracts({
     contracts: filteredCreateMarketArgs.map(
       (args) =>
         ({
-          address: morpho.address,
+          address: morpho?.address ?? "0x",
           abi: morphoAbi,
           functionName: "position",
           args: userAddress ? [args.id, userAddress] : undefined,
         }) as const,
     ),
     allowFailure: false,
-    query: { staleTime: 1 * 60 * 1000, placeholderData: keepPreviousData },
+    query: { staleTime: 1 * 60 * 1000, placeholderData: keepPreviousData, enabled: !!morpho },
   });
 
   const tokens = useMemo(() => {

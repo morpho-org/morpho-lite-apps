@@ -74,8 +74,8 @@ export function BorrowSubPage() {
   } = useContractEvents({
     chainId,
     abi: metaMorphoFactoryAbi,
-    address: [factoryV1_1.address].concat(factory ? [factory.address] : []),
-    fromBlock: factory?.fromBlock ?? factoryV1_1.fromBlock,
+    address: factoryV1_1 ? [factoryV1_1.address].concat(factory ? [factory.address] : []) : [],
+    fromBlock: factory?.fromBlock ?? factoryV1_1?.fromBlock,
     reverseChronologicalOrder: true,
     eventName: "CreateMetaMorpho",
     strict: true,
@@ -136,14 +136,14 @@ export function BorrowSubPage() {
     contracts: marketIds.map(
       (marketId) =>
         ({
-          address: morpho.address,
+          address: morpho?.address ?? "0x",
           abi: morphoAbi,
           functionName: "idToMarketParams",
           args: [marketId],
         }) as const,
     ),
     allowFailure: false,
-    query: { staleTime: Infinity, gcTime: Infinity },
+    query: { staleTime: Infinity, gcTime: Infinity, enabled: !!morpho },
   });
 
   const filteredCreateMarketArgs = useMemo(
@@ -187,28 +187,28 @@ export function BorrowSubPage() {
     contracts: filteredCreateMarketArgs.map(
       (args) =>
         ({
-          address: morpho.address,
+          address: morpho?.address ?? "0x",
           abi: morphoAbi,
           functionName: "market",
           args: [args.id],
         }) as const,
     ),
     allowFailure: false,
-    query: { staleTime: 10 * 60 * 1000, gcTime: Infinity, placeholderData: keepPreviousData },
+    query: { staleTime: 10 * 60 * 1000, gcTime: Infinity, placeholderData: keepPreviousData, enabled: !!morpho },
   });
 
   const { data: positionsRaw, refetch: refetchPositionsRaw } = useReadContracts({
     contracts: filteredCreateMarketArgs.map(
       (args) =>
         ({
-          address: morpho.address,
+          address: morpho?.address ?? "0x",
           abi: morphoAbi,
           functionName: "position",
           args: userAddress ? [args.id, userAddress] : undefined,
         }) as const,
     ),
     allowFailure: false,
-    query: { staleTime: 1 * 60 * 1000, gcTime: Infinity, placeholderData: keepPreviousData },
+    query: { staleTime: 1 * 60 * 1000, gcTime: Infinity, placeholderData: keepPreviousData, enabled: !!morpho },
   });
 
   const tokens = useMemo(() => {

@@ -174,8 +174,8 @@ export function EarnSubPage() {
   } = useContractEvents({
     chainId,
     abi: metaMorphoFactoryAbi,
-    address: [factoryV1_1.address].concat(factory ? [factory.address] : []),
-    fromBlock: factory?.fromBlock ?? factoryV1_1.fromBlock,
+    address: factoryV1_1 ? [factoryV1_1.address].concat(factory ? [factory.address] : []) : [],
+    fromBlock: factory?.fromBlock ?? factoryV1_1?.fromBlock,
     reverseChronologicalOrder: true,
     eventName: "CreateMetaMorpho",
     strict: true,

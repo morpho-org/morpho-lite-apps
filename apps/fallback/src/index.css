@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@source "../node_modules/@morpho-blue-offchain-public/uikit";
 
 @plugin "tailwindcss-animate";
 

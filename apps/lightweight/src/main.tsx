@@ -14,7 +14,7 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
       <Routes>
-        <Route element={<App />}>
+        <Route path="/" element={<App />}>
           <Route index element={<Navigate replace to={getChainSlug(DEFAULT_CHAIN)} />} />
           <Route path=":chain/">
             <Route index element={<Navigate replace to="earn" />} />

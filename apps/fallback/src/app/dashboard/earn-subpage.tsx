@@ -21,7 +21,7 @@ import { blo } from "blo";
 import humanizeDuration from "humanize-duration";
 import { useMemo } from "react";
 import { Address, erc20Abi, erc4626Abi } from "viem";
-import { useAccount, useBlockNumber, useReadContracts } from "wagmi";
+import { useAccount, useReadContracts } from "wagmi";
 
 import { CtaCard } from "@/components/cta-card";
 import { EarnSheetContent } from "@/components/earn-sheet-content";
@@ -45,10 +45,6 @@ function TokenTableCell({ address, symbol, imageSrc }: Token) {
 
 export function EarnSubPage() {
   const { chainId, address: userAddress } = useAccount();
-  const { data: blockNumber } = useBlockNumber({
-    watch: false,
-    query: { staleTime: Infinity, gcTime: Infinity, refetchOnMount: "always" },
-  });
 
   const urlSearchParams = new URLSearchParams(window.location.search);
   const isDev = urlSearchParams.has("dev");
@@ -68,16 +64,12 @@ export function EarnSubPage() {
     fractionFetched: ffCreateMetaMorphoEvents,
   } = useContractEvents({
     abi: metaMorphoFactoryAbi,
-    address: [factoryV1_1.address].concat(factory ? [factory.address] : []),
-    fromBlock: factory?.fromBlock ?? factoryV1_1.fromBlock,
-    toBlock: blockNumber,
+    address: factoryV1_1 ? [factoryV1_1.address].concat(factory ? [factory.address] : []) : [],
+    fromBlock: factory?.fromBlock ?? factoryV1_1?.fromBlock,
     reverseChronologicalOrder: true,
     eventName: "CreateMetaMorpho",
     strict: true,
-    query: {
-      // Wait to fetch so we don't get rate-limited.
-      enabled: chainId !== undefined && blockNumber !== undefined,
-    },
+    query: { enabled: chainId !== undefined },
   });
 
   // MARK: Fetch `ERC4626.Deposit` so that we know where user has deposited. Includes non-MetaMorpho ERC4626 deposits
@@ -87,8 +79,7 @@ export function EarnSubPage() {
     fractionFetched: ffDepositEvents,
   } = useContractEvents({
     abi: erc4626Abi,
-    fromBlock: factory?.fromBlock ?? factoryV1_1.fromBlock,
-    toBlock: blockNumber,
+    fromBlock: factory?.fromBlock ?? factoryV1_1?.fromBlock,
     reverseChronologicalOrder: true,
     eventName: "Deposit", // ERC-4626
     args: { receiver: userAddress },
@@ -96,7 +87,6 @@ export function EarnSubPage() {
     query: {
       enabled:
         chainId !== undefined &&
-        blockNumber !== undefined &&
         userAddress !== undefined &&
         // Wait to fetch so we don't get rate-limited.
         !isFetchingCreateMetaMorphoEvents,

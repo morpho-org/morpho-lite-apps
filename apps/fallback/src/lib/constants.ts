@@ -12,9 +12,9 @@ import {
   polygon,
   scroll as scrollMainnet,
   sonic,
+  unichain,
   worldchain,
-} from "viem/chains";
-import { unichain } from "viem/op-stack";
+} from "wagmi/chains";
 
 type MorphoContractName = "Morpho" | "MetaMorphoFactory" | "MetaMorphoV1_1Factory";
 
@@ -108,11 +108,12 @@ export const BATCH1_DEPLOYMENTS = new Set<keyof Deployments>([
 
 export const BATCH2_DEPLOYMENTS = new Set<keyof Deployments>([unichain.id, corn.id, modeMainnet.id, hemi.id, sonic.id]);
 
+export function getContractDeploymentInfo(chainId: number, name: OptionalContracts): DeploymentDetails | undefined;
+export function getContractDeploymentInfo(chainId: number, name: RequiredContracts): DeploymentDetails;
 export function getContractDeploymentInfo(
   chainId: number | undefined,
-  name: OptionalContracts,
+  name: MorphoContractName,
 ): DeploymentDetails | undefined;
-export function getContractDeploymentInfo(chainId: number | undefined, name: RequiredContracts): DeploymentDetails;
 export function getContractDeploymentInfo(chainId: number | undefined, name: MorphoContractName) {
-  return DEPLOYMENTS[chainId ?? mainnet.id][name];
+  return chainId !== undefined ? DEPLOYMENTS[chainId][name] : undefined;
 }

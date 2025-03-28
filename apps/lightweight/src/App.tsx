@@ -6,6 +6,7 @@ import { ConnectKitProvider, getDefaultConfig } from "connectkit";
 import { Outlet } from "react-router";
 import { Client as UrqlClient, Provider as UrqlProvider, fetchExchange } from "urql";
 import type { HttpTransportConfig } from "viem";
+import { createConfig, deserialize, fallback, http, serialize, WagmiProvider, type Transport } from "wagmi";
 import {
   arbitrum,
   base,
@@ -21,8 +22,7 @@ import {
   sonic,
   unichain,
   worldchain,
-} from "viem/chains";
-import { createConfig, deserialize, fallback, http, serialize, type Transport, WagmiProvider } from "wagmi";
+} from "wagmi/chains";
 
 const httpConfig: HttpTransportConfig = {
   retryDelay: 0,

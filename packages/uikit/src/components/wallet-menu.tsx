@@ -2,7 +2,15 @@ import { blo } from "blo";
 import { PowerOff } from "lucide-react";
 import { ReactNode, useEffect, useMemo, useState } from "react";
 import { type Address } from "viem";
-import { useAccount, useConnect, useDisconnect, useEnsAvatar, useEnsName, useSwitchChain } from "wagmi";
+import {
+  useAccount,
+  useAccountEffect,
+  useConnect,
+  useDisconnect,
+  useEnsAvatar,
+  useEnsName,
+  useSwitchChain,
+} from "wagmi";
 
 import { ChainIcon } from "@/components/chain-icon";
 import { Avatar, AvatarImage } from "@/components/shadcn/avatar";
@@ -109,8 +117,11 @@ export function WalletMenu({
   setSelectedChainSlug: (value: string) => void;
   connectWalletButton?: ReactNode;
 }) {
+  const [didInitialSync, setDidInitialSync] = useState(false);
+
   const { chain: chainInWallet, address, status } = useAccount();
   const { chains, switchChain } = useSwitchChain();
+  useAccountEffect({ onDisconnect: () => setDidInitialSync(false) });
 
   // The chain currently selected and shown in the UI, as specified by `[selectedChainSlug, setSelectedChainSlug]`,
   // which may come from a simple `useState` or URL parsing + navigation.
@@ -119,38 +130,26 @@ export function WalletMenu({
     [chains, selectedChainSlug],
   );
 
-  // The chain we're about to switch to. On mount, we assume wallet is out-of-sync, so `chainInUi` is pending.
-  const [pendingChain, setPendingChain] = useState(chainInUi);
-
-  // Use `switchChain` to ensure `pendingChain` is applied to wallet
   useEffect(() => {
-    switch (status) {
-      case "connected":
-        // Wallet is connected. Ask it to switch to the `pendingChain` if it's out-of-sync.
-        if (pendingChain !== undefined && pendingChain.id !== chainInWallet?.id) {
-          switchChain({ chainId: pendingChain.id }, { onSuccess: () => setPendingChain(undefined) });
-        }
-        break;
-    }
-  }, [status, pendingChain, chainInWallet?.id, switchChain]);
+    // Wallet isn't connected, so we can't do anything.
+    if (status !== "connected") return;
 
-  // Use `setSelectedChainSlug` to keep UI in sync with wallet
-  useEffect(() => {
-    switch (status) {
-      case "connected":
-        // Wallet is connected. As long as there's no `pendingChain`, we keep UI in sync with it.
-        if (pendingChain === undefined && chainInWallet !== undefined && chainInWallet.id !== chainInUi?.id) {
-          setSelectedChainSlug(getChainSlug(chainInWallet));
-        }
-        break;
-      case "disconnected":
-        // Wallet is disconnected. It can't switch to the `pendingChain`, so we bypass it.
-        if (pendingChain !== undefined && pendingChain.id !== chainInUi?.id) {
-          setSelectedChainSlug(getChainSlug(pendingChain));
-        }
-        break;
+    if (!didInitialSync && chainInUi?.id !== undefined) {
+      // Need initial sync (adjust wallet to match `chainInUi`)
+      if (chainInUi.id !== chainInWallet?.id) {
+        switchChain({ chainId: chainInUi.id }, { onSuccess: () => setDidInitialSync(true) });
+      } else {
+        setDidInitialSync(true);
+      }
+      return;
     }
-  }, [status, pendingChain, chainInWallet, chainInUi?.id, setSelectedChainSlug]);
+
+    if (didInitialSync && chainInWallet?.id !== undefined && chainInWallet.id !== chainInUi?.id) {
+      // After initial sync, updates flow the other way (adjust UI to match `chainInWallet`)
+      setSelectedChainSlug(getChainSlug(chainInWallet));
+      return;
+    }
+  }, [status, didInitialSync, chainInWallet, chainInUi?.id, switchChain, setSelectedChainSlug]);
 
   return (
     <>
@@ -159,7 +158,11 @@ export function WalletMenu({
         onValueChange={(value: string) => {
           const target = chains.find((chain) => getChainSlug(chain) === value);
           if (target && getChainSlug(target) !== selectedChainSlug) {
-            setPendingChain(target);
+            if (status === "connected") {
+              switchChain({ chainId: target.id });
+            } else {
+              setSelectedChainSlug(getChainSlug(target));
+            }
           }
         }}
       >

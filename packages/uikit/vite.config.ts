@@ -6,6 +6,7 @@ import { glob } from "glob";
 import { vitePluginTevm } from "tevm/bundler/vite-plugin";
 import { defineConfig } from "vite";
 import dts from "vite-plugin-dts";
+import { externalizeDeps } from "vite-plugin-externalize-deps";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 import svgr from "vite-plugin-svgr";
 
@@ -28,6 +29,15 @@ export default defineConfig({
     react(),
     vitePluginTevm(),
     dts({ tsconfigPath: "./tsconfig.package.json" }),
+    /* NOTE: The following works too, but results in a slightly larger bundle since it doesn't externalize
+    Node built-ins (the plugin does).
+    ```
+    import packageJson from "./package.json";
+    //...
+    build.rollupOptions.external = Object.keys(packageJson.peerDependencies)
+    ```
+    */
+    externalizeDeps({ deps: false, peerDeps: true, devDeps: false }),
   ],
   resolve: {
     alias: {
@@ -40,7 +50,6 @@ export default defineConfig({
       formats: ["es"],
     },
     rollupOptions: {
-      external: ["@tanstack/react-query", "sonner", "react", "react-dom", "recharts", "wagmi"],
       input: Object.fromEntries(
         glob
           .sync("src/**/*.{ts,tsx}", {

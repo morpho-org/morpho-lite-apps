@@ -5,6 +5,17 @@ import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import type { Chain, HttpTransportConfig } from "viem";
 import {
+  createConfig,
+  deserialize,
+  fallback,
+  http,
+  injected,
+  serialize,
+  type Transport,
+  unstable_connector,
+  WagmiProvider,
+} from "wagmi";
+import {
   arbitrum,
   base,
   corn,
@@ -17,20 +28,9 @@ import {
   polygon,
   scroll as scrollMainnet,
   sonic,
+  unichain,
   worldchain,
-} from "viem/chains";
-import { unichain } from "viem/op-stack";
-import {
-  createConfig,
-  deserialize,
-  fallback,
-  http,
-  injected,
-  serialize,
-  type Transport,
-  unstable_connector,
-  WagmiProvider,
-} from "wagmi";
+} from "wagmi/chains";
 
 import DashboardPage from "./app/dashboard/page";
 

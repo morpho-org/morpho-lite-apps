@@ -13,9 +13,9 @@ import {
   polygon,
   scroll as scrollMainnet,
   sonic,
+  unichain,
   worldchain,
-} from "viem/chains";
-import { unichain } from "viem/op-stack";
+} from "wagmi/chains";
 
 import ArbitrumSvg from "@/assets/chains/arb.svg?react";
 import BaseChainSvg from "@/assets/chains/base.svg?react";

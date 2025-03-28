@@ -17,7 +17,7 @@ enum SubPage {
 
 export default function Page() {
   const [selectedSubPage, setSelectedSubPage] = useState(SubPage.Earn);
-  const [selectedChainSlug, setSelectedChainSlug] = useState("Ethereum");
+  const [selectedChainSlug, setSelectedChainSlug] = useState("ethereum");
 
   return (
     <div className="bg-gray-200 dark:bg-neutral-900">
