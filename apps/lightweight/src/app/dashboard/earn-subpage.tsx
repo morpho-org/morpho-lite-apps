@@ -286,7 +286,8 @@ export function EarnSubPage() {
       if (!b.info?.maxWithdraw) return -1;
       return 0;
     });
-    return arr;
+    // Filter out unnamed vaults and vaults with 0 deposits
+    return arr.filter((vault) => vault.info?.name !== "" && !!vault.info?.totalAssets);
   }, [filteredCreateMetaMorphoArgs, filteredVaultInfos, assets, assetsInfo, vaultCurators]);
 
   return (
