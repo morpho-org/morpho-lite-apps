@@ -17,7 +17,10 @@ import {
   TooltipTrigger,
 } from "@morpho-blue-offchain-public/uikit/components/shadcn/tooltip";
 import useContractEvents from "@morpho-blue-offchain-public/uikit/hooks/use-contract-events/use-contract-events";
-import { readWithdrawQueue } from "@morpho-blue-offchain-public/uikit/lens/read-withdraw-queue";
+import {
+  readWithdrawQueue,
+  readWithdrawQueueStateOverride,
+} from "@morpho-blue-offchain-public/uikit/lens/read-withdraw-queue";
 import { formatBalanceWithSymbol, getTokenSymbolURI, Token } from "@morpho-blue-offchain-public/uikit/lib/utils";
 import { blo } from "blo";
 // @ts-expect-error: this package lacks types
@@ -199,6 +202,7 @@ export function EarnSubPage() {
       ])
       .flat(),
     allowFailure: false,
+    stateOverride: [readWithdrawQueueStateOverride()],
     query: {
       refetchOnMount: "always",
       enabled: !isFetchingCreateMetaMorphoEvents && userAddress !== undefined,

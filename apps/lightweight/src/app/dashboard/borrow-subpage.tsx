@@ -19,7 +19,10 @@ import {
   TooltipTrigger,
 } from "@morpho-blue-offchain-public/uikit/components/shadcn/tooltip";
 import useContractEvents from "@morpho-blue-offchain-public/uikit/hooks/use-contract-events/use-contract-events";
-import { readWithdrawQueue } from "@morpho-blue-offchain-public/uikit/lens/read-withdraw-queue";
+import {
+  readWithdrawQueue,
+  readWithdrawQueueStateOverride,
+} from "@morpho-blue-offchain-public/uikit/lens/read-withdraw-queue";
 import {
   formatBalanceWithSymbol,
   formatApy,
@@ -100,6 +103,7 @@ export function BorrowSubPage() {
       ])
       .flat(),
     allowFailure: false,
+    stateOverride: [readWithdrawQueueStateOverride()],
     query: {
       refetchOnMount: "always",
       enabled: !isFetchingCreateMetaMorphoEvents && userAddress !== undefined,
