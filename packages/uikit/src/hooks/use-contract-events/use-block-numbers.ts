@@ -55,6 +55,9 @@ export function useBlockNumbers<T extends Tuple<BlockNumber | BlockTag>, U = Map
       } as const),
       notifyOnChangeProps: ["data" as const],
     })),
+    combine(result) {
+      return result.map((qr) => qr.data);
+    },
   });
 
   return useMemo(() => {
@@ -63,7 +66,7 @@ export function useBlockNumbers<T extends Tuple<BlockNumber | BlockTag>, U = Map
     const blockNumbers: BlockNumber[] = [];
 
     for (const blockNumberOrTag of blockNumbersOrTags) {
-      const blockNumber = typeof blockNumberOrTag === "bigint" ? blockNumberOrTag : r.splice(0, 1)[0].data;
+      const blockNumber = typeof blockNumberOrTag === "bigint" ? blockNumberOrTag : r.splice(0, 1)[0];
       if (blockNumber === undefined) return { data: undefined };
       blockNumbers.push(blockNumber);
     }

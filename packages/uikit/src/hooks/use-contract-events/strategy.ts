@@ -153,7 +153,7 @@ export function getStrategyBasedOn<Transport extends EIP1193Transport>(
         retryDelay = ORDINARY_RETRY_DELAY;
       }
 
-      const timeout = latency ? latency * 5 : ping * 10;
+      const timeout = latency ? latency * 5 : ping * 20;
       const c = 0.75; // UCB coefficient (1.0 is standard, lower means less exploration)
       const k = (maxNumBlocks === "unconstrained" ? 1_000_000 : Number(maxNumBlocks)) / timeout; // UCB scaler
       const ucbValue = k * c * Math.sqrt(Math.log(totalRequestCount) / (successes + failures));

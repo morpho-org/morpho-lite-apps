@@ -412,9 +412,11 @@ export default function useContractEvents<
             : a + (min(b.toBlock, toBlock) - max(b.fromBlock, fromBlock) + 1n);
         }, 0n);
 
+        // Find index of first relevant range
+        const s = all.findIndex((range) => fromBlock <= range.toBlock);
         // Flatten and parse logs
         logs = {
-          all: parse(args.returnInOrder ? (all.at(0)?.logs ?? []) : all.flatMap((x) => x.logs)),
+          all: parse(args.returnInOrder ? (s > -1 ? all[s].logs : []) : all.flatMap((x) => x.logs)),
           finalized: parse(finalized.flatMap((x) => x.logs)),
         };
         // Filter out logs that are outside the requested block range
@@ -424,7 +426,7 @@ export default function useContractEvents<
             logs[key] = logs[key].filter((log) => fromBlock <= log.blockNumber && log.blockNumber <= toBlock);
           }
         }
-        isFetching = all.length !== 1 || all[0].fromBlock > fromBlock || all[0].toBlock < toBlock;
+        isFetching = s === -1 || all[s].fromBlock > fromBlock || all[s].toBlock < toBlock;
         fractionFetched = Number(numBlocksFetched) / (Number(toBlock) - Number(fromBlock) + 1);
       }
 
