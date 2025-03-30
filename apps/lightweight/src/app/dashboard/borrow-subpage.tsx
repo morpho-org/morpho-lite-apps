@@ -35,7 +35,8 @@ import { keepPreviousData } from "@tanstack/react-query";
 import { blo } from "blo";
 import { Eye, Info } from "lucide-react";
 import { useMemo } from "react";
-import { Address, erc20Abi, isAddressEqual, Hex } from "viem";
+import { useOutletContext } from "react-router";
+import { Address, erc20Abi, isAddressEqual, Hex, Chain, zeroAddress } from "viem";
 import { useAccount, useReadContracts } from "wagmi";
 
 import { BorrowSheetContent } from "@/components/borrow-sheet-content";
@@ -59,7 +60,9 @@ function TokenTableCell({ address, symbol, imageSrc }: Token) {
 }
 
 export function BorrowSubPage() {
-  const { chainId, address: userAddress } = useAccount();
+  const { status, address: userAddress } = useAccount();
+  const { chain } = useOutletContext() as { chain?: Chain };
+  const chainId = chain?.id;
 
   const [morpho, factory, factoryV1_1] = useMemo(
     () => [
@@ -97,7 +100,7 @@ export function BorrowSubPage() {
           address: ev.args.metaMorpho,
           abi: metaMorphoAbi,
           functionName: "maxWithdraw",
-          args: [userAddress ?? "0x"],
+          args: [userAddress ?? zeroAddress],
         } as const,
         readWithdrawQueue(ev.args.metaMorpho),
       ])
@@ -106,7 +109,7 @@ export function BorrowSubPage() {
     stateOverride: [readWithdrawQueueStateOverride()],
     query: {
       refetchOnMount: "always",
-      enabled: !isFetchingCreateMetaMorphoEvents && userAddress !== undefined,
+      enabled: !isFetchingCreateMetaMorphoEvents,
     },
   });
 
@@ -265,11 +268,13 @@ export function BorrowSubPage() {
     return map;
   }, [filteredCreateMarketArgs, erc20Symbols, erc20Decimals]);
 
+  if (status === "connecting") return undefined;
+
   return (
-    <div className="flex min-h-screen flex-col px-2.5">
-      {userAddress === undefined ? (
+    <div className="flex min-h-screen flex-col px-2.5 pt-16">
+      {status === "disconnected" ? (
         <CtaCard
-          className="flex w-full max-w-5xl flex-col gap-4 px-8 pb-14 pt-24 md:m-auto md:grid md:grid-cols-[50%_50%] md:px-0 md:pt-32 dark:bg-neutral-900"
+          className="flex w-full max-w-5xl flex-col gap-4 px-8 pb-14 pt-8 md:m-auto md:grid md:grid-cols-[50%_50%] md:px-0 dark:bg-neutral-900"
           bigText="Provide collateral to borrow any asset"
           littleText="Connect wallet to get started"
           videoSrc={{
@@ -278,9 +283,9 @@ export function BorrowSubPage() {
           }}
         />
       ) : (
-        <div className="flex h-96 w-full max-w-5xl flex-col gap-4 px-8 pb-14 pt-24 md:m-auto md:px-0 md:pt-32 dark:bg-neutral-900"></div>
+        <div className="flex h-fit w-full max-w-5xl flex-col gap-4 px-8 pb-14 pt-8 md:m-auto md:px-0 dark:bg-neutral-900"></div>
       )}
-      <div className="bg-background dark:bg-background/30 flex grow justify-center rounded-t-xl">
+      <div className="bg-background dark:bg-background/30 flex grow justify-center rounded-t-xl pb-32">
         <div className="text-primary w-full max-w-5xl px-8 pb-32 pt-8">
           <Table className="border-separate border-spacing-y-3">
             <TableHeader className="bg-secondary">

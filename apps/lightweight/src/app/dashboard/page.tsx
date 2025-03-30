@@ -1,9 +1,11 @@
 import MorphoLogoSvg from "@morpho-blue-offchain-public/uikit/assets/morpho.svg?react";
 import { Button } from "@morpho-blue-offchain-public/uikit/components/shadcn/button";
 import { WalletMenu } from "@morpho-blue-offchain-public/uikit/components/wallet-menu";
+import { getChainSlug } from "@morpho-blue-offchain-public/uikit/lib/utils";
 import { ConnectKitButton } from "connectkit";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { Link, Outlet, useLocation, useNavigate, useParams } from "react-router";
+import { useChains } from "wagmi";
 
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
@@ -38,6 +40,12 @@ export default function Page() {
   const setSelectedChainSlug = useCallback(
     (value: string) => navigate(`../${value}/${selectedSubPage}`, { replace: true, relative: "path" }),
     [navigate, selectedSubPage],
+  );
+
+  const chains = useChains();
+  const chain = useMemo(
+    () => chains.find((chain) => getChainSlug(chain) === selectedChainSlug),
+    [chains, selectedChainSlug],
   );
 
   return (
@@ -77,7 +85,7 @@ export default function Page() {
           />
         </div>
       </Header>
-      <Outlet />
+      <Outlet context={{ chain }} />
       <Footer />
     </div>
   );

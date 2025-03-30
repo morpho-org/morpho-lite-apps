@@ -26,7 +26,8 @@ import { blo } from "blo";
 // @ts-expect-error: this package lacks types
 import humanizeDuration from "humanize-duration";
 import { useMemo } from "react";
-import { Address, erc20Abi, isAddressEqual } from "viem";
+import { useOutletContext } from "react-router";
+import { Address, Chain, erc20Abi, isAddressEqual, zeroAddress } from "viem";
 import { useAccount, useReadContracts } from "wagmi";
 
 import { CtaCard } from "@/components/cta-card";
@@ -159,7 +160,9 @@ function VaultTable({ vaults, depositsMode }: { vaults: Vault[]; depositsMode: "
 }
 
 export function EarnSubPage() {
-  const { chainId, address: userAddress } = useAccount();
+  const { status, address: userAddress } = useAccount();
+  const { chain } = useOutletContext() as { chain?: Chain };
+  const chainId = chain?.id;
 
   const [factory, factoryV1_1] = useMemo(
     () => [
@@ -196,7 +199,7 @@ export function EarnSubPage() {
           address: ev.args.metaMorpho,
           abi: metaMorphoAbi,
           functionName: "maxWithdraw",
-          args: [userAddress ?? "0x"],
+          args: [userAddress ?? zeroAddress],
         } as const,
         readWithdrawQueue(ev.args.metaMorpho),
       ])
@@ -205,7 +208,7 @@ export function EarnSubPage() {
     stateOverride: [readWithdrawQueueStateOverride()],
     query: {
       refetchOnMount: "always",
-      enabled: !isFetchingCreateMetaMorphoEvents && userAddress !== undefined,
+      enabled: !isFetchingCreateMetaMorphoEvents,
     },
   });
 
@@ -263,7 +266,7 @@ export function EarnSubPage() {
               timelock: filteredVaultInfos[idx * 6 + 1] as bigint,
               name: filteredVaultInfos[idx * 6 + 2] as string,
               totalAssets: filteredVaultInfos[idx * 6 + 3] as bigint,
-              maxWithdraw: filteredVaultInfos[idx * 6 + 4] as bigint,
+              maxWithdraw: userAddress ? (filteredVaultInfos[idx * 6 + 4] as bigint) : 0n,
             }
           : undefined,
         asset: {
@@ -291,13 +294,17 @@ export function EarnSubPage() {
     });
     // Filter out unnamed vaults and vaults with 0 deposits
     return arr.filter((vault) => vault.info?.name !== "" && !!vault.info?.totalAssets);
-  }, [filteredCreateMetaMorphoArgs, filteredVaultInfos, assets, assetsInfo, vaultCurators]);
+  }, [filteredCreateMetaMorphoArgs, assets, assetsInfo, filteredVaultInfos, userAddress, vaultCurators]);
+
+  const userVaults = vaults.filter((v) => !!v.info?.maxWithdraw);
+
+  if (status === "connecting") return undefined;
 
   return (
-    <div className="flex min-h-screen flex-col px-2.5">
-      {userAddress === undefined ? (
+    <div className="flex min-h-screen flex-col px-2.5 pt-16">
+      {status === "disconnected" ? (
         <CtaCard
-          className="flex w-full max-w-5xl flex-col gap-4 px-8 pb-14 pt-24 md:m-auto md:grid md:grid-cols-[50%_50%] md:px-0 md:pt-32 dark:bg-neutral-900"
+          className="flex w-full max-w-5xl flex-col gap-4 px-8 pb-14 pt-8 md:m-auto md:grid md:grid-cols-[50%_50%] md:px-0 dark:bg-neutral-900"
           bigText="Earn on your terms"
           littleText="Connect wallet to get started"
           videoSrc={{
@@ -306,9 +313,11 @@ export function EarnSubPage() {
           }}
         />
       ) : (
-        <div className="flex h-fit min-h-96 w-full max-w-5xl flex-col gap-4 px-8 pb-14 pt-24 md:m-auto md:px-0 md:pt-32 dark:bg-neutral-900">
-          <VaultTable vaults={vaults.filter((v) => !!v.info?.maxWithdraw)} depositsMode="maxWithdraw" />
-        </div>
+        userVaults.length > 0 && (
+          <div className="flex h-fit w-full max-w-5xl flex-col gap-4 px-8 pb-14 pt-8 md:m-auto md:px-0 dark:bg-neutral-900">
+            <VaultTable vaults={userVaults} depositsMode="maxWithdraw" />
+          </div>
+        )
       )}
       <div className="bg-background dark:bg-background/30 flex grow justify-center rounded-t-xl pb-32">
         <VaultTable vaults={vaults} depositsMode="totalAssets" />
