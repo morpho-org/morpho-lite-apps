@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { fileURLToPath } from "node:url";
 import { extname, relative, resolve } from "path";
 
@@ -75,5 +76,8 @@ export default defineConfig({
       },
     },
     copyPublicDir: false,
+  },
+  test: {
+    include: ["test/**/*.{test,spec}.?(c|m)[jt]s?(x)"],
   },
 });
