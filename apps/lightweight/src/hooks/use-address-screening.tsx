@@ -52,5 +52,5 @@ export function AddressScreeningProvider({ children }: { children: ReactNode }) 
     }
   }, []);
 
-  return <AddressScreeningContext.Provider value={{ ...status, screen }}>{children}</AddressScreeningContext.Provider>;
+  return <AddressScreeningContext value={{ ...status, screen }}>{children}</AddressScreeningContext>;
 }
