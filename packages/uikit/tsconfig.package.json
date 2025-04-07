@@ -28,5 +28,5 @@
     },
     "plugins": [{ "name": "@tevm/ts-plugin" }]
   },
-  "include": ["src"]
+  "include": ["src", "test"]
 }
