@@ -35,5 +35,5 @@
       }
     ]
   },
-  "include": ["src", "test"]
+  "include": ["src"]
 }
