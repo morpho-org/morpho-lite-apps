@@ -162,7 +162,7 @@ export function EarnSubPage() {
   }, [tokenAddresses, tokenData]);
 
   // MARK: Fetch user's balance in each vault
-  const { data: maxWithdrawsData } = useReadContracts({
+  const { data: maxWithdrawsData, refetch: refetchMaxWithdraws } = useReadContracts({
     contracts: vaultsData?.map(
       (vaultData) =>
         ({
@@ -228,7 +228,7 @@ export function EarnSubPage() {
     });
   }, [vaults, tokens, maxWithdraws, top5Curators]);
 
-  const userRows = rows.filter((row) => !!row.maxWithdraw);
+  const userRows = rows.filter((row) => (row.maxWithdraw ?? 0n) > 0n);
 
   if (status === "reconnecting") return undefined;
 
@@ -247,12 +247,24 @@ export function EarnSubPage() {
       ) : (
         userRows.length > 0 && (
           <div className="flex h-fit w-full max-w-5xl flex-col gap-4 px-8 pb-14 pt-8 md:m-auto md:px-0 dark:bg-neutral-900">
-            <EarnTable chain={chain} rows={userRows} depositsMode="maxWithdraw" tokens={tokens} />
+            <EarnTable
+              chain={chain}
+              rows={userRows}
+              depositsMode="maxWithdraw"
+              tokens={tokens}
+              refetchPositions={refetchMaxWithdraws}
+            />
           </div>
         )
       )}
       <div className="bg-background dark:bg-background/30 flex grow justify-center rounded-t-xl pb-32">
-        <EarnTable chain={chain} rows={rows} depositsMode="totalAssets" tokens={tokens} />
+        <EarnTable
+          chain={chain}
+          rows={rows}
+          depositsMode="totalAssets"
+          tokens={tokens}
+          refetchPositions={refetchMaxWithdraws}
+        />
       </div>
     </div>
   );

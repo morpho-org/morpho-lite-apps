@@ -256,11 +256,13 @@ export function EarnTable({
   rows,
   depositsMode,
   tokens,
+  refetchPositions,
 }: {
   chain: Chain | undefined;
   rows: Row[];
   depositsMode: "totalAssets" | "maxWithdraw";
   tokens: Map<Address, { decimals?: number; symbol?: string }>;
+  refetchPositions: () => void;
 }) {
   return (
     <div className="text-primary w-full max-w-5xl px-8 pt-8">
@@ -279,7 +281,13 @@ export function EarnTable({
             const ownerText = `${row.vault.owner.slice(0, 6)}...${row.vault.owner.slice(-4)}`;
             const deposits = depositsMode === "maxWithdraw" ? row.maxWithdraw : row.vault.totalAssets;
             return (
-              <Sheet key={row.vault.address}>
+              <Sheet
+                key={row.vault.address}
+                onOpenChange={(isOpen) => {
+                  // Refetch positions on sidesheet close, since user may have sent txns to modify one
+                  if (!isOpen) void refetchPositions();
+                }}
+              >
                 <SheetTrigger asChild>
                   <TableRow className="bg-secondary hover:bg-accent">
                     <TableCell className="rounded-l-lg py-3">
