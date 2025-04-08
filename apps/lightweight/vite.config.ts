@@ -15,8 +15,12 @@ export default defineConfig({
     },
   },
   test: {
+    browser: {
+      provider: "playwright",
+      enabled: true,
+      instances: [{ browser: "chromium" }],
+    },
     include: ["./test/**/*.{test,spec}.?(c|m)[jt]s?(x)"],
-    environment: "jsdom",
     setupFiles: ["./test/setup.ts"],
     globalSetup: ["./test/global-setup.ts"],
   },

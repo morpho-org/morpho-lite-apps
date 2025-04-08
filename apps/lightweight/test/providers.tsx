@@ -1,6 +1,6 @@
-import { render, RenderOptions } from "@testing-library/react";
 import { ReactNode } from "react";
 import { createMemoryRouter, RouterProvider } from "react-router";
+import { render, ComponentRenderOptions } from "vitest-browser-react";
 import { type Config } from "wagmi";
 
 import App from "@/App";
@@ -29,7 +29,7 @@ function MockMain({
 const customRender = (
   ui: ReactNode,
   args: Omit<Parameters<typeof MockMain>[0], "children">,
-  options?: Omit<RenderOptions, "wrapper">,
+  options?: Omit<ComponentRenderOptions, "wrapper">,
 ) =>
   render(ui, {
     wrapper: ({ children }: { children: ReactNode }) => <MockMain children={children} {...args} />,
@@ -37,6 +37,6 @@ const customRender = (
   });
 
 // eslint-disable-next-line react-refresh/only-export-components, import-x/export
-export * from "@testing-library/react";
+export * from "vitest-browser-react";
 // eslint-disable-next-line import-x/export
 export { customRender as render };

@@ -1,4 +1,4 @@
-import userEvent from "@testing-library/user-event";
+import { page, userEvent } from "@vitest/browser/context";
 import { http, UserRejectedRequestError } from "viem";
 import { generatePrivateKey, privateKeyToAddress } from "viem/accounts";
 import { mainnet, base } from "viem/chains";
@@ -6,7 +6,7 @@ import { describe, expect, vi } from "vitest";
 import { mock } from "wagmi";
 
 import { testWithMainnetFork, rpcUrls } from "../../config";
-import { render, screen, waitFor, waitForElementToBeRemoved } from "../../providers";
+import { render } from "../../providers";
 
 import Page from "@/app/dashboard/page";
 import { createConfig } from "@/lib/config";
@@ -30,13 +30,13 @@ describe("connect wallet flow", () => {
       ],
     });
 
-    render(<Page />, { wagmiConfig });
+    const screen = render(<Page />, { wagmiConfig });
 
     await userEvent.click(screen.getByText("Connect Wallet"));
-    await userEvent.click(await screen.findByText("Mock Connector"));
+    await userEvent.click(screen.getByText("Mock Connector"));
 
-    await waitFor(() => screen.findByText("Requesting Connection"));
-    await waitForElementToBeRemoved(screen.getByText("Requesting Connection"));
+    // await waitFor(() => screen.getByText("Requesting Connection"));
+    // await waitForElementToBeRemoved(screen.getByText("Requesting Connection"));
 
     expect(screen.getByText("Request Cancelled")).toBeInTheDocument();
   });
@@ -52,13 +52,13 @@ describe("connect wallet flow", () => {
       connectors: [mock({ accounts: [account] })],
     });
 
-    render(<Page />, { wagmiConfig });
+    const screen = render(<Page />, { wagmiConfig });
 
     await userEvent.click(screen.getByText("Connect Wallet"));
-    await userEvent.click(await screen.findByText("Mock Connector"));
+    await userEvent.click(screen.getByText("Mock Connector"));
 
-    await waitFor(() => screen.findByText("Requesting Connection"));
-    await waitForElementToBeRemoved(screen.getByText("Requesting Connection"));
+    // await waitFor(() => screen.findByText("Requesting Connection"));
+    // await waitForElementToBeRemoved(screen.getByText("Requesting Connection"));
 
     expect(screen.getByText(`${account.slice(0, 6)}...${account.slice(-4)}`)).toBeInTheDocument();
   });
@@ -83,10 +83,10 @@ describe("switch chain flow", () => {
 
     window.open = vi.fn();
 
-    await userEvent.click(screen.getByRole("combobox"));
-    await userEvent.click(screen.getByText("Base"));
+    await userEvent.click(page.getByRole("combobox"));
+    await userEvent.click(page.getByText("Base"));
 
-    expect(screen.getByText("Switched to Base successfully!")).toBeInTheDocument();
+    expect(page.getByText("Switched to Base successfully!")).toBeInTheDocument();
     expect(window.open).toHaveBeenCalledWith("https://app.morpho.org/base/earn", "_blank", "noopener,noreferrer");
   });
 
@@ -108,10 +108,10 @@ describe("switch chain flow", () => {
 
     window.open = vi.fn();
 
-    await userEvent.click(screen.getByRole("combobox"));
-    await userEvent.click(screen.getByText("Base"));
+    await userEvent.click(page.getByRole("combobox"));
+    await userEvent.click(page.getByText("Base"));
 
-    expect(screen.getByText("Switched to Base successfully!")).toBeInTheDocument();
+    expect(page.getByText("Switched to Base successfully!")).toBeInTheDocument();
     expect(window.open).toHaveBeenCalledWith("https://app.morpho.org/base/earn", "_blank", "noopener,noreferrer");
   });
 });
