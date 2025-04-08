@@ -1,6 +1,9 @@
 {
   "name": "morpho-blue-offchain-public",
-  "private": true,
+  "author": "Morpho Association <contact@morpho.org>",
+  "contributors": [
+    "Hayden Shively <hayden@morpho.xyz>"
+  ],
   "version": "0.0.0",
   "type": "module",
   "scripts": {
@@ -21,7 +24,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
-    "@morpho-org/test": "link:../sdks/packages/test",
+    "@morpho-org/test": "file:../sdks/packages/test/morpho-org-test-2.0.0.tgz",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",

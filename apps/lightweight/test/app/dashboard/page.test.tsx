@@ -5,14 +5,14 @@ import { mainnet, base } from "viem/chains";
 import { describe, expect, vi } from "vitest";
 import { mock } from "wagmi";
 
-import { forkedTest, rpcUrls } from "../../config";
+import { testWithMainnetFork, rpcUrls } from "../../config";
 import { render, screen, waitFor, waitForElementToBeRemoved } from "../../providers";
 
 import Page from "@/app/dashboard/page";
 import { createConfig } from "@/lib/config";
 
 describe("connect wallet flow", () => {
-  forkedTest("handles user rejection gracefully", async ({ client }) => {
+  testWithMainnetFork("handles user rejection gracefully", async ({ client }) => {
     const account = privateKeyToAddress(generatePrivateKey());
     const wagmiConfig = createConfig({
       chains: [mainnet, base],
@@ -41,7 +41,7 @@ describe("connect wallet flow", () => {
     expect(screen.getByText("Request Cancelled")).toBeInTheDocument();
   });
 
-  forkedTest("shows user address once connected", async ({ client }) => {
+  testWithMainnetFork("shows user address once connected", async ({ client }) => {
     const account = privateKeyToAddress(generatePrivateKey());
     const wagmiConfig = createConfig({
       chains: [mainnet, base],
@@ -65,7 +65,7 @@ describe("connect wallet flow", () => {
 });
 
 describe("switch chain flow", () => {
-  forkedTest("switches to base without wallet and opens main app", async ({ client }) => {
+  testWithMainnetFork("switches to base without wallet and opens main app", async ({ client }) => {
     const account = privateKeyToAddress(generatePrivateKey());
     const wagmiConfig = createConfig({
       chains: [mainnet, base],
@@ -90,7 +90,7 @@ describe("switch chain flow", () => {
     expect(window.open).toHaveBeenCalledWith("https://app.morpho.org/base/earn", "_blank", "noopener,noreferrer");
   });
 
-  forkedTest("switches to base with wallet and opens main app", async ({ client }) => {
+  testWithMainnetFork("switches to base with wallet and opens main app", async ({ client }) => {
     const account = privateKeyToAddress(generatePrivateKey());
     const wagmiConfig = createConfig({
       chains: [mainnet, base],

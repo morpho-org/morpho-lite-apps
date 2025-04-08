@@ -11,8 +11,8 @@ importers:
         specifier: ^9.21.0
         version: 9.23.0
       "@morpho-org/test":
-        specifier: link:../sdks/packages/test
-        version: link:../sdks/packages/test
+        specifier: file:/Users/haydenshively/Developer/sdks/packages/test/morpho-org-test-2.0.0.tgz
+        version: file:../sdks/packages/test/morpho-org-test-2.0.0.tgz(viem@2.23.15(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@5.0.10)(zod@3.24.2))(vitest@3.1.1(@types/debug@4.1.12)(@types/node@22.13.14)(jiti@2.4.2)(jsdom@26.0.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(terser@5.39.0)(tsx@4.19.3)(yaml@2.7.0))
       "@testing-library/dom":
         specifier: ^10.4.0
         version: 10.4.0
@@ -1497,6 +1497,26 @@ packages:
   "@morpho-org/morpho-ts@2.2.0":
     resolution:
       { integrity: sha512-fsOBVvSLMlsyAI10pbgaXUnkN09DEUN0xw/W+5nWVrYO9/UGP1vDrdn99JH1B0tWZa7NqAWYc5RX9jLZGGTMNg== }
+
+  "@morpho-org/test@file:../sdks/packages/test/morpho-org-test-2.0.0.tgz":
+    resolution:
+      {
+        integrity: sha512-Dw14x1RePCPfhoytj/XdZ9yaXjYabWfkR7ei8nUZfAw+GaD6J1V/ZM5GYhDWk6cyX5p0js/V7cEIg4ezBBp8jw==,
+        tarball: file:../sdks/packages/test/morpho-org-test-2.0.0.tgz,
+      }
+    version: 2.0.0
+    peerDependencies:
+      "@playwright/test": ^1.48.1
+      ethers: ^6.13.0
+      viem: ^2.21.10
+      vitest: ">=2.0.0 <4.0.0"
+    peerDependenciesMeta:
+      "@playwright/test":
+        optional: true
+      ethers:
+        optional: true
+      vitest:
+        optional: true
 
   "@motionone/animation@10.18.0":
     resolution:
@@ -4304,6 +4324,11 @@ packages:
     resolution:
       { integrity: sha512-IfEDxwoWIjkeXL1eXcDiow4UbKjhLdq6/EuSVR9GMN7KVH3r9gQ83e73hsz1Nd1T3ijd5xv1wcWRYO+D6kCI2w== }
 
+  colors@1.4.0:
+    resolution:
+      { integrity: sha512-a+UqTh4kgZg/SlGvfbzDHpgRu7AAQOmmqRHJnxhRZICKFUT91brVhNNt58CMWU9PsBbv3PDCZUHbVxuDiH2mtA== }
+    engines: { node: ">=0.1.90" }
+
   combined-stream@1.0.8:
     resolution:
       { integrity: sha512-FQN4MRfuJeHf7cBbBMJFXhKSDq+2kAArBlmRBvcvFE5BB1HZKXtSFASDhdlz9zOYwxh8lDdnvmMOe/+5cdoEdg== }
@@ -6030,6 +6055,10 @@ packages:
     resolution:
       { integrity: sha512-pDo3lu8Jhfjqls6GkMgpahsF9kCyayhgykjyLMNFTKWrpVdAQtYyB4muAMWozBB4ig/dtWAmsMxLEI8wuz+DYQ== }
     deprecated: This package is deprecated. Use require('node:util').isDeepStrictEqual instead.
+
+  lodash.kebabcase@4.1.1:
+    resolution:
+      { integrity: sha512-N8XRTIMMqqDgSy4VLKPnJ/+hpGZN+PHQiJnSenYqPaVV/NCqEogTnAdZLQiGKhxX+JCs8waWq2t1XHWKOmlY8g== }
 
   lodash.merge@4.6.2:
     resolution:
@@ -7906,6 +7935,18 @@ packages:
     resolution:
       { integrity: sha512-PnpQQMuxlwYdocC8fIJqVXvkeViHYzotI+NJrCuav0ZYFoq912ZHBk3mCeuj+5/VpodOjPe1z0Fk2ihgzlXqjQ== }
 
+  viem-deal@2.0.4:
+    resolution:
+      { integrity: sha512-gd1+pnLissjxYbaJ8u2UtdOOpv0o4W8RsVlSwy5w+SEasi/f5VJvrCVmE8cBrcHpvWYqoaxwj4VfJG45oLPnyQ== }
+    peerDependencies:
+      viem: ^2.21.18
+
+  viem-tracer@1.5.5:
+    resolution:
+      { integrity: sha512-C6fEeO2hfvGEtiRd4ZE/82rWdSzf98YBuWxG7qmrSjOAcz7gVJEt8jpSFHUvVP0IZl0/1N+eix7JHDXGZ6iyHQ== }
+    peerDependencies:
+      viem: ^2.21.0
+
   viem@2.23.15:
     resolution:
       { integrity: sha512-2t9lROkSzj/ciEZ08NqAHZ6c+J1wKLwJ4qpUxcHdVHcLBt6GfO9+ycuZycTT05ckfJ6TbwnMXMa3bMonvhtUMw== }
@@ -9649,6 +9690,15 @@ snapshots:
       "@noble/hashes": 1.7.1
 
   "@morpho-org/morpho-ts@2.2.0": {}
+
+  "@morpho-org/test@file:../sdks/packages/test/morpho-org-test-2.0.0.tgz(viem@2.23.15(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@5.0.10)(zod@3.24.2))(vitest@3.1.1(@types/debug@4.1.12)(@types/node@22.13.14)(jiti@2.4.2)(jsdom@26.0.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(terser@5.39.0)(tsx@4.19.3)(yaml@2.7.0))":
+    dependencies:
+      lodash.kebabcase: 4.1.1
+      viem: 2.23.15(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@5.0.10)(zod@3.24.2)
+      viem-deal: 2.0.4(viem@2.23.15(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@5.0.10)(zod@3.24.2))
+      viem-tracer: 1.5.5(viem@2.23.15(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@5.0.10)(zod@3.24.2))
+    optionalDependencies:
+      vitest: 3.1.1(@types/debug@4.1.12)(@types/node@22.13.14)(jiti@2.4.2)(jsdom@26.0.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(terser@5.39.0)(tsx@4.19.3)(yaml@2.7.0)
 
   "@motionone/animation@10.18.0":
     dependencies:
@@ -12885,6 +12935,8 @@ snapshots:
 
   colorette@2.0.20: {}
 
+  colors@1.4.0: {}
+
   combined-stream@1.0.8:
     dependencies:
       delayed-stream: 1.0.0
@@ -14330,6 +14382,8 @@ snapshots:
   lodash-es@4.17.21: {}
 
   lodash.isequal@4.5.0: {}
+
+  lodash.kebabcase@4.1.1: {}
 
   lodash.merge@4.6.2: {}
 
@@ -15845,6 +15899,15 @@ snapshots:
       d3-shape: 3.2.0
       d3-time: 3.1.0
       d3-timer: 3.0.1
+
+  viem-deal@2.0.4(viem@2.23.15(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@5.0.10)(zod@3.24.2)):
+    dependencies:
+      viem: 2.23.15(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@5.0.10)(zod@3.24.2)
+
+  viem-tracer@1.5.5(viem@2.23.15(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@5.0.10)(zod@3.24.2)):
+    dependencies:
+      colors: 1.4.0
+      viem: 2.23.15(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@5.0.10)(zod@3.24.2)
 
   viem@2.23.15(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@5.0.10)(zod@3.24.2):
     dependencies:
