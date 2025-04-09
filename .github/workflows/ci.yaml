@@ -28,5 +28,7 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Build UIKit
         run: pnpm run uikit:build
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
       - name: Test
         run: pnpm vitest
