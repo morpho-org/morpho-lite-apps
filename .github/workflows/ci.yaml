@@ -30,5 +30,9 @@ jobs:
         run: pnpm run uikit:build
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
+      - name: Create .env
+        run: |
+          echo "VITE_WALLET_KIT_PROJECT_ID=${{ env.VITE_WALLET_KIT_PROJECT_ID }}" > apps/lightweight/.env
+          echo "VITE_ALCHEMY_API_KEY=${{ env.VITE_ALCHEMY_API_KEY }}" > apps/lightweight/.env
       - name: Test
         run: pnpm vitest
