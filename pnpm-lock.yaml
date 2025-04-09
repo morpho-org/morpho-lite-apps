@@ -11,8 +11,8 @@ importers:
         specifier: ^9.21.0
         version: 9.23.0
       "@morpho-org/test":
-        specifier: file:/Users/haydenshively/Developer/sdks/packages/test/morpho-org-test-2.0.0.tgz
-        version: file:../sdks/packages/test/morpho-org-test-2.0.0.tgz(viem@2.23.15(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@5.0.10)(zod@3.24.2))(vitest@3.1.1(@types/debug@4.1.12)(@types/node@22.13.14)(jiti@2.4.2)(jsdom@26.0.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(terser@5.39.0)(tsx@4.19.3)(yaml@2.7.0))
+        specifier: ^2.1.1
+        version: 2.1.1(viem@2.23.15(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@5.0.10)(zod@3.24.2))(vitest@3.1.1(@types/debug@4.1.12)(@types/node@22.13.14)(jiti@2.4.2)(jsdom@26.0.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(terser@5.39.0)(tsx@4.19.3)(yaml@2.7.0))
       "@testing-library/dom":
         specifier: ^10.4.0
         version: 10.4.0
@@ -1501,13 +1501,9 @@ packages:
     resolution:
       { integrity: sha512-fsOBVvSLMlsyAI10pbgaXUnkN09DEUN0xw/W+5nWVrYO9/UGP1vDrdn99JH1B0tWZa7NqAWYc5RX9jLZGGTMNg== }
 
-  "@morpho-org/test@file:../sdks/packages/test/morpho-org-test-2.0.0.tgz":
+  "@morpho-org/test@2.1.1":
     resolution:
-      {
-        integrity: sha512-Dw14x1RePCPfhoytj/XdZ9yaXjYabWfkR7ei8nUZfAw+GaD6J1V/ZM5GYhDWk6cyX5p0js/V7cEIg4ezBBp8jw==,
-        tarball: file:../sdks/packages/test/morpho-org-test-2.0.0.tgz,
-      }
-    version: 2.0.0
+      { integrity: sha512-bVjJH2KIfNZ0aFCJyXtbzGaXM4i/ZbN35eR1MtMAzMj8wI7neCzn5wsrWUIvOGuLkNcWeKybFHZlkG1Z7OJkzg== }
     peerDependencies:
       "@playwright/test": ^1.48.1
       ethers: ^6.13.0
@@ -9708,7 +9704,7 @@ snapshots:
 
   "@morpho-org/morpho-ts@2.2.0": {}
 
-  "@morpho-org/test@file:../sdks/packages/test/morpho-org-test-2.0.0.tgz(viem@2.23.15(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@5.0.10)(zod@3.24.2))(vitest@3.1.1(@types/debug@4.1.12)(@types/node@22.13.14)(jiti@2.4.2)(jsdom@26.0.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(terser@5.39.0)(tsx@4.19.3)(yaml@2.7.0))":
+  "@morpho-org/test@2.1.1(viem@2.23.15(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@5.0.10)(zod@3.24.2))(vitest@3.1.1(@types/debug@4.1.12)(@types/node@22.13.14)(jiti@2.4.2)(jsdom@26.0.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(terser@5.39.0)(tsx@4.19.3)(yaml@2.7.0))":
     dependencies:
       lodash.kebabcase: 4.1.1
       viem: 2.23.15(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@5.0.10)(zod@3.24.2)

@@ -24,7 +24,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
-    "@morpho-org/test": "file:../sdks/packages/test/morpho-org-test-2.0.0.tgz",
+    "@morpho-org/test": "^2.1.1",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
