@@ -13,9 +13,14 @@ function Banner(chainId: number | undefined) {
   const banner = BANNERS[chainId];
 
   return {
-    placeholder: <div className="h-8"></div>,
+    placeholder: <div className="h-10 min-h-min"></div>,
     banner: (
-      <aside className={cn("pointer-events-auto flex h-8 items-center px-1 text-sm font-light italic", banner.color)}>
+      <aside
+        className={cn(
+          "pointer-events-auto flex h-10 min-h-min items-center px-1 text-sm font-light italic",
+          banner.color,
+        )}
+      >
         {banner.text}
         <XIcon className="hover:bg-accent mx-2 h-6 w-6 rounded-sm p-1" onClick={() => setShouldShowBanner(false)} />
       </aside>

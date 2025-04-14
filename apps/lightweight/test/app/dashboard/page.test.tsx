@@ -1,3 +1,4 @@
+import { abbreviateAddress } from "@morpho-blue-offchain-public/uikit/lib/utils";
 import userEvent from "@testing-library/user-event";
 import { http, UserRejectedRequestError } from "viem";
 import { generatePrivateKey, privateKeyToAddress } from "viem/accounts";
@@ -60,7 +61,7 @@ describe("connect wallet flow", () => {
     await waitFor(() => screen.findByText("Requesting Connection"));
     await waitForElementToBeRemoved(screen.getByText("Requesting Connection"));
 
-    expect(screen.getByText(`${account.slice(0, 6)}...${account.slice(-4)}`)).toBeInTheDocument();
+    expect(screen.getByText(abbreviateAddress(account))).toBeInTheDocument();
   });
 });
 

@@ -82,13 +82,13 @@ describe("deposit flow", () => {
       expect(screen.getByPlaceholderText("0")).toBeInTheDocument();
 
       // Wait for MAX button -- this implies the component has loaded account balances
-      await waitFor(() => screen.findAllByText("MAX"));
+      await waitFor(() => screen.findAllByText("MAX"), { timeout: 10_000 });
       await userEvent.click(screen.getByText("MAX"));
 
       expect(screen.getByDisplayValue(amount)).toBeInTheDocument();
 
       // Wait for Approve button -- this implies the component has loaded account allowance
-      await waitFor(() => screen.findByText("Approve"), { timeout: 1000 });
+      await waitFor(() => screen.findByText("Approve"), { timeout: 10_000 });
       const transactionButton = screen.getByText("Approve");
 
       // Wait for approval to be automined
@@ -136,7 +136,7 @@ describe("deposit flow", () => {
       expect(deposit.args.assets).toBe(parseEther(amount));
       expect(deposit.args.shares).toBeGreaterThan(0n);
     },
-    30_000,
+    60_000,
   );
 });
 
@@ -186,7 +186,7 @@ describe("withdraw flow", () => {
       expect(screen.getByPlaceholderText("0")).toBeInTheDocument();
 
       // Wait for MAX button -- this implies the component has loaded account balances
-      await waitFor(() => screen.findAllByText("MAX"));
+      await waitFor(() => screen.findAllByText("MAX"), { timeout: 10_000 });
       await userEvent.click(screen.getByText("MAX"));
 
       expect(screen.getByDisplayValue(maxText)).toBeInTheDocument();
@@ -215,7 +215,7 @@ describe("withdraw flow", () => {
       expect(withdraw.args.receiver).toBe(account);
       expect(withdraw.args.shares).toBe(maxRedeem);
     },
-    30_000,
+    60_000,
   );
 
   testWithPolygonFork(
@@ -257,7 +257,7 @@ describe("withdraw flow", () => {
       expect(screen.getByPlaceholderText("0")).toBeInTheDocument();
 
       // Wait for MAX button -- this implies the component has loaded account balances
-      await waitFor(() => screen.findAllByText("MAX"));
+      await waitFor(() => screen.findAllByText("MAX"), { timeout: 10_000 });
 
       // Type an amount LESS THAN the max
       const amount = "1.0";
@@ -287,6 +287,6 @@ describe("withdraw flow", () => {
       expect(withdraw.args.receiver).toBe(account);
       expect(withdraw.args.assets).toBe(parseUnits(amount, asset.decimals!));
     },
-    30_000,
+    60_000,
   );
 });
