@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   deploy-to-s3:
-    environment: "Production – lite-app"
+    environment: "production-lite"
 
     runs-on: ubuntu-22.04
     strategy:
