@@ -37,9 +37,9 @@ jobs:
 
       - name: Create .env
         run: |
-          echo "VITE_WALLET_KIT_PROJECT_ID=${{ env.VITE_WALLET_KIT_PROJECT_ID }}" > apps/lightweight/.env
-          echo "VITE_ALCHEMY_API_KEY=${{ env.VITE_ALCHEMY_API_KEY }}" > apps/lightweight/.env
-          echo "VITE_APP_TITLE=${{ env.VITE_APP_TITLE }}" > apps/lightweight/.env
+          echo "VITE_WALLET_KIT_PROJECT_ID=${{ env.VITE_WALLET_KIT_PROJECT_ID }}" >> apps/lightweight/.env
+          echo "VITE_ALCHEMY_API_KEY=${{ env.VITE_ALCHEMY_API_KEY }}" >> apps/lightweight/.env
+          echo "VITE_APP_TITLE=${{ env.VITE_APP_TITLE }}" >> apps/lightweight/.env
 
       - name: Build lightweight app
         run: pnpm lightweight-app:build
