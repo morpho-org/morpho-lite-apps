@@ -54,6 +54,9 @@ jobs:
       - name: Deploy lightweight app on s3
         run: ./scripts/deploy.sh lightweight ${{ vars.S3_BUCKET_PRODUCTION }}
 
+      - name: Deploy CloudFront Function (SPA rewrite)
+        run: ./scripts/deploy-cloudfront-function.sh ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }} "lite-app-rewrites" "apps/lightweight/cloudfront.js"
+
       - name: Clean production cache
         run: |
           aws cloudfront create-invalidation --paths "/*" --distribution-id $DISTRIBUTION | \

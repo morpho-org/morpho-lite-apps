@@ -8,7 +8,7 @@ import eslintPluginPrettierRecommended from "eslint-plugin-prettier/recommended"
 import { createNextImportResolver } from "eslint-import-resolver-next";
 
 export default tseslint.config(
-  { ignores: ["**/dist", "**/fleek.config.ts", "vitest.workspace.ts"] },
+  { ignores: ["**/dist", "**/fleek.config.ts", "vitest.workspace.ts", "**/cloudfront.js"] },
   eslint.configs.recommended,
   {
     extends: [
