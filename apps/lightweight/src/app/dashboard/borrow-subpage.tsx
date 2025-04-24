@@ -15,6 +15,7 @@ import { CtaCard } from "@/components/cta-card";
 import { useMarkets } from "@/hooks/use-markets";
 import { useTopNCurators } from "@/hooks/use-top-n-curators";
 import { CORE_DEPLOYMENTS, getContractDeploymentInfo } from "@/lib/constants";
+import { type DisplayableCurators, getDisplayableCurators } from "@/lib/curators";
 
 const STALE_TIME = 5 * 60 * 1000;
 
@@ -66,12 +67,23 @@ export function BorrowSubPage() {
     },
   });
 
-  const marketIds = useMemo(() => [...new Set(vaultsData?.flatMap((d) => d.vault.withdrawQueue) ?? [])], [vaultsData]);
+  const marketIds = useMemo(
+    () => [
+      ...new Set(
+        vaultsData?.flatMap((d) =>
+          d.allocations
+            .filter((alloc) => alloc.config.enabled && alloc.position.supplyShares > 0n)
+            .map((alloc) => alloc.id),
+        ) ?? [],
+      ),
+    ],
+    [vaultsData],
+  );
   const markets = useMarkets({ chainId, marketIds, staleTime: STALE_TIME, fetchPrices: true });
   const marketsArr = useMemo(() => {
     const marketsArr = Object.values(markets).filter(
       (market) =>
-        market.liquidity > 0n &&
+        market.totalSupplyAssets > 0n &&
         ![market.params.collateralToken, market.params.loanToken, market.params.irm, market.params.oracle].includes(
           zeroAddress,
         ),
@@ -83,6 +95,30 @@ export function BorrowSubPage() {
     });
     return marketsArr;
   }, [markets]);
+  const marketVaults = useMemo(() => {
+    const map = new Map<
+      Hex,
+      { name: string; address: Address; totalAssets: bigint; curators: DisplayableCurators }[]
+    >();
+
+    vaultsData?.forEach((vaultData) => {
+      vaultData.allocations.forEach((allocation) => {
+        if (!allocation.config.enabled || allocation.position.supplyShares === 0n) return;
+
+        if (!map.has(allocation.id)) {
+          map.set(allocation.id, []);
+        }
+        map.get(allocation.id)!.push({
+          name: vaultData.vault.name,
+          address: vaultData.vault.vault,
+          totalAssets: vaultData.vault.totalAssets,
+          curators: getDisplayableCurators(vaultData.vault, topCurators),
+        });
+      });
+    });
+
+    return map;
+  }, [vaultsData, topCurators]);
 
   const { data: erc20Symbols } = useReadContracts({
     contracts: marketsArr
@@ -202,7 +238,13 @@ export function BorrowSubPage() {
       <div className="flex grow flex-col bg-white/[0.03]">
         <div className="bg-linear-to-b from-background to-primary flex h-full grow justify-center rounded-t-xl pb-16 pt-8">
           <div className="text-primary-foreground w-full max-w-7xl px-2 lg:px-8">
-            <BorrowTable chain={chain} markets={marketsArr} tokens={tokens} refetchPositions={refetchPositionsRaw} />
+            <BorrowTable
+              chain={chain}
+              markets={marketsArr}
+              tokens={tokens}
+              marketVaults={marketVaults}
+              refetchPositions={refetchPositionsRaw}
+            />
           </div>
         </div>
       </div>

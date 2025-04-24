@@ -31,18 +31,12 @@ import { DollarSign, ExternalLink, SignalHigh } from "lucide-react";
 import { Chain, hashMessage, Address, zeroAddress } from "viem";
 
 import { EarnSheetContent } from "@/components/earn-sheet-content";
+import { type DisplayableCurators } from "@/lib/curators";
 
 export type Row = {
   vault: AccrualVault;
   asset: Token;
-  curators: {
-    [name: string]: {
-      name: string;
-      roles: { name: string; address: Address }[];
-      url: string | null;
-      imageSrc: string | null;
-    };
-  };
+  curators: DisplayableCurators;
   maxWithdraw: bigint | undefined;
   imageSrc: string;
 };
@@ -210,7 +204,7 @@ function CollateralsTableCell({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex w-[240px] flex-col gap-3">
-              <div className="flex justify-between font-light">
+              <div className="flex items-center justify-between font-light">
                 Collateral
                 <div className="flex items-end gap-1">
                   <Avatar className="h-4 w-4 rounded-full">
@@ -222,15 +216,15 @@ function CollateralsTableCell({
                   {token?.symbol ?? ""}
                 </div>
               </div>
-              <div className="flex justify-between font-light">
+              <div className="flex items-center justify-between font-light">
                 <span>LLTV</span>
                 {lltvs.map((lltv) => formatLtv(lltv)).join(", ")}
               </div>
-              <div className="flex justify-between font-light">
+              <div className="flex items-center justify-between font-light">
                 <span>Allocation</span>
                 {formatLtv(allocation.proportion)}
               </div>
-              <div className="flex justify-between font-light">
+              <div className="flex items-center justify-between font-light">
                 <span>Oracle</span>
                 <div className="flex flex-col font-mono">
                   {oracles.map((oracle) => (
@@ -275,13 +269,13 @@ export function EarnTable({
   return (
     <div className="text-primary-foreground w-full max-w-7xl px-2 lg:px-8">
       <Table className="border-separate border-spacing-y-3">
-        <TableHeader className="bg-primary text-secondary-foreground">
+        <TableHeader className="bg-primary">
           <TableRow>
-            <TableHead className="rounded-l-lg pl-4 text-xs font-light">Vault</TableHead>
-            <TableHead className="text-xs font-light">Deposits</TableHead>
-            <TableHead className="text-xs font-light">Curator</TableHead>
-            <TableHead className="text-xs font-light">Collateral</TableHead>
-            <TableHead className="rounded-r-lg text-xs font-light">APY</TableHead>
+            <TableHead className="text-secondary-foreground rounded-l-lg pl-4 text-xs font-light">Vault</TableHead>
+            <TableHead className="text-secondary-foreground text-xs font-light">Deposits</TableHead>
+            <TableHead className="text-secondary-foreground text-xs font-light">Curator</TableHead>
+            <TableHead className="text-secondary-foreground text-xs font-light">Collateral</TableHead>
+            <TableHead className="text-secondary-foreground rounded-r-lg text-xs font-light">APY</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

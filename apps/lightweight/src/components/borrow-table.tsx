@@ -1,3 +1,4 @@
+import { AvatarStack } from "@morpho-blue-offchain-public/uikit/components/avatar-stack";
 import { Avatar, AvatarFallback, AvatarImage } from "@morpho-blue-offchain-public/uikit/components/shadcn/avatar";
 import { Sheet, SheetTrigger } from "@morpho-blue-offchain-public/uikit/components/shadcn/sheet";
 import {
@@ -24,10 +25,11 @@ import {
 import { AccrualPosition, Market } from "@morpho-org/blue-sdk";
 import { blo } from "blo";
 import { ExternalLink, Info } from "lucide-react";
-import { Chain, Hex, type Address } from "viem";
+import { type Chain, type Hex, type Address } from "viem";
 
 import { BorrowSheetContent } from "@/components/borrow-sheet-content";
 import { SHARED_LIQUIDITY_DOCUMENTATION } from "@/lib/constants";
+import { type DisplayableCurators } from "@/lib/curators";
 
 function TokenTableCell({ address, symbol, imageSrc, chain }: Token & { chain: Chain | undefined }) {
   return (
@@ -125,25 +127,118 @@ function HealthTableCell({
   );
 }
 
+function VaultsTableCell({
+  token,
+  vaults,
+  chain,
+}: {
+  token: Token;
+  vaults: { name: string; address: Address; totalAssets: bigint; curators: DisplayableCurators }[];
+  chain: Chain | undefined;
+}) {
+  return (
+    <AvatarStack
+      items={vaults.map((vault) => {
+        const hoverCardContent = (
+          <TooltipContent
+            className="text-primary-foreground rounded-3xl p-4 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex w-[260px] flex-col gap-4">
+              <div className="flex items-center justify-between font-light">
+                <span>Vault</span>
+                {vault.name}
+              </div>
+              <div className="flex items-center justify-between font-light">
+                <span>Address</span>
+                <a
+                  className="hover:bg-secondary flex gap-1 rounded-sm p-1"
+                  href={chain?.blockExplorers?.default.url.concat(`/address/${vault.address}`)}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  {abbreviateAddress(vault.address)}
+                  <ExternalLink className="h-4 w-4" />
+                </a>
+              </div>
+              <div className="flex items-center justify-between font-light">
+                <span>Curators</span>
+                <div className="flex items-end gap-1">
+                  {Object.values(vault.curators).map((curator) => (
+                    <a
+                      key={curator.name}
+                      className="hover:bg-secondary flex gap-1 rounded-sm p-1"
+                      href={curator.url ?? ""}
+                      rel="noopener noreferrer"
+                      target="_blank"
+                    >
+                      {curator.imageSrc && (
+                        <Avatar className="h-4 w-4 rounded-full">
+                          <AvatarImage src={curator.imageSrc} alt="Loan Token" />
+                        </Avatar>
+                      )}
+                      {curator.name}
+                    </a>
+                  ))}
+                </div>
+              </div>
+              {token.decimals !== undefined && (
+                <div className="flex items-center justify-between font-light">
+                  Total Supply
+                  <div className="flex items-end gap-1">
+                    <Avatar className="h-4 w-4 rounded-full">
+                      <AvatarImage src={token.imageSrc} alt="Loan Token" />
+                    </Avatar>
+                    {formatBalanceWithSymbol(vault.totalAssets, token.decimals, token.symbol, 5, true)}
+                  </div>
+                </div>
+              )}
+            </div>
+          </TooltipContent>
+        );
+
+        let logoUrl: string | null = null;
+        for (const name in vault.curators) {
+          const curator = vault.curators[name];
+          if (curator.imageSrc == null) continue;
+
+          logoUrl = curator.imageSrc;
+          if (curator.roles.some((role) => role.name === "Owner")) {
+            break;
+          }
+        }
+
+        if (!logoUrl) console.log(logoUrl, vault);
+
+        return { logoUrl: logoUrl ?? "", hoverCardContent };
+      })}
+      align="left"
+      maxItems={5}
+    />
+  );
+}
+
 export function BorrowTable({
   chain,
   markets,
   tokens,
+  marketVaults,
   refetchPositions,
 }: {
   chain: Chain | undefined;
   markets: Market[];
   tokens: Map<Address, Token>;
+  marketVaults: Map<Hex, { name: string; address: Address; totalAssets: bigint; curators: DisplayableCurators }[]>;
   refetchPositions: () => void;
 }) {
   return (
     <Table className="border-separate border-spacing-y-3">
-      <TableHeader className="bg-primary text-secondary-foreground">
+      <TableHeader className="bg-primary">
         <TableRow>
-          <TableHead className="rounded-l-lg pl-4 text-xs font-light">Collateral</TableHead>
-          <TableHead className="text-xs font-light">Loan</TableHead>
-          <TableHead className="text-xs font-light">LLTV</TableHead>
-          <TableHead className="text-xs font-light">
+          <TableHead className="text-secondary-foreground rounded-l-lg pl-4 text-xs font-light">Collateral</TableHead>
+          <TableHead className="text-secondary-foreground text-xs font-light">Loan</TableHead>
+          <TableHead className="text-secondary-foreground text-xs font-light">LLTV</TableHead>
+          <TableHead className="text-secondary-foreground text-xs font-light">
             <div className="flex items-center gap-1">
               Liquidity
               <TooltipProvider>
@@ -167,7 +262,8 @@ export function BorrowTable({
               </TooltipProvider>
             </div>
           </TableHead>
-          <TableHead className="rounded-r-lg text-xs font-light">Rate</TableHead>
+          <TableHead className="text-secondary-foreground text-xs font-light">Rate</TableHead>
+          <TableHead className="text-secondary-foreground rounded-r-lg text-xs font-light">Vault Listing</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -199,8 +295,13 @@ export function BorrowTable({
                       )
                     : "－"}
                 </TableCell>
+                <TableCell>{market.borrowApy ? `${formatApy(market.borrowApy)}` : "－"}</TableCell>
                 <TableCell className="rounded-r-lg">
-                  {market.borrowApy ? `${formatApy(market.borrowApy)}` : "－"}
+                  <VaultsTableCell
+                    token={tokens.get(market.params.loanToken)!}
+                    vaults={marketVaults.get(market.params.id) ?? []}
+                    chain={chain}
+                  />
                 </TableCell>
               </TableRow>
             </SheetTrigger>
@@ -227,12 +328,12 @@ export function BorrowPositionTable({
 }) {
   return (
     <Table className="border-separate border-spacing-y-3">
-      <TableHeader className="bg-primary text-secondary-foreground">
+      <TableHeader className="bg-primary">
         <TableRow>
-          <TableHead className="rounded-l-lg pl-4 text-xs font-light">Collateral</TableHead>
-          <TableHead className="text-xs font-light">Loan</TableHead>
-          <TableHead className="text-xs font-light">Rate</TableHead>
-          <TableHead className="rounded-r-lg text-xs font-light">Health</TableHead>
+          <TableHead className="text-secondary-foreground rounded-l-lg pl-4 text-xs font-light">Collateral</TableHead>
+          <TableHead className="text-secondary-foreground text-xs font-light">Loan</TableHead>
+          <TableHead className="text-secondary-foreground text-xs font-light">Rate</TableHead>
+          <TableHead className="text-secondary-foreground rounded-r-lg text-xs font-light">Health</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>

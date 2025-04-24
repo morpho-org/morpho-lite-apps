@@ -14,14 +14,15 @@ import {
 } from "@morpho-org/blue-sdk";
 import { useMemo } from "react";
 import { useOutletContext } from "react-router";
-import { Address, Chain, erc20Abi, isAddressEqual, zeroAddress } from "viem";
+import { Address, Chain, erc20Abi, zeroAddress } from "viem";
 import { useAccount, useReadContract, useReadContracts } from "wagmi";
 
 import { CtaCard } from "@/components/cta-card";
-import { EarnTable, Row } from "@/components/earn-table";
+import { EarnTable } from "@/components/earn-table";
 import { useMarkets } from "@/hooks/use-markets";
 import { useTopNCurators } from "@/hooks/use-top-n-curators";
 import { CORE_DEPLOYMENTS, getContractDeploymentInfo, MIN_TIMELOCK } from "@/lib/constants";
+import { getDisplayableCurators } from "@/lib/curators";
 
 const STALE_TIME = 5 * 60 * 1000;
 
@@ -191,28 +192,6 @@ export function EarnSubPage() {
     return vaults.map((vault) => {
       const { decimals, symbol } = tokens.get(vault.asset) ?? { decimals: undefined, symbol: undefined };
 
-      const curators: Row["curators"] = {};
-      for (const curator of topCurators) {
-        for (const roleName of ["owner", "curator", "guardian"] as const) {
-          const address = curator.addresses
-            ?.map((entry) => entry.address as Address)
-            .find((a) => isAddressEqual(a, vault[roleName]));
-          if (!address) continue;
-
-          const roleNameCapitalized = `${roleName.charAt(0).toUpperCase()}${roleName.slice(1)}`;
-          if (curators[curator.name]) {
-            curators[curator.name].roles.push({ name: roleNameCapitalized, address });
-          } else {
-            curators[curator.name] = {
-              name: curator.name,
-              roles: [{ name: roleNameCapitalized, address }],
-              url: curator.url,
-              imageSrc: curator.image,
-            };
-          }
-        }
-      }
-
       return {
         vault,
         asset: {
@@ -221,7 +200,7 @@ export function EarnSubPage() {
           symbol,
           decimals,
         } as Token,
-        curators,
+        curators: getDisplayableCurators(vault, topCurators),
         maxWithdraw: maxWithdraws[vault.address],
         imageSrc: getTokenSymbolURI(symbol),
       };

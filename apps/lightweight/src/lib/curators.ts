@@ -1,3 +1,4 @@
+import { Address, isAddressEqual } from "viem";
 import { optimism, polygon } from "wagmi/chains";
 
 import { graphql, FragmentOf } from "@/graphql/graphql";
@@ -28,3 +29,41 @@ export const MANUALLY_WHITELISTED_CURATORS: FragmentOf<typeof CuratorFragment>[]
     url: "https://moonwell.fi/",
   },
 ];
+
+export type DisplayableCurators = {
+  [name: string]: {
+    name: string;
+    roles: { name: string; address: Address }[];
+    url: string | null;
+    imageSrc: string | null;
+  };
+};
+
+const ROLE_NAMES = ["owner", "curator", "guardian"] as const;
+export function getDisplayableCurators(
+  vault: { [role in (typeof ROLE_NAMES)[number]]: Address },
+  curators: FragmentOf<typeof CuratorFragment>[],
+) {
+  const result: DisplayableCurators = {};
+  for (const curator of curators) {
+    for (const roleName of ROLE_NAMES) {
+      const address = curator.addresses
+        ?.map((entry) => entry.address as Address)
+        .find((a) => isAddressEqual(a, vault[roleName]));
+      if (!address) continue;
+
+      const roleNameCapitalized = `${roleName.charAt(0).toUpperCase()}${roleName.slice(1)}`;
+      if (result[curator.name]) {
+        result[curator.name].roles.push({ name: roleNameCapitalized, address });
+      } else {
+        result[curator.name] = {
+          name: curator.name,
+          roles: [{ name: roleNameCapitalized, address }],
+          url: curator.url,
+          imageSrc: curator.image,
+        };
+      }
+    }
+  }
+  return result;
+}
