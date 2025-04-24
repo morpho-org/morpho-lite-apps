@@ -37,7 +37,7 @@ function PositionProperty({ current, updated }: { current: string; updated?: str
   }
   return (
     <div className="flex items-center gap-1">
-      <p className="text-primary/50 text-lg font-medium">{current}</p>
+      <p className="text-tertiary-foreground text-lg font-medium">{current}</p>
       <AnimateIn
         className="flex items-center gap-1"
         from="opacity-0 translate-x-[-16px]"
@@ -45,12 +45,18 @@ function PositionProperty({ current, updated }: { current: string; updated?: str
         to="opacity-100 translate-x-[0px]"
         style={{ transitionTimingFunction: "cubic-bezier(0.25, 0.4, 0.55, 1.4)" }}
       >
-        <ArrowRight height={16} width={16} className="text-primary/50" />
+        <ArrowRight height={16} width={16} className="text-tertiary-foreground" />
         <p>{updated}</p>
       </AnimateIn>
     </div>
   );
 }
+
+const STYLE_LABEL = "text-secondary-foreground flex items-center justify-between text-xs font-light";
+const STYLE_TAB = "hover:bg-tertiary rounded-full duration-200 ease-in-out";
+const STYLE_INPUT_WRAPPER =
+  "bg-primary hover:bg-secondary flex flex-col gap-4 rounded-2xl p-4 transition-colors duration-200 ease-in-out";
+const STYLE_INPUT_HEADER = "text-secondary-foreground flex items-center justify-between text-xs font-light";
 
 export function BorrowSheetContent({
   marketId,
@@ -249,7 +255,7 @@ export function BorrowSheetContent({
   }
 
   return (
-    <SheetContent className="z-[9999] gap-3 overflow-y-scroll sm:min-w-[500px] dark:bg-neutral-900">
+    <SheetContent className="bg-background z-[9999] w-full gap-3 overflow-y-scroll sm:w-[500px] sm:min-w-[500px] sm:max-w-[500px]">
       <Toaster theme="dark" position="bottom-left" richColors />
       <SheetHeader>
         <SheetTitle>Your Position</SheetTitle>
@@ -260,8 +266,8 @@ export function BorrowSheetContent({
           </a>
         </SheetDescription>
       </SheetHeader>
-      <div className="bg-secondary mx-4 flex flex-col gap-4 rounded-2xl p-4">
-        <div className="text-primary/70 flex items-center justify-between text-xs font-light">
+      <div className="bg-primary mx-4 flex flex-col gap-4 rounded-2xl p-4">
+        <div className={STYLE_LABEL}>
           My collateral position {collateralSymbol ? `(${collateralSymbol})` : ""}
           <img className="rounded-full" height={16} width={16} src={collateralImgSrc} />
         </div>
@@ -269,7 +275,7 @@ export function BorrowSheetContent({
           current={tryFormatBalance(accrualPosition?.collateral, collateralDecimals, 5) ?? "－"}
           updated={tryFormatBalance(newAccrualPosition?.collateral, collateralDecimals, 5)}
         />
-        <div className="text-primary/70 flex items-center justify-between text-xs font-light">
+        <div className={STYLE_LABEL}>
           My loan position {loanSymbol ? `(${loanSymbol})` : ""}
           <img className="rounded-full" height={16} width={16} src={loanImgSrc} />
         </div>
@@ -277,9 +283,7 @@ export function BorrowSheetContent({
           current={tryFormatBalance(accrualPosition?.borrowAssets, loanDecimals) ?? "－"}
           updated={tryFormatBalance(newAccrualPosition?.borrowAssets, loanDecimals)}
         />
-        <div className="text-primary/70 flex items-center justify-between text-xs font-light">
-          LTV / Liquidation LTV
-        </div>
+        <div className={STYLE_LABEL}>LTV / Liquidation LTV</div>
         <PositionProperty
           current={`${accrualPosition?.ltv !== undefined ? formatLtv(accrualPosition.ltv ?? 0n) : "－"} / ${formatLtv(marketParams.lltv)}`}
           updated={
@@ -297,23 +301,23 @@ export function BorrowSheetContent({
           setTextInputValue("");
         }}
       >
-        <TabsList className="grid w-full grid-cols-4 bg-transparent p-0">
-          <TabsTrigger className="rounded-full" value={Actions.SupplyCollateral}>
+        <TabsList className="grid w-full grid-cols-4 gap-1 bg-transparent p-0">
+          <TabsTrigger className={STYLE_TAB} value={Actions.SupplyCollateral}>
             {Actions.SupplyCollateral}
           </TabsTrigger>
-          <TabsTrigger className="rounded-full" value={Actions.WithdrawCollateral}>
+          <TabsTrigger className={STYLE_TAB} value={Actions.WithdrawCollateral}>
             {Actions.WithdrawCollateral}
           </TabsTrigger>
-          <TabsTrigger className="rounded-full" value={Actions.Borrow}>
+          <TabsTrigger className={STYLE_TAB} value={Actions.Borrow}>
             {Actions.Borrow}
           </TabsTrigger>
-          <TabsTrigger className="rounded-full" value={Actions.Repay}>
+          <TabsTrigger className={STYLE_TAB} value={Actions.Repay}>
             {Actions.Repay}
           </TabsTrigger>
         </TabsList>
         <TabsContent value={Actions.SupplyCollateral}>
-          <div className="bg-secondary flex flex-col gap-4 rounded-2xl p-4">
-            <div className="text-primary/70 flex items-center justify-between text-xs font-light">
+          <div className={STYLE_INPUT_WRAPPER}>
+            <div className={STYLE_INPUT_HEADER}>
               Supply Collateral {token?.symbol ?? ""}
               <img className="rounded-full" height={16} width={16} src={token?.imageSrc} />
             </div>
@@ -341,8 +345,8 @@ export function BorrowSheetContent({
           )}
         </TabsContent>
         <TabsContent value={Actions.WithdrawCollateral}>
-          <div className="bg-secondary flex flex-col gap-4 rounded-2xl p-4">
-            <div className="text-primary/70 flex items-center justify-between text-xs font-light">
+          <div className={STYLE_INPUT_WRAPPER}>
+            <div className={STYLE_INPUT_HEADER}>
               Withdraw Collateral {token?.symbol ?? ""}
               <img className="rounded-full" height={16} width={16} src={token?.imageSrc} />
             </div>
@@ -365,8 +369,8 @@ export function BorrowSheetContent({
           </TransactionButton>
         </TabsContent>
         <TabsContent value={Actions.Borrow}>
-          <div className="bg-secondary flex flex-col gap-4 rounded-2xl p-4">
-            <div className="text-primary/70 flex items-center justify-between text-xs font-light">
+          <div className={STYLE_INPUT_WRAPPER}>
+            <div className={STYLE_INPUT_HEADER}>
               Borrow {token?.symbol ?? ""}
               <img className="rounded-full" height={16} width={16} src={token?.imageSrc} />
             </div>
@@ -389,8 +393,8 @@ export function BorrowSheetContent({
           </TransactionButton>
         </TabsContent>
         <TabsContent value={Actions.Repay}>
-          <div className="bg-secondary flex flex-col gap-4 rounded-2xl p-4">
-            <div className="text-primary/70 flex items-center justify-between text-xs font-light">
+          <div className={STYLE_INPUT_WRAPPER}>
+            <div className={STYLE_INPUT_HEADER}>
               Repay {token?.symbol ?? ""}
               <img className="rounded-full" height={16} width={16} src={token?.imageSrc} />
             </div>

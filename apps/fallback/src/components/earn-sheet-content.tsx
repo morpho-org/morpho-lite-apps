@@ -23,6 +23,11 @@ enum Actions {
   Withdraw = "Withdraw",
 }
 
+const STYLE_LABEL = "text-secondary-foreground flex items-center justify-between text-xs font-light";
+const STYLE_INPUT_WRAPPER =
+  "bg-primary hover:bg-secondary flex flex-col gap-4 rounded-2xl p-4 transition-colors duration-200 ease-in-out";
+const STYLE_INPUT_HEADER = "text-secondary-foreground flex items-center justify-between text-xs font-light";
+
 export function EarnSheetContent({ vaultAddress, asset }: { vaultAddress: Address; asset: Token }) {
   const chainId = useChainId();
   const chains = useChains();
@@ -84,8 +89,8 @@ export function EarnSheetContent({ vaultAddress, asset }: { vaultAddress: Addres
           </a>
         </SheetDescription>
       </SheetHeader>
-      <div className="bg-secondary mx-4 flex flex-col gap-4 rounded-2xl p-4">
-        <div className="text-primary/70 flex items-center justify-between text-xs font-light">
+      <div className="bg-primary mx-4 flex flex-col gap-4 rounded-2xl p-4">
+        <div className={STYLE_LABEL}>
           My position {asset.symbol ? `(${asset.symbol})` : ""}
           <img className="rounded-full" height={16} width={16} src={asset.imageSrc} />
         </div>
@@ -103,16 +108,19 @@ export function EarnSheetContent({ vaultAddress, asset }: { vaultAddress: Addres
         }}
       >
         <TabsList className="grid w-full grid-cols-2 bg-transparent p-0">
-          {/* <TabsTrigger className="rounded-full" value={Actions.Deposit} disabled>
+          {/* <TabsTrigger className={STYLE_TAB} value={Actions.Deposit} disabled>
             {Actions.Deposit}
           </TabsTrigger> */}
-          <TabsTrigger className="col-span-2 rounded-full" value={Actions.Withdraw}>
+          <TabsTrigger
+            className="hover:bg-tertiary col-span-2 rounded-full duration-200 ease-in-out"
+            value={Actions.Withdraw}
+          >
             {Actions.Withdraw}
           </TabsTrigger>
         </TabsList>
         <TabsContent value={Actions.Deposit}>
-          <div className="bg-secondary flex flex-col gap-4 rounded-2xl p-4">
-            <div className="text-primary/70 flex items-center justify-between text-xs font-light">
+          <div className={STYLE_INPUT_WRAPPER}>
+            <div className={STYLE_INPUT_HEADER}>
               Deposit {asset.symbol ?? ""}
               <img className="rounded-full" height={16} width={16} src={asset.imageSrc} />
             </div>
@@ -123,8 +131,8 @@ export function EarnSheetContent({ vaultAddress, asset }: { vaultAddress: Addres
           </Button>
         </TabsContent>
         <TabsContent value={Actions.Withdraw}>
-          <div className="bg-secondary flex flex-col gap-4 rounded-2xl p-4">
-            <div className="text-primary/70 flex items-center justify-between text-xs font-light">
+          <div className={STYLE_INPUT_WRAPPER}>
+            <div className={STYLE_INPUT_HEADER}>
               Withdraw {asset.symbol ?? ""}
               <img className="rounded-full" height={16} width={16} src={asset.imageSrc} />
             </div>

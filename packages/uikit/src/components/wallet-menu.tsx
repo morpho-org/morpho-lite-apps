@@ -1,5 +1,5 @@
 import { blo } from "blo";
-import { PowerOff } from "lucide-react";
+import { ExternalLink, PowerOff } from "lucide-react";
 import { ReactNode, useEffect, useMemo, useState } from "react";
 import { type Address } from "viem";
 import {
@@ -12,6 +12,7 @@ import {
   useSwitchChain,
 } from "wagmi";
 
+import MorphoSvg from "@/assets/morpho.svg?react";
 import { ChainIcon } from "@/components/chain-icon";
 import { Avatar, AvatarImage } from "@/components/shadcn/avatar";
 import { Button } from "@/components/shadcn/button";
@@ -25,7 +26,17 @@ import {
   DialogTrigger,
 } from "@/components/shadcn/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/shadcn/popover";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/select";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/shadcn/select";
+import { useModifierKey } from "@/hooks/use-modifier-key";
 import { abbreviateAddress, getChainSlug } from "@/lib/utils";
 
 function ConnectWalletButton() {
@@ -86,15 +97,15 @@ function WalletButton({ address }: { address: Address }) {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="tertiary" size="lg" className="rounded-full p-4 font-light">
+        <Button variant="tertiary" size="lg" className="rounded-full p-3 font-light">
           <Avatar className="h-4 w-4">
             <AvatarImage src={ensAvatar ?? blo(address)} alt="Avatar" />
           </Avatar>
-          {ensName ?? abbreviateAddress(address)}
+          <span className="hidden lg:block">{ensName ?? abbreviateAddress(address)}</span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-min rounded-xl">
-        <div className="flex items-center gap-2 font-mono font-light">
+      <PopoverContent className="bg-navbar-interactive w-min rounded-xl border-none" align="end" sideOffset={20}>
+        <div className="flex items-center gap-2 font-mono text-sm font-light">
           <Avatar className="h-4 w-4">
             <AvatarImage src={ensAvatar ?? blo(address)} alt="Avatar" />
           </Avatar>
@@ -112,10 +123,12 @@ export function WalletMenu({
   selectedChainSlug,
   setSelectedChainSlug,
   connectWalletButton = <ConnectWalletButton />,
+  coreDeployments = new Set(),
 }: {
   selectedChainSlug: string;
   setSelectedChainSlug: (value: string) => void;
   connectWalletButton?: ReactNode;
+  coreDeployments?: Set<number>;
 }) {
   const [didInitialSync, setDidInitialSync] = useState(false);
 
@@ -151,6 +164,8 @@ export function WalletMenu({
     }
   }, [status, didInitialSync, chainInWallet, chainInUi?.id, switchChain, setSelectedChainSlug]);
 
+  const isShiftHeld = useModifierKey("Shift");
+
   return (
     <>
       <Select
@@ -166,19 +181,48 @@ export function WalletMenu({
           }
         }}
       >
-        <SelectTrigger className="bg-tertiary-dark h-[40px] w-16 rounded-full">
+        <SelectTrigger className="bg-navbar-interactive h-[40px] w-16 rounded-full">
           <SelectValue aria-label={chainInUi?.name}>
             <ChainIcon id={chainInUi?.id} />
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
           <SelectGroup>
-            {chains.map((chain, idx) => (
-              <SelectItem key={idx} value={getChainSlug(chain)}>
-                <ChainIcon id={chain.id} /> {chain.name}
-              </SelectItem>
-            ))}
+            {chains
+              .filter((chain) => !coreDeployments.has(chain.id))
+              .map((chain, idx) => (
+                <SelectItem key={idx} value={getChainSlug(chain)}>
+                  <ChainIcon id={chain.id} /> {chain.name}
+                </SelectItem>
+              ))}
           </SelectGroup>
+          {coreDeployments.size > 0 && (
+            <SelectGroup>
+              {(isShiftHeld || (chainInUi !== undefined && coreDeployments.has(chainInUi?.id))) && (
+                <>
+                  <SelectSeparator />
+                  {chains
+                    .filter((chain) => coreDeployments.has(chain.id))
+                    .map((chain, idx) => (
+                      <SelectItem
+                        key={idx}
+                        value={getChainSlug(chain)}
+                        className="text-secondary-foreground focus:text-secondary-foreground"
+                      >
+                        <ChainIcon id={chain.id} /> {chain.name}
+                      </SelectItem>
+                    ))}
+                </>
+              )}
+              <SelectSeparator />
+              <SelectLabel
+                className="bg-tertiary hover:bg-morpho-brand flex cursor-pointer items-center gap-2 rounded-sm font-normal"
+                onClick={() => window.open("https://app.morpho.org/", "_blank", "noopener,noreferrer")}
+              >
+                <MorphoSvg height={16} width={16} /> Full App <ExternalLink className="h-4 w-4" />
+              </SelectLabel>
+            </SelectGroup>
+          )}
         </SelectContent>
       </Select>
       {status === "connected" && address ? <WalletButton address={address} /> : connectWalletButton}

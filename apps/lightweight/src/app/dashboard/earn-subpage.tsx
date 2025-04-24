@@ -236,7 +236,7 @@ export function EarnSubPage() {
     <div className="flex min-h-screen flex-col px-2.5 pt-16">
       {status === "disconnected" ? (
         <CtaCard
-          className="flex w-full max-w-5xl flex-col gap-4 px-8 pb-14 pt-8 md:m-auto md:grid md:grid-cols-[50%_50%] md:px-0 dark:bg-neutral-900"
+          className="bg-linear-to-b flex w-full max-w-7xl flex-col gap-4 from-transparent to-white/[0.03] px-8 pb-20 pt-8 md:flex-row md:items-center md:justify-between"
           bigText="Earn on your terms"
           littleText="Connect wallet to get started"
           videoSrc={{
@@ -246,7 +246,7 @@ export function EarnSubPage() {
         />
       ) : (
         userRows.length > 0 && (
-          <div className="flex h-fit w-full max-w-5xl flex-col gap-4 px-8 pb-14 pt-8 md:m-auto md:px-0 dark:bg-neutral-900">
+          <div className="bg-linear-to-b lg:pt-22 flex h-fit w-full flex-col items-center from-transparent to-white/[0.03] pb-20">
             <EarnTable
               chain={chain}
               rows={userRows}
@@ -257,14 +257,20 @@ export function EarnSubPage() {
           </div>
         )
       )}
-      <div className="bg-background dark:bg-background/30 flex grow justify-center rounded-t-xl pb-32">
-        <EarnTable
-          chain={chain}
-          rows={rows}
-          depositsMode="totalAssets"
-          tokens={tokens}
-          refetchPositions={refetchMaxWithdraws}
-        />
+      {/*
+      Outer div ensures background color matches the end of the gradient from the div above,
+      allowing rounded corners to show correctly. Inner div defines rounded corners and table background.
+      */}
+      <div className="flex grow flex-col bg-white/[0.03]">
+        <div className="bg-linear-to-b from-background to-primary flex h-full grow justify-center rounded-t-xl pb-16 pt-8">
+          <EarnTable
+            chain={chain}
+            rows={rows}
+            depositsMode="totalAssets"
+            tokens={tokens}
+            refetchPositions={refetchMaxWithdraws}
+          />
+        </div>
       </div>
     </div>
   );

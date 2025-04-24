@@ -11,11 +11,11 @@ export function CtaCard({
 }) {
   return (
     <div className={className}>
-      <div className="flex h-full flex-col items-start justify-center gap-4 md:ml-8">
-        <h1 className="text-5xl font-light">{bigText}</h1>
-        <h2 className="font-light">{littleText}</h2>
+      <div className="flex h-full max-w-lg flex-col items-start justify-center gap-4">
+        <h1 className="text-6xl font-light">{bigText}</h1>
+        <h2 className="text-secondary-foreground font-light">{littleText}</h2>
       </div>
-      <div className="hidden items-center justify-end md:flex md:max-h-72">
+      <div className="hidden items-center justify-end md:mr-[-16px] md:flex">
         <video
           loop={true}
           autoPlay={true}
@@ -23,7 +23,7 @@ export function CtaCard({
           controls={false}
           playsInline={true}
           preload="metadata"
-          className="aspect-square h-full"
+          className="aspect-auto h-[460px]"
         >
           {videoSrc.mov && <source src={videoSrc.mov} type="video/mp4; codecs='hvc1'" />}
           {videoSrc.webm && <source src={videoSrc.webm} type="video/webm; codecs=vp09.00.41.08" />}

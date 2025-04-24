@@ -49,7 +49,7 @@ function TokenTableCell({ address, symbol, imageSrc }: Token) {
         </AvatarFallback>
       </Avatar>
       {symbol ?? "－"}
-      <span className="text-primary/30 font-mono">{abbreviateAddress(address)}</span>
+      <span className="text-tertiary-foreground font-mono">{abbreviateAddress(address)}</span>
     </div>
   );
 }
@@ -205,7 +205,7 @@ export function BorrowSubPage() {
   if (!userAddress) totalProgress = 0;
 
   const progressCard = (
-    <Card className="bg-secondary h-min md:h-full">
+    <Card className="bg-primary h-min md:h-full">
       <CardContent className="flex h-full flex-col gap-2 p-6 text-xs font-light">
         <div className="flex justify-between">
           <span>Indexing your positions</span>
@@ -244,20 +244,20 @@ export function BorrowSubPage() {
         </div>
       )}
       <div className="bg-background dark:bg-background/30 flex grow justify-center rounded-t-xl">
-        <div className="text-primary w-full max-w-5xl px-8 pb-32 pt-8">
+        <div className="text-primary-foreground w-full max-w-5xl px-8 pb-32 pt-8">
           <Table className="border-separate border-spacing-y-3">
             <TableCaption>
               Showing markets in which you've opened positions.
               <br />
               Click on a market to manage your position.
             </TableCaption>
-            <TableHeader className="bg-secondary">
+            <TableHeader className="bg-primary text-secondary-foreground">
               <TableRow>
-                <TableHead className="text-primary rounded-l-lg pl-4 text-xs font-light">Collateral</TableHead>
-                <TableHead className="text-primary text-xs font-light">Loan</TableHead>
-                <TableHead className="text-primary text-xs font-light">LLTV</TableHead>
-                <TableHead className="text-primary text-xs font-light">Position</TableHead>
-                <TableHead className="text-primary rounded-r-lg text-xs font-light">
+                <TableHead className="rounded-l-lg pl-4 text-xs font-light">Collateral</TableHead>
+                <TableHead className="text-xs font-light">Loan</TableHead>
+                <TableHead className="text-xs font-light">LLTV</TableHead>
+                <TableHead className="text-xs font-light">Position</TableHead>
+                <TableHead className="rounded-r-lg text-xs font-light">
                   <div className="flex items-center gap-1">
                     Liquidity
                     <TooltipProvider>
@@ -265,7 +265,7 @@ export function BorrowSubPage() {
                         <TooltipTrigger asChild>
                           <Info className="h-4 w-4" />
                         </TooltipTrigger>
-                        <TooltipContent className="text-secondary max-w-56 p-3 font-light">
+                        <TooltipContent className="text-secondary-foreground max-w-56 p-3 font-light">
                           This value will be smaller than that of the full app. It doesn't include shared market
                           liquidity which could be reallocated upon borrow.
                         </TooltipContent>
@@ -285,7 +285,7 @@ export function BorrowSubPage() {
                   }}
                 >
                   <SheetTrigger asChild>
-                    <TableRow className="bg-secondary">
+                    <TableRow className="bg-primary">
                       <TableCell className="rounded-l-lg p-5">
                         <TokenTableCell {...tokens.get(args.marketParams.collateralToken)!} />
                       </TableCell>
@@ -300,7 +300,7 @@ export function BorrowSubPage() {
                               <TooltipTrigger asChild>
                                 <Eye className="h-4 w-4" />
                               </TooltipTrigger>
-                              <TooltipContent className="text-secondary max-w-56 p-3 font-light">
+                              <TooltipContent className="text-secondary-foreground max-w-56 p-3 font-light">
                                 <h3>Collateral</h3>
                                 <p>
                                   {positionsRaw && tokens.get(args.marketParams.collateralToken)?.decimals !== undefined

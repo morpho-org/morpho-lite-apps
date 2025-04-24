@@ -58,7 +58,7 @@ function VaultTableCell({
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <div className="hover:bg-tertiary/15 flex w-min items-center gap-2 rounded-sm p-2">
+          <div className="hover:bg-secondary flex w-min items-center gap-2 rounded-sm p-2">
             <Avatar className="h-4 w-4 rounded-sm">
               <AvatarImage src={imageSrc} alt="Avatar" />
               <AvatarFallback delayMs={1000}>
@@ -68,7 +68,10 @@ function VaultTableCell({
             {symbol ?? "－"}
           </div>
         </TooltipTrigger>
-        <TooltipContent className="text-primary rounded-3xl p-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <TooltipContent
+          className="text-primary-foreground rounded-3xl p-4 shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        >
           <p className="underline">Properties</p>
           <p>Timelock: {humanizeDuration(Number(timelock) * 1000)}</p>
           <br />
@@ -103,7 +106,7 @@ function CuratorTableCell({
     <TooltipProvider>
       <Tooltip delayDuration={0}>
         <TooltipTrigger asChild>
-          <div className="hover:bg-tertiary/15 ml-[-8px] flex w-min items-center gap-2 rounded-sm p-2">
+          <div className="hover:bg-secondary ml-[-8px] flex w-min items-center gap-2 rounded-sm p-2">
             <Avatar className="h-4 w-4 rounded-sm">
               <AvatarImage src={imageSrc ?? ""} alt="Avatar" />
               <AvatarFallback delayMs={500}>
@@ -113,7 +116,10 @@ function CuratorTableCell({
             {name}
           </div>
         </TooltipTrigger>
-        <TooltipContent className="text-primary rounded-3xl p-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <TooltipContent
+          className="text-primary-foreground rounded-3xl p-4 shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        >
           <p className="underline">Roles</p>
           {roles.map((role) => (
             <div className="flex items-center gap-1" key={role.name}>
@@ -148,11 +154,14 @@ function ApyTableCell({ vault }: Pick<Row, "vault">) {
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <div className="hover:bg-tertiary/15 ml-[-8px] flex w-min items-center gap-2 rounded-sm p-2">
+          <div className="hover:bg-secondary ml-[-8px] flex w-min items-center gap-2 rounded-sm p-2">
             {formatApy(vault.netApy)}
           </div>
         </TooltipTrigger>
-        <TooltipContent className="text-primary rounded-3xl p-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <TooltipContent
+          className="text-primary-foreground rounded-3xl p-4 shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        >
           <div className="flex w-[240px] flex-col gap-3">
             <div className="flex justify-between">
               <div className="flex items-end font-light">
@@ -196,7 +205,10 @@ function CollateralsTableCell({
         lltvs.sort((a, b) => (a > b ? 1 : -1));
 
         const hoverCardContent = (
-          <TooltipContent className="text-primary rounded-3xl p-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <TooltipContent
+            className="text-primary-foreground rounded-3xl p-4 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex w-[240px] flex-col gap-3">
               <div className="flex justify-between font-light">
                 Collateral
@@ -261,15 +273,15 @@ export function EarnTable({
   refetchPositions: () => void;
 }) {
   return (
-    <div className="text-primary w-full max-w-5xl px-8 pt-8">
+    <div className="text-primary-foreground w-full max-w-7xl px-2 lg:px-8">
       <Table className="border-separate border-spacing-y-3">
-        <TableHeader className="bg-secondary">
+        <TableHeader className="bg-primary text-secondary-foreground">
           <TableRow>
-            <TableHead className="text-primary rounded-l-lg pl-4 text-xs font-light">Vault</TableHead>
-            <TableHead className="text-primary text-xs font-light">Deposits</TableHead>
-            <TableHead className="text-primary text-xs font-light">Curator</TableHead>
-            <TableHead className="text-primary text-xs font-light">Collateral</TableHead>
-            <TableHead className="text-primary rounded-r-lg text-xs font-light">APY</TableHead>
+            <TableHead className="rounded-l-lg pl-4 text-xs font-light">Vault</TableHead>
+            <TableHead className="text-xs font-light">Deposits</TableHead>
+            <TableHead className="text-xs font-light">Curator</TableHead>
+            <TableHead className="text-xs font-light">Collateral</TableHead>
+            <TableHead className="rounded-r-lg text-xs font-light">APY</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -285,7 +297,7 @@ export function EarnTable({
                 }}
               >
                 <SheetTrigger asChild>
-                  <TableRow className="bg-secondary hover:bg-accent">
+                  <TableRow className="bg-primary hover:bg-secondary">
                     <TableCell className="rounded-l-lg py-3">
                       <VaultTableCell
                         address={row.vault.address}

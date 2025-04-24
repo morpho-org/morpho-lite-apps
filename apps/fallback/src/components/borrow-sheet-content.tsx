@@ -29,6 +29,12 @@ enum Actions {
   Repay = "Repay",
 }
 
+const STYLE_LABEL = "text-secondary-foreground flex items-center justify-between text-xs font-light";
+const STYLE_TAB = "hover:bg-tertiary rounded-full duration-200 ease-in-out";
+const STYLE_INPUT_WRAPPER =
+  "bg-primary hover:bg-secondary flex flex-col gap-4 rounded-2xl p-4 transition-colors duration-200 ease-in-out";
+const STYLE_INPUT_HEADER = "text-secondary-foreground flex items-center justify-between text-xs font-light";
+
 export function BorrowSheetContent({
   marketId,
   marketParams,
@@ -194,8 +200,8 @@ export function BorrowSheetContent({
           </a>
         </SheetDescription>
       </SheetHeader>
-      <div className="bg-secondary mx-4 flex flex-col gap-4 rounded-2xl p-4">
-        <div className="text-primary/70 flex items-center justify-between text-xs font-light">
+      <div className="bg-primary mx-4 flex flex-col gap-4 rounded-2xl p-4">
+        <div className={STYLE_LABEL}>
           My collateral position {collateralSymbol ? `(${collateralSymbol})` : ""}
           <img className="rounded-full" height={16} width={16} src={collateralImgSrc} />
         </div>
@@ -204,7 +210,7 @@ export function BorrowSheetContent({
             ? formatBalance(accrualPosition.collateral, collateralDecimals, 5)
             : "－"}
         </p>
-        <div className="text-primary/70 flex items-center justify-between text-xs font-light">
+        <div className={STYLE_LABEL}>
           My loan position {loanSymbol ? `(${loanSymbol})` : ""}
           <img className="rounded-full" height={16} width={16} src={loanImgSrc} />
         </div>
@@ -213,9 +219,7 @@ export function BorrowSheetContent({
             ? formatBalance(accrualPosition.borrowAssets, loanDecimals, 5)
             : "－"}
         </p>
-        <div className="text-primary/70 flex items-center justify-between text-xs font-light">
-          LTV / Liquidation LTV
-        </div>
+        <div className={STYLE_LABEL}>LTV / Liquidation LTV</div>
         <p className="text-lg font-medium">
           {accrualPosition?.ltv ? formatLtv(accrualPosition.ltv) : "－"} / {formatLtv(marketParams.lltv)}
         </p>
@@ -229,20 +233,20 @@ export function BorrowSheetContent({
           setTextInputValue("");
         }}
       >
-        <TabsList className="grid w-full grid-cols-3 bg-transparent p-0">
-          <TabsTrigger className="rounded-full" value={Actions.SupplyCollateral}>
+        <TabsList className="grid w-full grid-cols-3 gap-1 bg-transparent p-0">
+          <TabsTrigger className={STYLE_TAB} value={Actions.SupplyCollateral}>
             {Actions.SupplyCollateral}
           </TabsTrigger>
-          <TabsTrigger className="rounded-full" value={Actions.WithdrawCollateral}>
+          <TabsTrigger className={STYLE_TAB} value={Actions.WithdrawCollateral}>
             {Actions.WithdrawCollateral}
           </TabsTrigger>
-          <TabsTrigger className="rounded-full" value={Actions.Repay}>
+          <TabsTrigger className={STYLE_TAB} value={Actions.Repay}>
             {Actions.Repay}
           </TabsTrigger>
         </TabsList>
         <TabsContent value={Actions.SupplyCollateral}>
-          <div className="bg-secondary flex flex-col gap-4 rounded-2xl p-4">
-            <div className="text-primary/70 flex items-center justify-between text-xs font-light">
+          <div className={STYLE_INPUT_WRAPPER}>
+            <div className={STYLE_INPUT_HEADER}>
               Supply Collateral {collateralSymbol ?? ""}
               <img className="rounded-full" height={16} width={16} src={collateralImgSrc} />
             </div>
@@ -270,8 +274,8 @@ export function BorrowSheetContent({
           )}
         </TabsContent>
         <TabsContent value={Actions.WithdrawCollateral}>
-          <div className="bg-secondary flex flex-col gap-4 rounded-2xl p-4">
-            <div className="text-primary/70 flex items-center justify-between text-xs font-light">
+          <div className={STYLE_INPUT_WRAPPER}>
+            <div className={STYLE_INPUT_HEADER}>
               Withdraw Collateral {collateralSymbol ?? ""}
               <img className="rounded-full" height={16} width={16} src={collateralImgSrc} />
             </div>
@@ -294,8 +298,8 @@ export function BorrowSheetContent({
           </TransactionButton>
         </TabsContent>
         <TabsContent value={Actions.Repay}>
-          <div className="bg-secondary flex flex-col gap-4 rounded-2xl p-4">
-            <div className="text-primary/70 flex items-center justify-between text-xs font-light">
+          <div className={STYLE_INPUT_WRAPPER}>
+            <div className={STYLE_INPUT_HEADER}>
               Repay Loan {loanSymbol ?? ""}
               <img className="rounded-full" height={16} width={16} src={loanImgSrc} />
             </div>

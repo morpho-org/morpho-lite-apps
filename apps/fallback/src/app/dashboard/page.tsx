@@ -23,7 +23,7 @@ export default function Page() {
     <div className="bg-gray-200 dark:bg-neutral-900">
       <Header className="flex items-center justify-between px-5 py-3">
         <div className="flex gap-4">
-          <div className="text-primary flex items-center gap-2 text-xl">
+          <div className="text-primary-foreground flex items-center gap-2 text-xl">
             <MorphoLogoSvg width={24} height={24} />
             Morpho
           </div>

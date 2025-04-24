@@ -57,10 +57,10 @@ export function Footer() {
   }, [ipfsDeployments]);
 
   return (
-    <div className="bg-secondary fixed bottom-0 z-[51] h-[12px] w-full overflow-visible">
+    <div className="bg-primary fixed bottom-0 z-[51] h-[12px] w-full overflow-visible">
       <div
         className={cn(
-          "bg-secondary border-1 absolute bottom-[12px] right-[128px] h-min w-min rounded-t-lg border-b-0",
+          "bg-primary border-1 absolute bottom-[12px] right-[128px] h-min w-min rounded-t-lg border-b-0",
           isLikelyIpfs ? "border-green-400 text-green-400" : "border-amber-300 text-amber-300",
         )}
       >
@@ -108,12 +108,12 @@ export function Footer() {
             </DialogHeader>
             <div className="flex min-w-full">
               <Table className="border-separate border-spacing-y-3">
-                <TableHeader className="bg-secondary">
+                <TableHeader className="bg-primary text-secondary-foreground">
                   <TableRow>
-                    <TableHead className="text-primary rounded-l-lg pl-4 text-xs font-light">Version</TableHead>
-                    <TableHead className="text-primary text-nowrap text-xs font-light">Source Code</TableHead>
-                    <TableHead className="text-primary text-nowrap text-xs font-light">Changelog</TableHead>
-                    <TableHead className="text-primary text-nowrap rounded-r-lg text-xs font-light">IPFS CID</TableHead>
+                    <TableHead className="rounded-l-lg pl-4 text-xs font-light">Version</TableHead>
+                    <TableHead className="text-nowrap text-xs font-light">Source Code</TableHead>
+                    <TableHead className="text-nowrap text-xs font-light">Changelog</TableHead>
+                    <TableHead className="text-nowrap rounded-r-lg text-xs font-light">IPFS CID</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -127,10 +127,10 @@ export function Footer() {
                         : undefined;
 
                     return (
-                      <TableRow className="bg-secondary" key={cid}>
+                      <TableRow className="bg-primary" key={cid}>
                         <TableCell className="rounded-l-lg p-5">
                           <a
-                            className="hover:text-primary/70 flex cursor-pointer items-center gap-1"
+                            className="hover:text-tertiary-foreground flex cursor-pointer items-center gap-1"
                             target="_blank"
                             rel="noopener noreferrer"
                             href={deployment.environment_url}
@@ -166,7 +166,7 @@ export function Footer() {
                         <TableCell className="rounded-r-lg font-mono">
                           {cid ? (
                             <div
-                              className="hover:text-primary/70 flex cursor-pointer items-center gap-1"
+                              className="hover:text-tertiary-foreground flex cursor-pointer items-center gap-1"
                               onClick={() => {
                                 void navigator.clipboard.writeText(cid);
                                 setRecentlyCopiedText(cid);

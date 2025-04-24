@@ -35,7 +35,7 @@ export function Header({ className, children, chainId, ...props }: React.Compone
       {placeholder}
       <div className="pointer-events-none fixed top-0 z-50 flex h-screen w-screen flex-col">
         {banner}
-        <header className={cn("bg-secondary pointer-events-auto h-16", className)} {...props}>
+        <header className={cn("bg-primary pointer-events-auto h-16", className)} {...props}>
           {children}
         </header>
 
@@ -55,7 +55,7 @@ export function Header({ className, children, chainId, ...props }: React.Compone
                 </filter>
               </defs>
             </svg>
-            <div className="is-frame bg-secondary w-full"></div>
+            <div className="is-frame bg-primary w-full"></div>
           </div>
           {/* <div className="mt-[-10px] h-[12px] bg-slate-100 dark:bg-slate-700"></div> */}
         </aside>

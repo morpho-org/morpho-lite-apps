@@ -170,7 +170,7 @@ export function BorrowSubPage() {
     <div className="flex min-h-screen flex-col px-2.5 pt-16">
       {status === "disconnected" ? (
         <CtaCard
-          className="flex w-full max-w-5xl flex-col gap-4 px-8 pb-14 pt-8 md:m-auto md:grid md:grid-cols-[50%_50%] md:px-0 dark:bg-neutral-900"
+          className="bg-linear-to-b flex w-full max-w-7xl flex-col gap-4 from-transparent to-white/[0.03] px-8 pb-20 pt-8 md:flex-row md:items-center md:justify-between"
           bigText="Provide collateral to borrow any asset"
           littleText="Connect wallet to get started"
           videoSrc={{
@@ -180,8 +180,8 @@ export function BorrowSubPage() {
         />
       ) : (
         userMarkets.length > 0 && (
-          <div className="flex h-fit w-full max-w-5xl flex-col gap-4 px-8 pb-14 pt-8 md:m-auto md:px-0 dark:bg-neutral-900">
-            <div className="text-primary w-full max-w-5xl px-8 pt-8">
+          <div className="bg-linear-to-b lg:pt-22 flex h-fit w-full flex-col items-center from-transparent to-white/[0.03] pb-20">
+            <div className="text-primary-foreground w-full max-w-7xl px-2 lg:px-8">
               <BorrowPositionTable
                 chain={chain}
                 markets={userMarkets}
@@ -193,9 +193,15 @@ export function BorrowSubPage() {
           </div>
         )
       )}
-      <div className="bg-background dark:bg-background/30 flex grow justify-center rounded-t-xl pb-32">
-        <div className="text-primary w-full max-w-5xl px-8 pt-8">
-          <BorrowTable chain={chain} markets={marketsArr} tokens={tokens} refetchPositions={refetchPositionsRaw} />
+      {/*
+      Outer div ensures background color matches the end of the gradient from the div above,
+      allowing rounded corners to show correctly. Inner div defines rounded corners and table background.
+      */}
+      <div className="flex grow flex-col bg-white/[0.03]">
+        <div className="bg-linear-to-b from-background to-primary flex h-full grow justify-center rounded-t-xl pb-16 pt-8">
+          <div className="text-primary-foreground w-full max-w-7xl px-2 lg:px-8">
+            <BorrowTable chain={chain} markets={marketsArr} tokens={tokens} refetchPositions={refetchPositionsRaw} />
+          </div>
         </div>
       </div>
     </div>

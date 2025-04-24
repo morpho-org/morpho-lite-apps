@@ -43,7 +43,7 @@ function TokenTableCell({ address, symbol, imageSrc }: Token) {
         </AvatarFallback>
       </Avatar>
       {symbol ?? "－"}
-      <span className="text-primary/30 font-mono">{abbreviateAddress(address)}</span>
+      <span className="text-tertiary-foreground font-mono">{abbreviateAddress(address)}</span>
     </div>
   );
 }
@@ -193,7 +193,7 @@ export function EarnSubPage() {
   if (!userAddress) totalProgress = 0;
 
   const progressCard = (
-    <Card className="bg-secondary h-min md:h-full">
+    <Card className="bg-primary h-min md:h-full">
       <CardContent className="flex h-full flex-col gap-2 p-6 text-xs font-light">
         <div className="flex justify-between">
           <span>Indexing vaults</span>
@@ -237,28 +237,28 @@ export function EarnSubPage() {
         </div>
       )}
       <div className="bg-background dark:bg-background/30 flex grow justify-center rounded-t-xl">
-        <div className="text-primary w-full max-w-5xl px-8 pb-32 pt-8">
+        <div className="text-primary-foreground w-full max-w-5xl px-8 pb-32 pt-8">
           <Table className="border-separate border-spacing-y-3">
             <TableCaption>
               Showing vaults where you've deposited.
               <br />
               Click on a vault to manage your deposit.
             </TableCaption>
-            <TableHeader className="bg-secondary">
+            <TableHeader className="bg-primary text-secondary-foreground">
               <TableRow>
-                <TableHead className="text-primary rounded-l-lg pl-4 text-xs font-light">Vault</TableHead>
-                <TableHead className="text-primary text-xs font-light">Asset</TableHead>
-                <TableHead className="text-primary text-nowrap text-xs font-light">Total Supply</TableHead>
-                <TableHead className="text-primary text-nowrap text-xs font-light">Balance</TableHead>
-                <TableHead className="text-primary text-xs font-light">Curator</TableHead>
-                <TableHead className="text-primary rounded-r-lg text-xs font-light">Timelock</TableHead>
+                <TableHead className="rounded-l-lg pl-4 text-xs font-light">Vault</TableHead>
+                <TableHead className="text-xs font-light">Asset</TableHead>
+                <TableHead className="text-nowrap text-xs font-light">Total Supply</TableHead>
+                <TableHead className="text-nowrap text-xs font-light">Balance</TableHead>
+                <TableHead className="text-xs font-light">Curator</TableHead>
+                <TableHead className="rounded-r-lg text-xs font-light">Timelock</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {vaults.map((vault) => (
                 <Sheet key={vault.address}>
                   <SheetTrigger asChild>
-                    <TableRow className="bg-secondary">
+                    <TableRow className="bg-primary">
                       <TableCell className="rounded-l-lg p-5">
                         <TokenTableCell address={vault.address} symbol={vault.info?.name} imageSrc={vault.imageSrc} />
                       </TableCell>

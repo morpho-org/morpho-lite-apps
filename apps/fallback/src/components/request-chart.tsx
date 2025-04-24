@@ -188,7 +188,7 @@ export function RequestChart() {
   }, [providers, activeChart]);
 
   return (
-    <Card className="bg-secondary min-w-min grow">
+    <Card className="bg-primary min-w-min grow">
       <CardHeader className="border-tertiary-dark flex flex-col items-stretch space-y-0 border-b p-0 md:flex-row">
         <div className="flex flex-1 flex-col justify-center gap-1 px-6 py-4">
           <CardTitle>RPC Requests</CardTitle>

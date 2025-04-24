@@ -32,7 +32,7 @@ export function TokenAmountInput({
   return (
     <div>
       <Input
-        className="p-0 font-mono text-2xl font-bold"
+        className="caret-morpho-brand p-0 font-mono text-2xl font-bold"
         type="text"
         placeholder="0"
         value={value}
@@ -43,9 +43,9 @@ export function TokenAmountInput({
         disabled={decimals === undefined}
       />
       {textMaxValue && (
-        <p className="text-primary/70 text-right text-xs font-light">
+        <p className="text-primary-foreground text-right text-xs font-light">
           {textMaxValue}{" "}
-          <span className="cursor-pointer text-blue-600" onClick={() => onChange(textMaxValue)}>
+          <span className="text-morpho-brand cursor-pointer" onClick={() => onChange(textMaxValue)}>
             MAX
           </span>{" "}
         </p>

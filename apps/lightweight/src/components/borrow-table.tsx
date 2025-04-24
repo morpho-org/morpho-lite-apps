@@ -34,7 +34,7 @@ function TokenTableCell({ address, symbol, imageSrc, chain }: Token & { chain: C
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <div className="hover:bg-tertiary/15 flex w-min items-center gap-2 rounded-sm p-2">
+          <div className="hover:bg-secondary flex w-min items-center gap-2 rounded-sm p-2">
             <Avatar className="h-4 w-4 rounded-sm">
               <AvatarImage src={imageSrc} alt="Avatar" />
               <AvatarFallback delayMs={1000}>
@@ -44,7 +44,10 @@ function TokenTableCell({ address, symbol, imageSrc, chain }: Token & { chain: C
             {symbol ?? "－"}
           </div>
         </TooltipTrigger>
-        <TooltipContent className="text-primary rounded-3xl p-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <TooltipContent
+          className="text-primary-foreground rounded-3xl p-4 shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        >
           <div className="flex items-center gap-1">
             <p>
               Address: <code>{abbreviateAddress(address)}</code>
@@ -92,11 +95,14 @@ function HealthTableCell({
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <div className="hover:bg-tertiary/15 ml-[-8px] flex w-min items-center gap-2 rounded-sm p-2">
+          <div className="hover:bg-secondary ml-[-8px] flex w-min items-center gap-2 rounded-sm p-2">
             {ltvText} / {lltvText}
           </div>
         </TooltipTrigger>
-        <TooltipContent className="text-primary rounded-3xl p-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <TooltipContent
+          className="text-primary-foreground rounded-3xl p-4 shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        >
           <div className="flex w-[240px] flex-col gap-3">
             <div className="flex justify-between">
               LTV / Liq. LTV
@@ -132,12 +138,12 @@ export function BorrowTable({
 }) {
   return (
     <Table className="border-separate border-spacing-y-3">
-      <TableHeader className="bg-secondary">
+      <TableHeader className="bg-primary text-secondary-foreground">
         <TableRow>
-          <TableHead className="text-primary rounded-l-lg pl-4 text-xs font-light">Collateral</TableHead>
-          <TableHead className="text-primary text-xs font-light">Loan</TableHead>
-          <TableHead className="text-primary text-xs font-light">LLTV</TableHead>
-          <TableHead className="text-primary text-xs font-light">
+          <TableHead className="rounded-l-lg pl-4 text-xs font-light">Collateral</TableHead>
+          <TableHead className="text-xs font-light">Loan</TableHead>
+          <TableHead className="text-xs font-light">LLTV</TableHead>
+          <TableHead className="text-xs font-light">
             <div className="flex items-center gap-1">
               Liquidity
               <TooltipProvider>
@@ -145,7 +151,7 @@ export function BorrowTable({
                   <TooltipTrigger asChild>
                     <Info className="h-4 w-4" />
                   </TooltipTrigger>
-                  <TooltipContent className="text-primary max-w-56 rounded-3xl p-4 text-xs shadow-2xl">
+                  <TooltipContent className="text-primary-foreground max-w-56 rounded-3xl p-4 text-xs shadow-2xl">
                     This value will be smaller than that of the full app. It doesn't include{" "}
                     <a
                       className="underline"
@@ -161,7 +167,7 @@ export function BorrowTable({
               </TooltipProvider>
             </div>
           </TableHead>
-          <TableHead className="text-primary rounded-r-lg text-xs font-light">Rate</TableHead>
+          <TableHead className="rounded-r-lg text-xs font-light">Rate</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -174,7 +180,7 @@ export function BorrowTable({
             }}
           >
             <SheetTrigger asChild>
-              <TableRow className="bg-secondary hover:bg-accent">
+              <TableRow className="bg-primary hover:bg-secondary">
                 <TableCell className="rounded-l-lg py-3">
                   <TokenTableCell {...tokens.get(market.params.collateralToken)!} chain={chain} />
                 </TableCell>
@@ -221,12 +227,12 @@ export function BorrowPositionTable({
 }) {
   return (
     <Table className="border-separate border-spacing-y-3">
-      <TableHeader className="bg-secondary">
+      <TableHeader className="bg-primary text-secondary-foreground">
         <TableRow>
-          <TableHead className="text-primary rounded-l-lg pl-4 text-xs font-light">Collateral</TableHead>
-          <TableHead className="text-primary text-xs font-light">Loan</TableHead>
-          <TableHead className="text-primary text-xs font-light">Rate</TableHead>
-          <TableHead className="text-primary rounded-r-lg text-xs font-light">Health</TableHead>
+          <TableHead className="rounded-l-lg pl-4 text-xs font-light">Collateral</TableHead>
+          <TableHead className="text-xs font-light">Loan</TableHead>
+          <TableHead className="text-xs font-light">Rate</TableHead>
+          <TableHead className="rounded-r-lg text-xs font-light">Health</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -258,7 +264,7 @@ export function BorrowPositionTable({
               }}
             >
               <SheetTrigger asChild>
-                <TableRow className="bg-secondary hover:bg-accent">
+                <TableRow className="bg-primary hover:bg-secondary">
                   <TableCell className="rounded-l-lg py-3">
                     <TokenTableCell {...collateralToken} symbol={collateralText} chain={chain} />
                   </TableCell>
