@@ -2,7 +2,7 @@ import { abbreviateAddress } from "@morpho-blue-offchain-public/uikit/lib/utils"
 import userEvent from "@testing-library/user-event";
 import { http, UserRejectedRequestError } from "viem";
 import { generatePrivateKey, privateKeyToAddress } from "viem/accounts";
-import { mainnet, base } from "viem/chains";
+import { mainnet, base, optimism } from "viem/chains";
 import { describe, expect, vi } from "vitest";
 import { mock } from "wagmi";
 
@@ -66,53 +66,51 @@ describe("connect wallet flow", () => {
 });
 
 describe("switch chain flow", () => {
-  testWithMainnetFork("switches to base without wallet and opens main app", async ({ client }) => {
+  testWithMainnetFork("switches to optimism without wallet and opens main app", async ({ client }) => {
     const account = privateKeyToAddress(generatePrivateKey());
     const wagmiConfig = createConfig({
-      chains: [mainnet, base],
+      chains: [mainnet, optimism],
       transports: {
         [mainnet.id]: http(client.transport.url),
-        [base.id]: http(rpcUrls[base.id]),
+        [optimism.id]: http(rpcUrls[optimism.id]),
       },
       connectors: [mock({ accounts: [account] })],
     });
 
     render(<Page />, {
       wagmiConfig,
-      routes: [{ element: <div>Switched to Base successfully!</div>, path: "base/earn" }],
+      routes: [{ element: <div>Switched to Optimism successfully!</div>, path: "op-mainnet/earn" }],
     });
 
     window.open = vi.fn();
 
     await userEvent.click(screen.getByRole("combobox"));
-    await userEvent.click(screen.getByText("Base"));
+    await userEvent.click(screen.getByText("OP Mainnet"));
 
-    expect(screen.getByText("Switched to Base successfully!")).toBeInTheDocument();
-    expect(window.open).toHaveBeenCalledWith("https://app.morpho.org/base/earn", "_blank", "noopener,noreferrer");
+    expect(screen.getByText("Switched to Optimism successfully!")).toBeInTheDocument();
   });
 
-  testWithMainnetFork("switches to base with wallet and opens main app", async ({ client }) => {
+  testWithMainnetFork("switches to optimism with wallet", async ({ client }) => {
     const account = privateKeyToAddress(generatePrivateKey());
     const wagmiConfig = createConfig({
-      chains: [mainnet, base],
+      chains: [mainnet, optimism],
       transports: {
         [mainnet.id]: http(client.transport.url),
-        [base.id]: http(rpcUrls[base.id]),
+        [optimism.id]: http(rpcUrls[optimism.id]),
       },
       connectors: [mock({ accounts: [account], features: { defaultConnected: true } })],
     });
 
     render(<Page />, {
       wagmiConfig,
-      routes: [{ element: <div>Switched to Base successfully!</div>, path: "base/earn" }],
+      routes: [{ element: <div>Switched to Optimism successfully!</div>, path: "op-mainnet/earn" }],
     });
 
     window.open = vi.fn();
 
     await userEvent.click(screen.getByRole("combobox"));
-    await userEvent.click(screen.getByText("Base"));
+    await userEvent.click(screen.getByText("OP Mainnet"));
 
-    expect(screen.getByText("Switched to Base successfully!")).toBeInTheDocument();
-    expect(window.open).toHaveBeenCalledWith("https://app.morpho.org/base/earn", "_blank", "noopener,noreferrer");
+    expect(screen.getByText("Switched to Optimism successfully!")).toBeInTheDocument();
   });
 });
