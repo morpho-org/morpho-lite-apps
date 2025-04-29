@@ -154,21 +154,6 @@ export const DEPLOYMENTS: Deployments = {
 
 export const CORE_DEPLOYMENTS = new Set<keyof Deployments>([mainnet.id, base.id]);
 
-export const BATCH1_DEPLOYMENTS = new Set<keyof Deployments>([
-  ink.id,
-  arbitrum.id,
-  optimism.id,
-  polygon.id,
-  worldchain.id,
-  scrollMainnet.id,
-  fraxtal.id,
-]);
-
-export const BATCH2_DEPLOYMENTS = new Set<keyof Deployments>([unichain.id, corn.id, modeMainnet.id, hemi.id, sonic.id]);
-
-// TODO: update once viem supports flame, camp, hyperliquid, and tac
-export const BATCH3_DEPLOYMENTS = new Set<keyof Deployments>([plumeMainnet.id, 253368190, 123420001114]);
-
 export function getContractDeploymentInfo(chainId: number, name: OptionalContracts): DeploymentDetails | undefined;
 export function getContractDeploymentInfo(chainId: number, name: RequiredContracts): DeploymentDetails;
 export function getContractDeploymentInfo(
