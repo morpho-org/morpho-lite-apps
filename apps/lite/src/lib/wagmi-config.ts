@@ -68,7 +68,7 @@ const chains = [
   // corn,
   // modeMainnet,
   // hemi,
-  // plumeMainnet,
+  plumeMainnet,
 ] as const;
 
 const transports: { [K in (typeof chains)[number]["id"]]: Transport } & { [k: number]: Transport } = {
