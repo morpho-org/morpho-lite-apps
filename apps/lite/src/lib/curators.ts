@@ -1,5 +1,5 @@
 import { Address, isAddressEqual } from "viem";
-import { optimism, polygon } from "wagmi/chains";
+import { optimism, plumeMainnet, polygon } from "wagmi/chains";
 
 import { graphql, FragmentOf } from "@/graphql/graphql";
 
@@ -27,6 +27,13 @@ export const MANUALLY_WHITELISTED_CURATORS: FragmentOf<typeof CuratorFragment>[]
     image: "https://cdn.morpho.org/v2/assets/images/moonwell.svg",
     name: "Moonwell",
     url: "https://moonwell.fi/",
+  },
+  // TEMPORARY!!!
+  {
+    addresses: [{ address: "0x7B41b9891887820A75A51a1025dB1A54f4798521", chainId: plumeMainnet.id }],
+    image: "https://www.svgrepo.com/show/456602/construction-tools.svg",
+    name: "Re7 Dev",
+    url: "https://re7.capital",
   },
 ];
 
