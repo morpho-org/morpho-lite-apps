@@ -25,7 +25,7 @@ export function CtaCard({
           preload="metadata"
           className="aspect-auto h-[460px]"
         >
-          {videoSrc.mov && <source src={videoSrc.mov} type="video/mp4; codecs='hvc1'" />}
+          {videoSrc.mov && <source src={videoSrc.mov} type="video/mp4; codecs=hvc1" />}
           {videoSrc.webm && <source src={videoSrc.webm} type="video/webm; codecs=vp09.00.41.08" />}
         </video>
       </div>

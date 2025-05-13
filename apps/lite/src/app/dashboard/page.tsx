@@ -10,6 +10,7 @@ import { useChains } from "wagmi";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { MorphoMenu } from "@/components/morpho-menu";
+import { RewardsButton } from "@/components/rewards-button";
 import { WelcomeModal } from "@/components/welcome-modal";
 import { APP_DETAILS, CORE_DEPLOYMENTS, WORDMARK } from "@/lib/constants";
 
@@ -97,6 +98,7 @@ export default function Page() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <RewardsButton chainId={chain?.id} />
           <WalletMenu
             selectedChainSlug={selectedChainSlug!}
             setSelectedChainSlug={setSelectedChainSlug}

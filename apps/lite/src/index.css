@@ -220,6 +220,34 @@
 }
 
 @theme {
+  @keyframes rainbow {
+    0% {
+      color: var(--color-red-300);
+    }
+    14% {
+      color: var(--color-orange-300);
+    }
+    28% {
+      color: var(--color-yellow-300);
+    }
+    42% {
+      color: var(--color-green-300);
+    }
+    57% {
+      color: var(--color-blue-300);
+    }
+    71% {
+      color: var(--color-indigo-300);
+    }
+    85% {
+      color: var(--color-violet-300);
+    }
+    100% {
+      color: var(--color-red-300);
+    }
+  }
+
+  --animate-rainbow: rainbow 5s linear infinite;
   --animate-appear: opacity 250ms ease-in-out;
   --ease-aggressive: cubic-bezier(0, 1.02, 0.27, 0.97);
 }

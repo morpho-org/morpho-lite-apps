@@ -27,7 +27,7 @@ import { blo } from "blo";
 import { Eye, Info } from "lucide-react";
 import { useMemo } from "react";
 import { Address, erc20Abi } from "viem";
-import { useAccount, useReadContracts } from "wagmi";
+import { useAccount, useChainId, useReadContracts } from "wagmi";
 
 import { BorrowSheetContent } from "@/components/borrow-sheet-content";
 import { CtaCard } from "@/components/cta-card";
@@ -50,7 +50,8 @@ function TokenTableCell({ address, symbol, imageSrc }: Token) {
 }
 
 export function BorrowSubPage() {
-  const { chainId, address: userAddress } = useAccount();
+  const { address: userAddress } = useAccount();
+  const chainId = useChainId();
 
   const urlSearchParams = new URLSearchParams(window.location.search);
   const isDev = urlSearchParams.has("dev");

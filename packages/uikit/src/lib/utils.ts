@@ -78,6 +78,12 @@ export type Token = { address: Address; symbol?: string; decimals?: number; imag
  * Generate a url for a token's svg leveraging the Morpho CDN.
  */
 export function getTokenSymbolURI(symbol: string | undefined) {
+  if (symbol === "USDC.e") {
+    symbol = "USDC";
+  } else if (symbol === "WLD") {
+    // TODO: remove once it's included on Morpho CDN
+    return "https://storage.googleapis.com/merkl-static-assets/tokens/WLD.jpeg";
+  }
   return `https://cdn.morpho.org/assets/logos/${encodeURIComponent((symbol ?? "").toLowerCase())}.svg`;
 }
 

@@ -21,11 +21,19 @@ export const AddressScreeningContext = createContext<AddressScreeningContextType
   screen: async () => false,
 });
 
+/**
+ * IMPORTANT: This context provider is for use by the Morpho Association ONLY. Any external use is
+ * strictly prohibited.
+ */
 export function AddressScreeningProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<ScreeningStatus>(defaultStatus);
 
   const screen = useCallback(async (address: Address) => {
     try {
+      if (!window.location.host.includes("morpho")) {
+        throw new Error("Address screening API is only available on Morpho sites.");
+      }
+
       setStatus((prev) => ({ ...prev, isLoading: true, error: null }));
 
       const response = await fetch(

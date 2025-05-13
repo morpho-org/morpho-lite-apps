@@ -28,7 +28,7 @@ function TokenTableCell({ address, symbol, imageSrc, chain }: Token & { chain: C
       <Tooltip>
         <TooltipTrigger asChild>
           <div className="hover:bg-secondary flex w-min items-center gap-2 rounded-sm p-2">
-            <Avatar className="h-4 w-4 rounded-sm">
+            <Avatar className="h-4 w-4 rounded-full">
               <AvatarImage src={imageSrc} alt="Avatar" />
               <AvatarFallback delayMs={1000}>
                 <img src={blo(address)} />

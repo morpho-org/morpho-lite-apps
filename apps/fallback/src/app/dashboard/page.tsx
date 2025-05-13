@@ -9,6 +9,7 @@ import { EarnSubPage } from "./earn-subpage";
 
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
+import { WelcomeModal } from "@/components/welcome-modal";
 
 enum SubPage {
   Earn = "earn",
@@ -65,6 +66,7 @@ export default function Page() {
         </div>
       </Header>
       {selectedSubPage === SubPage.Earn ? <EarnSubPage /> : <BorrowSubPage />}
+      <WelcomeModal />
       <Footer />
     </div>
   );

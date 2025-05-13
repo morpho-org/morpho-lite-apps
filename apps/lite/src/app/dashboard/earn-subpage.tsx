@@ -23,7 +23,7 @@ import { useMarkets } from "@/hooks/use-markets";
 import * as Merkl from "@/hooks/use-merkl-campaigns";
 import { useMerklOpportunities } from "@/hooks/use-merkl-opportunities";
 import { useTopNCurators } from "@/hooks/use-top-n-curators";
-import { CORE_DEPLOYMENTS, getContractDeploymentInfo, MIN_TIMELOCK } from "@/lib/constants";
+import { CORE_DEPLOYMENTS, getContractDeploymentInfo } from "@/lib/constants";
 import { getDisplayableCurators } from "@/lib/curators";
 
 const STALE_TIME = 5 * 60 * 1000;
@@ -98,7 +98,6 @@ export function EarnSubPage() {
       if (
         vault.name === "" ||
         vault.totalAssets === 0n ||
-        vault.timelock < MIN_TIMELOCK ||
         markets === undefined ||
         vaultData.allocations.some((allocation) => markets[allocation.id] === undefined)
       ) {

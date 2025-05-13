@@ -42,11 +42,11 @@ export const BANNERS: Record<keyof Deployments, { color: string; text: ReactNode
     color: "bg-purple-500",
     text: (
       <span className="grow py-2 text-center">
-        Use the external{" "}
+        Claim rewards and access enhanced features on the external{" "}
         <a className="underline" href="https://compound.blue" rel="noopener noreferrer" target="_blank">
           Compound Blue
         </a>{" "}
-        interface to view and claim POL and COMP rewards.
+        interface.
       </span>
     ),
   },
@@ -59,6 +59,23 @@ export const BANNERS: Record<keyof Deployments, { color: string; text: ReactNode
           Moonwell
         </a>
         .
+      </span>
+    ),
+  },
+  [worldchain.id]: {
+    color: "bg-black",
+    text: (
+      <span className="grow py-2 text-center">
+        Claim rewards and access enhanced features on the external{" "}
+        <a
+          className="underline"
+          href="https://oku.trade/morpho/vaults?inputChain=worldchain"
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          Oku Trade
+        </a>{" "}
+        interface.
       </span>
     ),
   },

@@ -21,12 +21,13 @@ import {
 import { blo } from "blo";
 // @ts-expect-error: this package lacks types
 import humanizeDuration from "humanize-duration";
-import { ExternalLink } from "lucide-react";
+import { ClockAlert, ExternalLink } from "lucide-react";
 import { Chain, hashMessage, Address, zeroAddress } from "viem";
 
 import { EarnSheetContent } from "@/components/earn-sheet-content";
 import { ApyTableCell } from "@/components/table-cells/apy-table-cell";
 import { type useMerklOpportunities } from "@/hooks/use-merkl-opportunities";
+import { MIN_TIMELOCK } from "@/lib/constants";
 import { type DisplayableCurators } from "@/lib/curators";
 
 export type Row = {
@@ -49,13 +50,16 @@ function VaultTableCell({
       <Tooltip>
         <TooltipTrigger asChild>
           <div className="hover:bg-secondary flex w-min items-center gap-2 rounded-sm p-2">
-            <Avatar className="h-4 w-4 rounded-sm">
+            <Avatar className="h-4 w-4 rounded-full">
               <AvatarImage src={imageSrc} alt="Avatar" />
               <AvatarFallback delayMs={1000}>
                 <img src={blo(address)} />
               </AvatarFallback>
             </Avatar>
             {symbol ?? "－"}
+            {timelock < MIN_TIMELOCK && (
+              <ClockAlert height={16} width={16} className="text-morpho-error duration-750 animate-pulse" />
+            )}
           </div>
         </TooltipTrigger>
         <TooltipContent
@@ -64,6 +68,11 @@ function VaultTableCell({
         >
           <p className="underline">Properties</p>
           <p>Timelock: {humanizeDuration(Number(timelock) * 1000)}</p>
+          {timelock < MIN_TIMELOCK && (
+            <p className="text-morpho-error italic">
+              This timelock seems low. Please exercise caution and ask the curator about it if you have questions.
+            </p>
+          )}
           <br />
           <div className="flex items-center gap-1">
             <p>
@@ -97,7 +106,7 @@ function CuratorTableCell({
       <Tooltip delayDuration={0}>
         <TooltipTrigger asChild>
           <div className="hover:bg-secondary ml-[-8px] flex w-min items-center gap-2 rounded-sm p-2">
-            <Avatar className="h-4 w-4 rounded-sm">
+            <Avatar className="h-4 w-4 rounded-full">
               <AvatarImage src={imageSrc ?? ""} alt="Avatar" />
               <AvatarFallback delayMs={500}>
                 <img src={blo(hashMessage(name).padEnd(42, "0").slice(0, 42) as Address)} />

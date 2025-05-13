@@ -1,13 +1,13 @@
+import { useContext } from "react";
+import { useAccountEffect, useDisconnect } from "wagmi";
+
 import {
   AlertDialog,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@morpho-org/uikit/components/shadcn/alert-dialog";
-import { useContext } from "react";
-import { useAccountEffect, useDisconnect } from "wagmi";
-
+} from "@/components/shadcn/alert-dialog";
 import { AddressScreeningContext } from "@/hooks/use-address-screening";
 
 export function AddressScreeningModal() {
@@ -26,7 +26,7 @@ export function AddressScreeningModal() {
       <AlertDialogContent className="border-destructive bg-card">
         <AlertDialogHeader>
           <AlertDialogTitle className="text-red-500">Access Denied</AlertDialogTitle>
-          <AlertDialogDescription className="text-primary">
+          <AlertDialogDescription className="text-primary-foreground">
             We&apos;re sorry, but your address is not permitted to use this application for compliance reasons.
             <br />
             <br />

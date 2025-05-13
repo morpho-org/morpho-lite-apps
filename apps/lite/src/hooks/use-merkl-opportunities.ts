@@ -21,6 +21,8 @@ export type MerklOpportunities = {
 export function useMerklOpportunities({ chainId, subType }: { chainId: number | undefined; subType: Merkl.SubType }) {
   const { data: campaigns } = Merkl.useMerklCampaigns({ chainId, subType });
 
+  // console.log(campaigns);
+
   const paramKey = useMemo(() => {
     let paramKey = "";
     switch (subType) {
@@ -57,6 +59,11 @@ export function useMerklOpportunities({ chainId, subType }: { chainId: number | 
         rewardsMap.set(paramKeyValue, []);
       }
 
+      if (rewardsMap.get(paramKeyValue)!.some((item) => item.opportunityId === opportunity.id)) {
+        // Multiple campaigns can reference the same `opportunity.id`
+        return;
+      }
+
       rewardsMap.get(paramKeyValue)!.push({
         campaignId,
         opportunityId: opportunity.id,
@@ -76,6 +83,8 @@ export function useMerklOpportunities({ chainId, subType }: { chainId: number | 
         dailyRewards: opportunity.dailyRewards,
       });
     });
+
+    console.log(rewardsMap);
 
     return rewardsMap;
   }, [campaigns, paramKey]);

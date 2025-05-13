@@ -1,3 +1,5 @@
+import { AddressScreeningModal } from "@morpho-org/uikit/components/address-screening-modal";
+import { AddressScreeningProvider } from "@morpho-org/uikit/hooks/use-address-screening";
 import { RequestTrackingProvider } from "@morpho-org/uikit/hooks/use-request-tracking";
 import { cyrb64Hash } from "@morpho-org/uikit/lib/cyrb64";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
@@ -32,8 +34,9 @@ import {
   unichain,
   worldchain,
 } from "wagmi/chains";
+import { walletConnect } from "wagmi/connectors";
 
-import DashboardPage from "./app/dashboard/page";
+import DashboardPage from "@/app/dashboard/page";
 
 const httpConfig: HttpTransportConfig = {
   retryDelay: 0,
@@ -140,7 +143,9 @@ const transports: Record<(typeof chains)[number]["id"], Transport> = {
 const wagmiConfig = createConfig({
   chains,
   transports,
-  connectors: [injected({ shimDisconnect: true })],
+  connectors: import.meta.env.VITE_WALLET_KIT_PROJECT_ID
+    ? [injected({ shimDisconnect: true }), walletConnect({ projectId: import.meta.env.VITE_WALLET_KIT_PROJECT_ID })]
+    : [injected({ shimDisconnect: true })],
   batch: {
     multicall: {
       batchSize: 2048,
@@ -173,7 +178,10 @@ function App() {
     <WagmiProvider config={wagmiConfig}>
       <PersistQueryClientProvider client={queryClient} persistOptions={{ persister, buster: "v1" }}>
         <RequestTrackingProvider>
-          <DashboardPage />
+          <AddressScreeningProvider>
+            <DashboardPage />
+            <AddressScreeningModal />
+          </AddressScreeningProvider>
         </RequestTrackingProvider>
       </PersistQueryClientProvider>
     </WagmiProvider>

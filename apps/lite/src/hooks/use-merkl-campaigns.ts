@@ -10,10 +10,17 @@ export enum SubType {
 }
 
 async function queryFn({ queryKey }: { queryKey: QueryKey }) {
-  const [subType, chainId] = queryKey.slice(4) as [number, number];
+  const [subType, chainId, withOpportunity] = queryKey.slice(4) as [SubType | undefined, number, boolean];
 
   const campaigns = await merkl.campaigns.index.get({
-    query: { chainId, status: "LIVE", type: "MORPHO", subType, withOpportunity: true, items: 100 },
+    query: {
+      chainId,
+      status: "LIVE",
+      type: "MORPHO",
+      withOpportunity,
+      items: 100,
+      ...(subType !== undefined ? { subType } : {}),
+    },
   });
 
   if (campaigns.error) {
@@ -21,12 +28,22 @@ async function queryFn({ queryKey }: { queryKey: QueryKey }) {
     throw new Error(JSON.stringify(campaigns.error));
   }
 
-  return campaigns.data.filter((campaign) => campaign.Opportunity?.status === "LIVE");
+  return withOpportunity
+    ? campaigns.data.filter((campaign) => campaign.Opportunity?.status === "LIVE")
+    : campaigns.data;
 }
 
-export function useMerklCampaigns({ chainId, subType }: { chainId: number | undefined; subType: SubType }) {
+export function useMerklCampaigns({
+  chainId,
+  subType,
+  withOpportunity = true,
+}: {
+  chainId: number | undefined;
+  subType?: SubType;
+  withOpportunity?: boolean;
+}) {
   return useQuery({
-    queryKey: ["merkl", "campaigns", "LIVE", "MORPHO", subType, chainId, "withOpportunity"],
+    queryKey: ["merkl", "campaigns", "LIVE", "MORPHO", subType, chainId, withOpportunity],
     queryFn,
     staleTime: 5 * 60 * 1_000,
     enabled: chainId !== undefined,

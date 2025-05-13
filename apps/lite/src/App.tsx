@@ -1,3 +1,5 @@
+import { AddressScreeningModal } from "@morpho-org/uikit/components/address-screening-modal";
+import { AddressScreeningProvider } from "@morpho-org/uikit/hooks/use-address-screening";
 import { cyrb64Hash } from "@morpho-org/uikit/lib/cyrb64";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import { QueryClient } from "@tanstack/react-query";
@@ -7,8 +9,6 @@ import { ReactNode } from "react";
 import { Client as UrqlClient, Provider as UrqlProvider, fetchExchange } from "urql";
 import { type Config, deserialize, serialize, WagmiProvider } from "wagmi";
 
-import { AddressScreeningModal } from "@/components/address-screening-modal";
-import { AddressScreeningProvider } from "@/hooks/use-address-screening";
 import { TERMS_OF_USE } from "@/lib/constants";
 import { createConfig } from "@/lib/wagmi-config";
 

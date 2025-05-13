@@ -1,5 +1,5 @@
 import { blo } from "blo";
-import { ExternalLink, PowerOff } from "lucide-react";
+import { ExternalLink, LoaderCircle, PowerOff } from "lucide-react";
 import { ReactNode, useEffect, useMemo, useState } from "react";
 import { type Address } from "viem";
 import {
@@ -40,9 +40,10 @@ import { useModifierKey } from "@/hooks/use-modifier-key";
 import { abbreviateAddress, getChainSlug } from "@/lib/utils";
 
 function ConnectWalletButton() {
-  const { connectors, connect } = useConnect();
-
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [pendingConnectorId, setPendingConnectorId] = useState<string | null>(null);
+
+  const { connectors, connect } = useConnect({ mutation: { onSettled: () => setPendingConnectorId(null) } });
 
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -62,8 +63,9 @@ function ConnectWalletButton() {
           {connectors.map((connector) => (
             <Button
               key={connector.uid}
-              variant="outline"
+              variant="secondary"
               onClick={() => {
+                setPendingConnectorId(connector.id);
                 // Manually close the modal when the connector is connecting
                 // This indicates the connector's modal/popup is or will soon be open
                 connector.emitter.once("connect", () => setIsDialogOpen(false));
@@ -72,6 +74,7 @@ function ConnectWalletButton() {
             >
               {connector.icon && <img width={20} height={20} src={connector.icon} alt={`${connector.name} icon`} />}
               {connector.name}
+              {connector.id === pendingConnectorId && <LoaderCircle height={16} width={16} className="animate-spin" />}
             </Button>
           ))}
         </div>

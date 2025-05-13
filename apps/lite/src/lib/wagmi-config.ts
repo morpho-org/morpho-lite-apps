@@ -68,7 +68,7 @@ const chains = [
   // scrollMainnet,
   // sonic,
   // unichain,
-  // worldchain,
+  worldchain,
 ] as const;
 
 const transports: { [K in (typeof chains)[number]["id"]]: Transport } & { [k: number]: Transport } = {

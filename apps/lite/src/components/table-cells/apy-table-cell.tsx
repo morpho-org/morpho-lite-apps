@@ -54,7 +54,7 @@ export function ApyTableCell({
                   {reward.depositUrl && (
                     <a
                       href={reward.depositUrl}
-                      className="bg-morpho-brand flex items-center gap-1 rounded-sm px-0.5"
+                      className="bg-morpho-brand flex items-center gap-1 rounded-sm px-1"
                       rel="noopener noreferrer"
                       target="_blank"
                     >
@@ -72,7 +72,7 @@ export function ApyTableCell({
                 <div className="flex items-end font-light">
                   <DollarSign size={18} />
                   Performance Fee
-                  <div className="bg-foreground/25 mx-1 rounded-sm px-0.5">{formatApy(fee)}</div>
+                  <div className="bg-foreground/25 mx-1 rounded-sm px-1">{formatApy(fee)}</div>
                 </div>
                 {formatApy(feeApy)}
               </div>

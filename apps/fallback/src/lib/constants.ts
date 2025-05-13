@@ -34,6 +34,8 @@ export const GITHUB_OWNER = "morpho-org";
 export const GITHUB_REPO = "morpho-lite-apps";
 export const GITHUB_REPO_URL = `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}`;
 
+export const TERMS_OF_USE = "https://cdn.morpho.org/documents/Morpho_Terms_of_Use.pdf";
+
 export const DEPLOYMENTS: Deployments = {
   [mainnet.id]: {
     Morpho: { address: "0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb", fromBlock: 18883124n },

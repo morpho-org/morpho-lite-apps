@@ -21,7 +21,7 @@ import { blo } from "blo";
 import humanizeDuration from "humanize-duration";
 import { useMemo } from "react";
 import { Address, erc20Abi, erc4626Abi } from "viem";
-import { useAccount, useReadContracts } from "wagmi";
+import { useAccount, useChainId, useReadContracts } from "wagmi";
 
 import { CtaCard } from "@/components/cta-card";
 import { EarnSheetContent } from "@/components/earn-sheet-content";
@@ -44,7 +44,8 @@ function TokenTableCell({ address, symbol, imageSrc }: Token) {
 }
 
 export function EarnSubPage() {
-  const { chainId, address: userAddress } = useAccount();
+  const { address: userAddress } = useAccount();
+  const chainId = useChainId();
 
   const urlSearchParams = new URLSearchParams(window.location.search);
   const isDev = urlSearchParams.has("dev");
