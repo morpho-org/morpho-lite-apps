@@ -14,6 +14,7 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@morpho-org/uikit/components/shadcn/tabs";
 import { TokenAmountInput } from "@morpho-org/uikit/components/token-amount-input";
 import { TransactionButton } from "@morpho-org/uikit/components/transaction-button";
+import { getContractDeploymentInfo } from "@morpho-org/uikit/lib/deployments";
 import { tryFormatBalance, formatLtv, Token } from "@morpho-org/uikit/lib/utils";
 import { keepPreviousData } from "@tanstack/react-query";
 import { ArrowRight, CircleArrowLeft } from "lucide-react";
@@ -22,7 +23,7 @@ import { Toaster } from "sonner";
 import { Address, erc20Abi, parseUnits } from "viem";
 import { useAccount, useChainId, useReadContract, useReadContracts } from "wagmi";
 
-import { getContractDeploymentInfo, RISKS_DOCUMENTATION } from "@/lib/constants";
+import { RISKS_DOCUMENTATION } from "@/lib/constants";
 
 enum Actions {
   SupplyCollateral = "Supply",
@@ -269,7 +270,7 @@ export function BorrowSheetContent({
       <div className="bg-primary mx-4 flex flex-col gap-4 rounded-2xl p-4">
         <div className={STYLE_LABEL}>
           My collateral position {collateralSymbol ? `(${collateralSymbol})` : ""}
-          <img className="rounded-full" height={16} width={16} src={collateralImgSrc} />
+          <img className="max-h-[16px] rounded-full" height={16} width={16} src={collateralImgSrc} />
         </div>
         <PositionProperty
           current={tryFormatBalance(accrualPosition?.collateral, collateralDecimals, 5) ?? "－"}
@@ -277,7 +278,7 @@ export function BorrowSheetContent({
         />
         <div className={STYLE_LABEL}>
           My loan position {loanSymbol ? `(${loanSymbol})` : ""}
-          <img className="rounded-full" height={16} width={16} src={loanImgSrc} />
+          <img className="max-h-[16px] rounded-full" height={16} width={16} src={loanImgSrc} />
         </div>
         <PositionProperty
           current={tryFormatBalance(accrualPosition?.borrowAssets, loanDecimals) ?? "－"}
@@ -319,7 +320,7 @@ export function BorrowSheetContent({
           <div className={STYLE_INPUT_WRAPPER}>
             <div className={STYLE_INPUT_HEADER}>
               Supply Collateral {token?.symbol ?? ""}
-              <img className="rounded-full" height={16} width={16} src={token?.imageSrc} />
+              <img className="max-h-[16px] rounded-full" height={16} width={16} src={token?.imageSrc} />
             </div>
             <TokenAmountInput decimals={token?.decimals} value={textInputValue} onChange={setTextInputValue} />
           </div>
@@ -348,7 +349,7 @@ export function BorrowSheetContent({
           <div className={STYLE_INPUT_WRAPPER}>
             <div className={STYLE_INPUT_HEADER}>
               Withdraw Collateral {token?.symbol ?? ""}
-              <img className="rounded-full" height={16} width={16} src={token?.imageSrc} />
+              <img className="max-h-[16px] rounded-full" height={16} width={16} src={token?.imageSrc} />
             </div>
             <TokenAmountInput
               decimals={token?.decimals}
@@ -372,7 +373,7 @@ export function BorrowSheetContent({
           <div className={STYLE_INPUT_WRAPPER}>
             <div className={STYLE_INPUT_HEADER}>
               Borrow {token?.symbol ?? ""}
-              <img className="rounded-full" height={16} width={16} src={token?.imageSrc} />
+              <img className="max-h-[16px] rounded-full" height={16} width={16} src={token?.imageSrc} />
             </div>
             <TokenAmountInput
               decimals={token?.decimals}
@@ -396,7 +397,7 @@ export function BorrowSheetContent({
           <div className={STYLE_INPUT_WRAPPER}>
             <div className={STYLE_INPUT_HEADER}>
               Repay {token?.symbol ?? ""}
-              <img className="rounded-full" height={16} width={16} src={token?.imageSrc} />
+              <img className="max-h-[16px] rounded-full" height={16} width={16} src={token?.imageSrc} />
             </div>
             <TokenAmountInput
               decimals={token?.decimals}

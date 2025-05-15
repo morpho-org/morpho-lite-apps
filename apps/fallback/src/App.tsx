@@ -1,6 +1,7 @@
 import { AddressScreeningModal } from "@morpho-org/uikit/components/address-screening-modal";
 import { AddressScreeningProvider } from "@morpho-org/uikit/hooks/use-address-screening";
 import { RequestTrackingProvider } from "@morpho-org/uikit/hooks/use-request-tracking";
+import * as customChains from "@morpho-org/uikit/lib/chains";
 import { cyrb64Hash } from "@morpho-org/uikit/lib/cyrb64";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import { QueryClient } from "@tanstack/react-query";
@@ -21,15 +22,18 @@ import {
   arbitrum,
   base,
   corn,
+  flame,
   fraxtal,
   hemi,
   ink,
+  lisk,
   mainnet,
   mode as modeMainnet,
   optimism,
   plumeMainnet,
   polygon,
   scroll as scrollMainnet,
+  soneium,
   sonic,
   unichain,
   worldchain,
@@ -54,21 +58,29 @@ function createFallbackTransport(rpcs: { url: string; batch: HttpTransportConfig
 }
 
 const chains = [
+  // core
   mainnet,
   base,
-  ink,
-  optimism,
+  // other (alphabetical)
   arbitrum,
-  polygon,
-  unichain,
-  plumeMainnet,
-  worldchain,
-  scrollMainnet,
-  fraxtal,
-  sonic,
+  // NOTE: Camp is disabled because RPC rate limits are too strict
+  // customChains.basecamp,
   corn,
-  modeMainnet,
+  flame,
+  fraxtal,
   hemi,
+  customChains.hyperevm,
+  ink,
+  lisk,
+  modeMainnet,
+  optimism,
+  plumeMainnet,
+  polygon,
+  scrollMainnet,
+  soneium,
+  sonic,
+  unichain,
+  worldchain,
 ] as const;
 
 const transports: Record<(typeof chains)[number]["id"], Transport> = {
@@ -138,6 +150,15 @@ const transports: Record<(typeof chains)[number]["id"], Transport> = {
     { url: "https://mode.drpc.org", batch: false },
   ]),
   [hemi.id]: createFallbackTransport([{ url: "https://rpc.hemi.network/rpc", batch: false }]),
+  [flame.id]: createFallbackTransport(flame.rpcUrls.default.http.map((url) => ({ url, batch: false }))),
+  [lisk.id]: createFallbackTransport(lisk.rpcUrls.default.http.map((url) => ({ url, batch: false }))),
+  [soneium.id]: createFallbackTransport(soneium.rpcUrls.default.http.map((url) => ({ url, batch: false }))),
+  [customChains.hyperevm.id]: createFallbackTransport(
+    customChains.hyperevm.rpcUrls.default.http.map((url) => ({ url, batch: false })),
+  ),
+  // [customChains.basecamp.id]: createFallbackTransport(
+  //   customChains.basecamp.rpcUrls.default.http.map((url) => ({ url, batch: false })),
+  // ),
 };
 
 const wagmiConfig = createConfig({

@@ -84,8 +84,6 @@ export function useMerklOpportunities({ chainId, subType }: { chainId: number | 
       });
     });
 
-    console.log(rewardsMap);
-
     return rewardsMap;
   }, [campaigns, paramKey]);
 }

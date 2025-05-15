@@ -13,6 +13,7 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@morpho-org/uikit/components/shadcn/tabs";
 import { TokenAmountInput } from "@morpho-org/uikit/components/token-amount-input";
 import { TransactionButton } from "@morpho-org/uikit/components/transaction-button";
+import { getContractDeploymentInfo } from "@morpho-org/uikit/lib/deployments";
 import { formatBalance, formatLtv, Token } from "@morpho-org/uikit/lib/utils";
 import { keepPreviousData } from "@tanstack/react-query";
 import { CircleArrowLeft } from "lucide-react";
@@ -20,8 +21,6 @@ import { useMemo, useState } from "react";
 import { Toaster } from "sonner";
 import { Address, erc20Abi, extractChain, parseUnits } from "viem";
 import { useAccount, useChainId, useChains, useReadContract, useReadContracts } from "wagmi";
-
-import { getContractDeploymentInfo } from "@/lib/constants";
 
 enum Actions {
   SupplyCollateral = "Supply",

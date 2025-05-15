@@ -1,6 +1,7 @@
 import WatermarkSvg from "@morpho-org/uikit/assets/powered-by-morpho.svg?react";
 import { Button } from "@morpho-org/uikit/components/shadcn/button";
 import { WalletMenu } from "@morpho-org/uikit/components/wallet-menu";
+import { CORE_DEPLOYMENTS } from "@morpho-org/uikit/lib/deployments";
 import { getChainSlug } from "@morpho-org/uikit/lib/utils";
 import { ConnectKitButton } from "connectkit";
 import { useCallback, useEffect, useMemo } from "react";
@@ -12,7 +13,7 @@ import { Header } from "@/components/header";
 import { MorphoMenu } from "@/components/morpho-menu";
 import { RewardsButton } from "@/components/rewards-button";
 import { WelcomeModal } from "@/components/welcome-modal";
-import { APP_DETAILS, CORE_DEPLOYMENTS, WORDMARK } from "@/lib/constants";
+import { APP_DETAILS, WORDMARK } from "@/lib/constants";
 
 enum SubPage {
   Earn = "earn",
