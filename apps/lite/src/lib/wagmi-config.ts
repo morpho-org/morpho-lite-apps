@@ -63,7 +63,7 @@ const chains = [
   // ink,
   // modeMainnet,
   optimism,
-  // plumeMainnet,
+  plumeMainnet,
   polygon,
   // scrollMainnet,
   // sonic,
