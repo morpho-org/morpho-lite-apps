@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 
 interface AvatarStackItem {
   // If providing two URLs, they will be rendered as a double avatar.
-  logoUrl: string | Promise<string> | [string | Promise<string>, string];
+  logoUrl: (string | undefined) | (string | undefined)[];
   // Optional content to show on hover.
   hoverCardContent?: React.ReactNode;
 }

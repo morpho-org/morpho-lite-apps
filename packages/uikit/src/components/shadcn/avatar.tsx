@@ -13,30 +13,9 @@ function Avatar({ className, ...props }: React.ComponentProps<typeof AvatarPrimi
   );
 }
 
-function AvatarImage({
-  className,
-  ...props
-}: Omit<React.ComponentProps<typeof AvatarPrimitive.Image>, "src"> & { src: string | Promise<string> | undefined }) {
-  const [imgSrc, setImgSrc] = React.useState<string | undefined>(undefined);
-
-  React.useEffect(() => {
-    if (!props.src || typeof props.src === "string") {
-      setImgSrc(props.src);
-      return;
-    }
-
-    void (async () => {
-      setImgSrc(await props.src);
-    })();
-  }, [props.src]);
-
+function AvatarImage({ className, ...props }: React.ComponentProps<typeof AvatarPrimitive.Image>) {
   return (
-    <AvatarPrimitive.Image
-      data-slot="avatar-image"
-      className={cn("aspect-square size-full", className)}
-      {...props}
-      src={imgSrc}
-    />
+    <AvatarPrimitive.Image data-slot="avatar-image" className={cn("aspect-square size-full", className)} {...props} />
   );
 }
 

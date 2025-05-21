@@ -18,7 +18,7 @@ import * as Merkl from "@/hooks/use-merkl-campaigns";
 import { useMerklOpportunities } from "@/hooks/use-merkl-opportunities";
 import { useTopNCurators } from "@/hooks/use-top-n-curators";
 import { type DisplayableCurators, getDisplayableCurators } from "@/lib/curators";
-import { getTokenURI } from "@/lib/utils";
+import { getTokenURI } from "@/lib/tokens";
 
 const STALE_TIME = 5 * 60 * 1000;
 

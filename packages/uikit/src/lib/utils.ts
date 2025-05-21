@@ -72,13 +72,15 @@ export function abbreviateAddress(address: Address) {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
 
-export type Token = { address: Address; symbol?: string; decimals?: number; imageSrc: string | Promise<string> };
+export type Token = { address: Address; symbol?: string; decimals?: number; imageSrc?: string };
 
 /**
  * Generate a url for a token's svg leveraging the Morpho CDN.
  */
-export function getTokenSymbolURI(symbol: string | undefined) {
-  if (symbol === "USDC.e") {
+export function getTokenSymbolURI(symbol: string | undefined): Token["imageSrc"] {
+  if (!symbol) {
+    return undefined;
+  } else if (symbol === "USDC.e") {
     symbol = "USDC";
   } else if (symbol === "WLD") {
     // TODO: remove once it's included on Morpho CDN

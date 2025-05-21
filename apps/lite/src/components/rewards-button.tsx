@@ -18,7 +18,7 @@ import { useAccount } from "wagmi";
 import { NewsTicker } from "@/components/news-ticker";
 import { useMerklCampaigns } from "@/hooks/use-merkl-campaigns";
 import { useMerklRewards } from "@/hooks/use-merkl-rewards";
-import { getTokenURI } from "@/lib/utils";
+import { getTokenURI } from "@/lib/tokens";
 
 export function RewardsButton({ chainId }: { chainId: number | undefined }) {
   const [isModalOpen, setIsModalOpen] = useState(false);

@@ -23,14 +23,14 @@ import { ApyTableCell } from "@/components/table-cells/apy-table-cell";
 import { type useMerklOpportunities } from "@/hooks/use-merkl-opportunities";
 import { MIN_TIMELOCK } from "@/lib/constants";
 import { type DisplayableCurators } from "@/lib/curators";
-import { getTokenURI } from "@/lib/utils";
+import { getTokenURI } from "@/lib/tokens";
 
 export type Row = {
   vault: AccrualVault;
   asset: Token;
   curators: DisplayableCurators;
   maxWithdraw: bigint | undefined;
-  imageSrc: string | Promise<string>;
+  imageSrc?: string;
 };
 
 function VaultTableCell({
@@ -155,7 +155,7 @@ function CollateralsTableCell({
     <AvatarStack
       items={allocations.map(([collateral, allocation]) => {
         const token = tokens.get(collateral);
-        const logoUrl: [Promise<string>, string] = [
+        const logoUrl = [
           getTokenURI({ symbol: token?.symbol, address: collateral, chainId: chain?.id }),
           blo(collateral),
         ];
