@@ -136,6 +136,8 @@ export function BorrowSheetContent({
           address: token.address,
           abi: erc20Abi,
           functionName: "approve",
+          // If `isRepayMax`, the user will repay borrow _shares_ (rather than assets), which
+          // grow in value while the txn is processed. This necessitates a small approval buffer.
           args: [morpho, isRepayMax ? (inputValue * 1001n) / 1000n : inputValue],
         } as const)
       : undefined;

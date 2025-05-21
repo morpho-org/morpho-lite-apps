@@ -4,7 +4,7 @@ import { Dialog } from "@morpho-org/uikit/components/shadcn/dialog";
 import { Token } from "@morpho-org/uikit/lib/utils";
 import userEvent from "@testing-library/user-event";
 import { useEffect } from "react";
-import { defineChain, erc20Abi, ExtractAbiItem, Hex, http, Log, parseEther, parseUnits, PublicClient } from "viem";
+import { defineChain, erc20Abi, ExtractAbiItem, http, Log, parseEther, parseUnits, PublicClient } from "viem";
 import { generatePrivateKey, privateKeyToAddress } from "viem/accounts";
 import { polygon } from "viem/chains";
 import { describe, expect } from "vitest";
@@ -47,7 +47,7 @@ const collateralToken: Token = {
   imageSrc: "./morpho.svg",
 };
 const morphoAddress = "0x1bF0c2541F820E775182832f06c0B7Fc27A25f67";
-const marketId: Hex = "0x9eacb622c6ef9c2f0fa5f1fda58a8702eb8132d8f49783f6eea6acc3a398e741";
+const marketId = "0x9eacb622c6ef9c2f0fa5f1fda58a8702eb8132d8f49783f6eea6acc3a398e741" as MarketId;
 
 async function fetchMarket(client: PublicClient) {
   const [marketParamsRaw, marketRaw] = await Promise.all([
@@ -82,387 +82,255 @@ async function fetchMarket(client: PublicClient) {
 }
 
 describe("supply collateral flow", () => {
-  testWithPolygonFork(
-    "encodes approval and supply collateral correctly",
-    async ({ client }) => {
-      const account = privateKeyToAddress(generatePrivateKey());
-      const chain = defineChain({ ...polygon, rpcUrls: { default: { http: [client.transport.url!] } } });
-      const wagmiConfig = createConfig({
-        chains: [chain],
-        transports: { [chain.id]: http(client.transport.url) },
-        connectors: [
-          mock({
-            accounts: [account],
-            features: { defaultConnected: true, reconnect: true },
-          }),
-        ],
-      });
-
-      const market = await fetchMarket(client as unknown as PublicClient);
-      const amountText = "1.2";
-      const amount = parseUnits(amountText, collateralToken.decimals!);
-      await client.deal({ account, amount: parseEther("0.1") }); // for gas
-      await client.deal({ account, amount, erc20: collateralToken.address }); // for collateral
-      await client.impersonateAccount({ address: account });
-
-      render(
-        <TestableBorrowSheetContent
-          marketId={marketId as MarketId}
-          marketParams={market.params}
-          imarket={market}
-          tokens={
-            new Map([
-              [loanToken.address, loanToken],
-              [collateralToken.address, collateralToken],
-            ])
-          }
-        />,
-        { wagmiConfig },
-      );
-
-      // Wait for tabs -- this implies the `Testable` wrapper has connected the mock account
-      await waitFor(() => screen.findAllByRole("tab"));
-      const tabs = screen.getAllByRole("tab");
-      await userEvent.click(tabs.find((tab) => tab.textContent === "Supply")!);
-
-      const inputField = screen.getByPlaceholderText("0");
-      expect(inputField).toBeInTheDocument();
-      await userEvent.type(inputField, amountText);
-
-      // Wait for Approve button -- this implies the component has loaded account allowance
-      await waitFor(() => screen.findByText("Approve"), { timeout: 10_000 });
-
-      // Wait for approval to be automined
-      const [, approval] = await Promise.all([
-        userEvent.click(screen.getByText("Approve")),
-        new Promise<ApprovalLog>((resolve) => {
-          const unwatch = client.watchContractEvent({
-            abi: erc20Abi,
-            address: collateralToken.address,
-            eventName: "Approval",
-            strict: true,
-            onLogs(logs) {
-              unwatch();
-              expect(logs.length).toBe(1);
-              resolve(logs[0]);
-            },
-          });
+  testWithPolygonFork("encodes approval and supply collateral correctly", async ({ client }) => {
+    const account = privateKeyToAddress(generatePrivateKey());
+    const chain = defineChain({ ...polygon, rpcUrls: { default: { http: [client.transport.url!] } } });
+    const wagmiConfig = createConfig({
+      chains: [chain],
+      transports: { [chain.id]: http(client.transport.url) },
+      connectors: [
+        mock({
+          accounts: [account],
+          features: { defaultConnected: true, reconnect: true },
         }),
-      ]);
+      ],
+    });
 
-      expect(approval.args.owner).toBe(account);
-      expect(approval.args.spender).toBe(morphoAddress);
-      expect(approval.args.value).toBe(amount);
+    const market = await fetchMarket(client as unknown as PublicClient);
+    const amountText = "1.2";
+    const amount = parseUnits(amountText, collateralToken.decimals!);
+    await client.deal({ account, amount: parseEther("0.1") }); // for gas
+    await client.deal({ account, amount, erc20: collateralToken.address }); // for collateral
+    await client.impersonateAccount({ address: account });
 
-      await waitFor(() => screen.findByText("Supply Collateral"), { timeout: 10_000 });
+    render(
+      <TestableBorrowSheetContent
+        marketId={marketId}
+        marketParams={market.params}
+        imarket={market}
+        tokens={
+          new Map([
+            [loanToken.address, loanToken],
+            [collateralToken.address, collateralToken],
+          ])
+        }
+      />,
+      { wagmiConfig },
+    );
 
-      // Wait for supply to be automined
-      const [, supply] = await Promise.all([
-        userEvent.click(screen.getByText("Supply Collateral")),
-        new Promise<SupplyLog>((resolve) => {
-          const unwatch = client.watchContractEvent({
-            abi: morphoAbi,
-            address: morphoAddress,
-            eventName: "SupplyCollateral",
-            strict: true,
-            onLogs(logs) {
-              unwatch();
-              expect(logs.length).toBe(1);
-              resolve(logs[0]);
-            },
-          });
-        }),
-      ]);
+    // Wait for tabs -- this implies the `Testable` wrapper has connected the mock account
+    await waitFor(() => screen.findAllByRole("tab"));
+    const tabs = screen.getAllByRole("tab");
+    await userEvent.click(tabs.find((tab) => tab.textContent === "Supply")!);
 
-      expect(supply.args.id).toBe(marketId);
-      expect(supply.args.caller).toBe(account);
-      expect(supply.args.onBehalf).toBe(account);
-      expect(supply.args.assets).toBe(amount);
-    },
-    60_000,
-  );
+    const inputField = screen.getByPlaceholderText("0");
+    expect(inputField).toBeInTheDocument();
+    await userEvent.type(inputField, amountText);
+
+    // Wait for Approve button -- this implies the component has loaded account allowance
+    await waitFor(() => screen.findByText("Approve"), { timeout: 10_000 });
+
+    // Wait for approval to be automined
+    const [, approval] = await Promise.all([
+      userEvent.click(screen.getByText("Approve")),
+      new Promise<ApprovalLog>((resolve) => {
+        const unwatch = client.watchContractEvent({
+          abi: erc20Abi,
+          address: collateralToken.address,
+          eventName: "Approval",
+          strict: true,
+          onLogs(logs) {
+            unwatch();
+            expect(logs.length).toBe(1);
+            resolve(logs[0]);
+          },
+        });
+      }),
+    ]);
+
+    expect(approval.args.owner).toBe(account);
+    expect(approval.args.spender).toBe(morphoAddress);
+    expect(approval.args.value).toBe(amount);
+
+    await waitFor(() => screen.findByText("Supply Collateral"), { timeout: 10_000 });
+
+    // Wait for supply to be automined
+    const [, supply] = await Promise.all([
+      userEvent.click(screen.getByText("Supply Collateral")),
+      new Promise<SupplyLog>((resolve) => {
+        const unwatch = client.watchContractEvent({
+          abi: morphoAbi,
+          address: morphoAddress,
+          eventName: "SupplyCollateral",
+          strict: true,
+          onLogs(logs) {
+            unwatch();
+            expect(logs.length).toBe(1);
+            resolve(logs[0]);
+          },
+        });
+      }),
+    ]);
+
+    expect(supply.args.id).toBe(marketId);
+    expect(supply.args.caller).toBe(account);
+    expect(supply.args.onBehalf).toBe(account);
+    expect(supply.args.assets).toBe(amount);
+  });
 });
 
 describe("withdraw collateral flow", () => {
-  testWithPolygonFork(
-    "encodes withdraw collateral correctly",
-    async ({ client }) => {
-      const account = privateKeyToAddress(generatePrivateKey());
-      const chain = defineChain({ ...polygon, rpcUrls: { default: { http: [client.transport.url!] } } });
-      const wagmiConfig = createConfig({
-        chains: [chain],
-        transports: { [chain.id]: http(client.transport.url) },
-        connectors: [
-          mock({
-            accounts: [account],
-            features: { defaultConnected: true, reconnect: true },
-          }),
-        ],
-      });
-
-      const market = await fetchMarket(client as unknown as PublicClient);
-      const amountText = "1.2";
-      const amount = parseUnits(amountText, collateralToken.decimals!);
-
-      await client.deal({ account, amount: parseEther("0.1") }); // for gas
-      await client.deal({ account, amount, erc20: collateralToken.address });
-      await client.impersonateAccount({ address: account });
-      await client.approve({ account, address: collateralToken.address, args: [morphoAddress, amount] });
-      await client.writeContract({
-        account,
-        abi: morphoAbi,
-        address: morphoAddress,
-        functionName: "supplyCollateral",
-        args: [{ ...market.params }, amount, account, "0x"],
-      });
-
-      render(
-        <TestableBorrowSheetContent
-          marketId={marketId as MarketId}
-          marketParams={market.params}
-          imarket={market}
-          tokens={
-            new Map([
-              [loanToken.address, loanToken],
-              [collateralToken.address, collateralToken],
-            ])
-          }
-        />,
-        { wagmiConfig },
-      );
-
-      // Wait for tabs -- this implies the `Testable` wrapper has connected the mock account
-      await waitFor(() => screen.findAllByRole("tab"));
-      const tabs = screen.getAllByRole("tab");
-      await userEvent.click(tabs.find((tab) => tab.textContent === "Withdraw")!);
-
-      const inputField = screen.getByPlaceholderText("0");
-      expect(inputField).toBeInTheDocument();
-      await userEvent.type(inputField, amountText);
-
-      await waitFor(() => screen.findByText("Withdraw Collateral"), { timeout: 10_000 });
-
-      // Wait for withdraw to be automined
-      const [, withdraw] = await Promise.all([
-        userEvent.click(screen.getByText("Withdraw Collateral")),
-        new Promise<WithdrawLog>((resolve) => {
-          const unwatch = client.watchContractEvent({
-            abi: morphoAbi,
-            address: morphoAddress,
-            eventName: "WithdrawCollateral",
-            strict: true,
-            onLogs(logs) {
-              unwatch();
-              expect(logs.length).toBe(1);
-              resolve(logs[0]);
-            },
-          });
+  testWithPolygonFork("encodes withdraw collateral correctly", async ({ client }) => {
+    const account = privateKeyToAddress(generatePrivateKey());
+    const chain = defineChain({ ...polygon, rpcUrls: { default: { http: [client.transport.url!] } } });
+    const wagmiConfig = createConfig({
+      chains: [chain],
+      transports: { [chain.id]: http(client.transport.url) },
+      connectors: [
+        mock({
+          accounts: [account],
+          features: { defaultConnected: true, reconnect: true },
         }),
-      ]);
+      ],
+    });
 
-      expect(withdraw.args.id).toBe(marketId);
-      expect(withdraw.args.caller).toBe(account);
-      expect(withdraw.args.onBehalf).toBe(account);
-      expect(withdraw.args.assets).toBe(amount);
-    },
-    60_000,
-  );
+    const market = await fetchMarket(client as unknown as PublicClient);
+    const amountText = "1.2";
+    const amount = parseUnits(amountText, collateralToken.decimals!);
+
+    await client.deal({ account, amount: parseEther("0.1") }); // for gas
+    await client.deal({ account, amount, erc20: collateralToken.address });
+    await client.impersonateAccount({ address: account });
+    await client.approve({ account, address: collateralToken.address, args: [morphoAddress, amount] });
+    await client.writeContract({
+      account,
+      abi: morphoAbi,
+      address: morphoAddress,
+      functionName: "supplyCollateral",
+      args: [{ ...market.params }, amount, account, "0x"],
+    });
+
+    render(
+      <TestableBorrowSheetContent
+        marketId={marketId}
+        marketParams={market.params}
+        imarket={market}
+        tokens={
+          new Map([
+            [loanToken.address, loanToken],
+            [collateralToken.address, collateralToken],
+          ])
+        }
+      />,
+      { wagmiConfig },
+    );
+
+    // Wait for tabs -- this implies the `Testable` wrapper has connected the mock account
+    await waitFor(() => screen.findAllByRole("tab"));
+    const tabs = screen.getAllByRole("tab");
+    await userEvent.click(tabs.find((tab) => tab.textContent === "Withdraw")!);
+
+    const inputField = screen.getByPlaceholderText("0");
+    expect(inputField).toBeInTheDocument();
+    await userEvent.type(inputField, amountText);
+
+    await waitFor(() => screen.findByText("Withdraw Collateral"), { timeout: 10_000 });
+
+    // Wait for withdraw to be automined
+    const [, withdraw] = await Promise.all([
+      userEvent.click(screen.getByText("Withdraw Collateral")),
+      new Promise<WithdrawLog>((resolve) => {
+        const unwatch = client.watchContractEvent({
+          abi: morphoAbi,
+          address: morphoAddress,
+          eventName: "WithdrawCollateral",
+          strict: true,
+          onLogs(logs) {
+            unwatch();
+            expect(logs.length).toBe(1);
+            resolve(logs[0]);
+          },
+        });
+      }),
+    ]);
+
+    expect(withdraw.args.id).toBe(marketId);
+    expect(withdraw.args.caller).toBe(account);
+    expect(withdraw.args.onBehalf).toBe(account);
+    expect(withdraw.args.assets).toBe(amount);
+  });
 });
 
 describe("repay flow", () => {
-  testWithPolygonFork(
-    "encodes repay correctly",
-    async ({ client }) => {
-      const account = privateKeyToAddress(generatePrivateKey());
-      const chain = defineChain({ ...polygon, rpcUrls: { default: { http: [client.transport.url!] } } });
-      const wagmiConfig = createConfig({
-        chains: [chain],
-        transports: { [chain.id]: http(client.transport.url) },
-        connectors: [
-          mock({
-            accounts: [account],
-            features: { defaultConnected: true, reconnect: true },
-          }),
-        ],
-      });
-
-      const market = await fetchMarket(client as unknown as PublicClient);
-      const collateralAmount = parseUnits("1.2", collateralToken.decimals!);
-      const loanAmount = parseUnits("0.01", loanToken.decimals!);
-      const repayAmountText = "0.005";
-      const repayAmount = parseUnits(repayAmountText, loanToken.decimals!);
-
-      await client.deal({ account, amount: parseEther("0.1") }); // for gas
-      await client.deal({ account, amount: collateralAmount, erc20: collateralToken.address });
-      await client.impersonateAccount({ address: account });
-      await client.approve({ account, address: collateralToken.address, args: [morphoAddress, collateralAmount] });
-      await client.writeContract({
-        account,
-        abi: morphoAbi,
-        address: morphoAddress,
-        functionName: "supplyCollateral",
-        args: [{ ...market.params }, collateralAmount, account, "0x"],
-      });
-      await client.writeContract({
-        account,
-        abi: morphoAbi,
-        address: morphoAddress,
-        functionName: "borrow",
-        args: [{ ...market.params }, loanAmount, 0n, account, account],
-      });
-
-      render(
-        <TestableBorrowSheetContent
-          marketId={marketId as MarketId}
-          marketParams={market.params}
-          imarket={market}
-          tokens={
-            new Map([
-              [loanToken.address, loanToken],
-              [collateralToken.address, collateralToken],
-            ])
-          }
-        />,
-        { wagmiConfig },
-      );
-
-      // Wait for tabs -- this implies the `Testable` wrapper has connected the mock account
-      await waitFor(() => screen.findAllByRole("tab"));
-      const tabs = screen.getAllByRole("tab");
-      await userEvent.click(tabs.find((tab) => tab.textContent === "Repay")!);
-
-      const inputField = screen.getByPlaceholderText("0");
-      expect(inputField).toBeInTheDocument();
-      await userEvent.type(inputField, repayAmountText);
-
-      await waitFor(() => screen.findAllByRole("button", { name: "Approve" }), { timeout: 10_000 });
-
-      // Wait for approval to be automined
-      const [, approval] = await Promise.all([
-        userEvent.click(screen.getByText("Approve")),
-        new Promise<ApprovalLog>((resolve) => {
-          const unwatch = client.watchContractEvent({
-            abi: erc20Abi,
-            address: loanToken.address,
-            eventName: "Approval",
-            strict: true,
-            onLogs(logs) {
-              unwatch();
-              expect(logs.length).toBe(1);
-              resolve(logs[0]);
-            },
-          });
+  testWithPolygonFork("encodes repay correctly", async ({ client }) => {
+    const account = privateKeyToAddress(generatePrivateKey());
+    const chain = defineChain({ ...polygon, rpcUrls: { default: { http: [client.transport.url!] } } });
+    const wagmiConfig = createConfig({
+      chains: [chain],
+      transports: { [chain.id]: http(client.transport.url) },
+      connectors: [
+        mock({
+          accounts: [account],
+          features: { defaultConnected: true, reconnect: true },
         }),
-      ]);
+      ],
+    });
 
-      expect(approval.args.owner).toBe(account);
-      expect(approval.args.spender).toBe(morphoAddress);
-      expect(approval.args.value).toBe(repayAmount);
+    const market = await fetchMarket(client as unknown as PublicClient);
+    const collateralAmount = parseUnits("1.2", collateralToken.decimals!);
+    const loanAmount = parseUnits("0.01", loanToken.decimals!);
+    const repayAmountText = "0.005";
+    const repayAmount = parseUnits(repayAmountText, loanToken.decimals!);
 
-      await waitFor(() => screen.findAllByRole("button", { name: "Repay" }), { timeout: 10_000 });
+    await client.deal({ account, amount: parseEther("0.1") }); // for gas
+    await client.deal({ account, amount: collateralAmount, erc20: collateralToken.address });
+    await client.impersonateAccount({ address: account });
+    await client.approve({ account, address: collateralToken.address, args: [morphoAddress, collateralAmount] });
+    await client.writeContract({
+      account,
+      abi: morphoAbi,
+      address: morphoAddress,
+      functionName: "supplyCollateral",
+      args: [{ ...market.params }, collateralAmount, account, "0x"],
+    });
+    await client.writeContract({
+      account,
+      abi: morphoAbi,
+      address: morphoAddress,
+      functionName: "borrow",
+      args: [{ ...market.params }, loanAmount, 0n, account, account],
+    });
 
-      // Wait for repay to be automined
-      const [, repay] = await Promise.all([
-        userEvent.click(screen.getByRole("button", { name: "Repay" })),
-        new Promise<RepayLog>((resolve) => {
-          const unwatch = client.watchContractEvent({
-            abi: morphoAbi,
-            address: morphoAddress,
-            eventName: "Repay",
-            strict: true,
-            onLogs(logs) {
-              unwatch();
-              expect(logs.length).toBe(1);
-              resolve(logs[0]);
-            },
-          });
-        }),
-      ]);
+    render(
+      <TestableBorrowSheetContent
+        marketId={marketId}
+        marketParams={market.params}
+        imarket={market}
+        tokens={
+          new Map([
+            [loanToken.address, loanToken],
+            [collateralToken.address, collateralToken],
+          ])
+        }
+      />,
+      { wagmiConfig },
+    );
 
-      expect(repay.args.id).toBe(marketId);
-      expect(repay.args.caller).toBe(account);
-      expect(repay.args.onBehalf).toBe(account);
-      expect(repay.args.assets).toBe(repayAmount);
-    },
-    60_000,
-  );
+    // Wait for tabs -- this implies the `Testable` wrapper has connected the mock account
+    await waitFor(() => screen.findAllByRole("tab"));
+    const tabs = screen.getAllByRole("tab");
+    await userEvent.click(tabs.find((tab) => tab.textContent === "Repay")!);
 
-  testWithPolygonFork(
-    "encodes repay max correctly",
-    async ({ client }) => {
-      const account = privateKeyToAddress(generatePrivateKey());
-      const chain = defineChain({ ...polygon, rpcUrls: { default: { http: [client.transport.url!] } } });
-      const wagmiConfig = createConfig({
-        chains: [chain],
-        transports: { [chain.id]: http(client.transport.url) },
-        connectors: [
-          mock({
-            accounts: [account],
-            features: { defaultConnected: true, reconnect: true },
-          }),
-        ],
-      });
+    const inputField = screen.getByPlaceholderText("0");
+    expect(inputField).toBeInTheDocument();
+    await userEvent.type(inputField, repayAmountText);
 
-      const market = await fetchMarket(client as unknown as PublicClient);
-      const collateralAmount = parseUnits("1.2", collateralToken.decimals!);
-      const loanAmount = parseUnits("0.01", loanToken.decimals!);
+    await waitFor(() => screen.findAllByRole("button", { name: "Approve" }), { timeout: 10_000 });
 
-      await client.deal({ account, amount: parseEther("0.1") }); // for gas
-      await client.deal({ account, amount: collateralAmount, erc20: collateralToken.address });
-      await client.deal({ account, amount: loanAmount / 1000n, erc20: loanToken.address });
-      await client.impersonateAccount({ address: account });
-      await client.approve({ account, address: collateralToken.address, args: [morphoAddress, collateralAmount] });
-      await client.writeContract({
-        account,
-        abi: morphoAbi,
-        address: morphoAddress,
-        functionName: "supplyCollateral",
-        args: [{ ...market.params }, collateralAmount, account, "0x"],
-      });
-      await client.writeContract({
-        account,
-        abi: morphoAbi,
-        address: morphoAddress,
-        functionName: "borrow",
-        args: [{ ...market.params }, loanAmount, 0n, account, account],
-      });
-      const [, repayShares] = await client.readContract({
-        abi: morphoAbi,
-        address: morphoAddress,
-        functionName: "position",
-        args: [marketId, account],
-      });
-
-      render(
-        <TestableBorrowSheetContent
-          marketId={marketId as MarketId}
-          marketParams={market.params}
-          imarket={market}
-          tokens={
-            new Map([
-              [loanToken.address, loanToken],
-              [collateralToken.address, collateralToken],
-            ])
-          }
-        />,
-        { wagmiConfig },
-      );
-
-      // Wait for tabs -- this implies the `Testable` wrapper has connected the mock account
-      await waitFor(() => screen.findAllByRole("tab"));
-      const tabs = screen.getAllByRole("tab");
-      await userEvent.click(tabs.find((tab) => tab.textContent === "Repay")!);
-
-      const inputField = screen.getByPlaceholderText("0");
-      expect(inputField).toBeInTheDocument();
-
-      await waitFor(() => screen.findAllByText("MAX"), { timeout: 10_000 });
-      await userEvent.click(screen.getByText("MAX"));
-
-      await waitFor(() => screen.findAllByRole("button", { name: "Approve" }), { timeout: 10_000 });
-
-      // Wait for approval to be automined
-      const approval = await new Promise<ApprovalLog>((resolve) => {
+    // Wait for approval to be automined
+    const [, approval] = await Promise.all([
+      userEvent.click(screen.getByText("Approve")),
+      new Promise<ApprovalLog>((resolve) => {
         const unwatch = client.watchContractEvent({
           abi: erc20Abi,
           address: loanToken.address,
@@ -474,16 +342,19 @@ describe("repay flow", () => {
             resolve(logs[0]);
           },
         });
-        void userEvent.click(screen.getByText("Approve"));
-      });
+      }),
+    ]);
 
-      expect(approval.args.owner).toBe(account);
-      expect(approval.args.spender).toBe(morphoAddress);
+    expect(approval.args.owner).toBe(account);
+    expect(approval.args.spender).toBe(morphoAddress);
+    expect(approval.args.value).toBe(repayAmount);
 
-      await waitFor(() => screen.findAllByRole("button", { name: "Repay" }), { timeout: 10_000 });
+    await waitFor(() => screen.findAllByRole("button", { name: "Repay" }), { timeout: 10_000 });
 
-      // Wait for repay to be automined
-      const repay = await new Promise<RepayLog>((resolve) => {
+    // Wait for repay to be automined
+    const [, repay] = await Promise.all([
+      userEvent.click(screen.getByRole("button", { name: "Repay" })),
+      new Promise<RepayLog>((resolve) => {
         const unwatch = client.watchContractEvent({
           abi: morphoAbi,
           address: morphoAddress,
@@ -495,14 +366,128 @@ describe("repay flow", () => {
             resolve(logs[0]);
           },
         });
-        void userEvent.click(screen.getByRole("button", { name: "Repay" }));
-      });
+      }),
+    ]);
 
-      expect(repay.args.id).toBe(marketId);
-      expect(repay.args.caller).toBe(account);
-      expect(repay.args.onBehalf).toBe(account);
-      expect(repay.args.shares).toBe(repayShares);
-    },
-    60_000,
-  );
+    expect(repay.args.id).toBe(marketId);
+    expect(repay.args.caller).toBe(account);
+    expect(repay.args.onBehalf).toBe(account);
+    expect(repay.args.assets).toBe(repayAmount);
+  });
+
+  testWithPolygonFork("encodes repay max correctly", async ({ client }) => {
+    const account = privateKeyToAddress(generatePrivateKey());
+    const chain = defineChain({ ...polygon, rpcUrls: { default: { http: [client.transport.url!] } } });
+    const wagmiConfig = createConfig({
+      chains: [chain],
+      transports: { [chain.id]: http(client.transport.url) },
+      connectors: [
+        mock({
+          accounts: [account],
+          features: { defaultConnected: true, reconnect: true },
+        }),
+      ],
+    });
+
+    const market = await fetchMarket(client as unknown as PublicClient);
+    const collateralAmount = parseUnits("1.2", collateralToken.decimals!);
+    const loanAmount = parseUnits("0.01", loanToken.decimals!);
+
+    await client.deal({ account, amount: parseEther("0.1") }); // for gas
+    await client.deal({ account, amount: collateralAmount, erc20: collateralToken.address });
+    await client.deal({ account, amount: loanAmount / 1000n, erc20: loanToken.address });
+    await client.impersonateAccount({ address: account });
+    await client.approve({ account, address: collateralToken.address, args: [morphoAddress, collateralAmount] });
+    await client.writeContract({
+      account,
+      abi: morphoAbi,
+      address: morphoAddress,
+      functionName: "supplyCollateral",
+      args: [{ ...market.params }, collateralAmount, account, "0x"],
+    });
+    await client.writeContract({
+      account,
+      abi: morphoAbi,
+      address: morphoAddress,
+      functionName: "borrow",
+      args: [{ ...market.params }, loanAmount, 0n, account, account],
+    });
+    const [, repayShares] = await client.readContract({
+      abi: morphoAbi,
+      address: morphoAddress,
+      functionName: "position",
+      args: [marketId, account],
+    });
+
+    render(
+      <TestableBorrowSheetContent
+        marketId={marketId}
+        marketParams={market.params}
+        imarket={market}
+        tokens={
+          new Map([
+            [loanToken.address, loanToken],
+            [collateralToken.address, collateralToken],
+          ])
+        }
+      />,
+      { wagmiConfig },
+    );
+
+    // Wait for tabs -- this implies the `Testable` wrapper has connected the mock account
+    await waitFor(() => screen.findAllByRole("tab"));
+    const tabs = screen.getAllByRole("tab");
+    await userEvent.click(tabs.find((tab) => tab.textContent === "Repay")!);
+
+    const inputField = screen.getByPlaceholderText("0");
+    expect(inputField).toBeInTheDocument();
+
+    await waitFor(() => screen.findAllByText("MAX"), { timeout: 10_000 });
+    await userEvent.click(screen.getByText("MAX"));
+
+    await waitFor(() => screen.findAllByRole("button", { name: "Approve" }), { timeout: 10_000 });
+
+    // Wait for approval to be automined
+    const approval = await new Promise<ApprovalLog>((resolve) => {
+      const unwatch = client.watchContractEvent({
+        abi: erc20Abi,
+        address: loanToken.address,
+        eventName: "Approval",
+        strict: true,
+        onLogs(logs) {
+          unwatch();
+          expect(logs.length).toBe(1);
+          resolve(logs[0]);
+        },
+      });
+      void userEvent.click(screen.getByText("Approve"));
+    });
+
+    expect(approval.args.owner).toBe(account);
+    expect(approval.args.spender).toBe(morphoAddress);
+    expect(approval.args.value).toBe(10009997787393201n); // > 0.01 because of share growth buffer
+
+    await waitFor(() => screen.findAllByRole("button", { name: "Repay" }), { timeout: 10_000 });
+
+    // Wait for repay to be automined
+    const repay = await new Promise<RepayLog>((resolve) => {
+      const unwatch = client.watchContractEvent({
+        abi: morphoAbi,
+        address: morphoAddress,
+        eventName: "Repay",
+        strict: true,
+        onLogs(logs) {
+          unwatch();
+          expect(logs.length).toBe(1);
+          resolve(logs[0]);
+        },
+      });
+      void userEvent.click(screen.getByRole("button", { name: "Repay" }));
+    });
+
+    expect(repay.args.id).toBe(marketId);
+    expect(repay.args.caller).toBe(account);
+    expect(repay.args.onBehalf).toBe(account);
+    expect(repay.args.shares).toBe(repayShares);
+  });
 });
