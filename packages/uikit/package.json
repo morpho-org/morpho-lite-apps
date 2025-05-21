@@ -10,7 +10,8 @@
   "exports": {
     "./*": "./dist/*.js",
     "./*.svg": "./dist/*.svg",
-    "./*.sol": "./dist/*.sol"
+    "./*.sol": "./dist/*.sol",
+    "./lib/chains": "./dist/lib/chains/index.js"
   },
   "files": [
     "dist"
@@ -56,8 +57,8 @@
     "tailwindcss": "^4.0.6",
     "tailwindcss-animate": "^1.0.7",
     "tevm": "1.0.0-next.140",
-    "viem": "~2.23.5",
-    "wagmi": "2.14.15"
+    "viem": "~2.29.1",
+    "wagmi": "2.15.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
@@ -83,12 +84,12 @@
     "tevm": "1.0.0-next.140",
     "typescript": "~5.7.2",
     "typescript-eslint": "^8.24.1",
-    "viem": "~2.23.5",
+    "viem": "~2.29.1",
     "vite": "^6.2.0",
     "vite-plugin-dts": "^4.5.3",
     "vite-plugin-externalize-deps": "^0.9.0",
     "vite-plugin-static-copy": "^2.3.0",
     "vite-plugin-svgr": "^4.3.0",
-    "wagmi": "2.14.15"
+    "wagmi": "2.15.2"
   }
 }

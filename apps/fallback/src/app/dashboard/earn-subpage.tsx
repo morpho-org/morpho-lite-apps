@@ -14,6 +14,7 @@ import {
   TableRow,
 } from "@morpho-org/uikit/components/shadcn/table";
 import useContractEvents from "@morpho-org/uikit/hooks/use-contract-events/use-contract-events";
+import { getContractDeploymentInfo } from "@morpho-org/uikit/lib/deployments";
 import { abbreviateAddress, formatBalanceWithSymbol, getTokenSymbolURI, Token } from "@morpho-org/uikit/lib/utils";
 import { keepPreviousData } from "@tanstack/react-query";
 import { blo } from "blo";
@@ -26,7 +27,6 @@ import { useAccount, useChainId, useReadContracts } from "wagmi";
 import { CtaCard } from "@/components/cta-card";
 import { EarnSheetContent } from "@/components/earn-sheet-content";
 import { RequestChart } from "@/components/request-chart";
-import { getContractDeploymentInfo } from "@/lib/constants";
 
 function TokenTableCell({ address, symbol, imageSrc }: Token) {
   return (

@@ -29,8 +29,8 @@
     "sonner": "^2.0.0",
     "tailwindcss-animate": "^1.0.7",
     "tailwind-merge": "^3.0.1",
-    "viem": "~2.23.5",
-    "wagmi": "2.14.15"
+    "viem": "~2.29.1",
+    "wagmi": "2.15.2"
   },
   "devDependencies": {
     "@fleek-platform/cli": "^3.8.2",

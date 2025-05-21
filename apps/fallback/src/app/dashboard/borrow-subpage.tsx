@@ -15,6 +15,7 @@ import {
 } from "@morpho-org/uikit/components/shadcn/table";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@morpho-org/uikit/components/shadcn/tooltip";
 import useContractEvents from "@morpho-org/uikit/hooks/use-contract-events/use-contract-events";
+import { getContractDeploymentInfo } from "@morpho-org/uikit/lib/deployments";
 import {
   abbreviateAddress,
   formatBalanceWithSymbol,
@@ -32,7 +33,6 @@ import { useAccount, useChainId, useReadContracts } from "wagmi";
 import { BorrowSheetContent } from "@/components/borrow-sheet-content";
 import { CtaCard } from "@/components/cta-card";
 import { RequestChart } from "@/components/request-chart";
-import { getContractDeploymentInfo } from "@/lib/constants";
 
 function TokenTableCell({ address, symbol, imageSrc }: Token) {
   return (
