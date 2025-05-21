@@ -11,13 +11,7 @@ import {
   Table,
 } from "@morpho-org/uikit/components/shadcn/table";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@morpho-org/uikit/components/shadcn/tooltip";
-import {
-  formatBalanceWithSymbol,
-  Token,
-  getTokenSymbolURI,
-  formatLtv,
-  abbreviateAddress,
-} from "@morpho-org/uikit/lib/utils";
+import { formatBalanceWithSymbol, Token, formatLtv, abbreviateAddress } from "@morpho-org/uikit/lib/utils";
 import { blo } from "blo";
 // @ts-expect-error: this package lacks types
 import humanizeDuration from "humanize-duration";
@@ -29,13 +23,14 @@ import { ApyTableCell } from "@/components/table-cells/apy-table-cell";
 import { type useMerklOpportunities } from "@/hooks/use-merkl-opportunities";
 import { MIN_TIMELOCK } from "@/lib/constants";
 import { type DisplayableCurators } from "@/lib/curators";
+import { getTokenURI } from "@/lib/utils";
 
 export type Row = {
   vault: AccrualVault;
   asset: Token;
   curators: DisplayableCurators;
   maxWithdraw: bigint | undefined;
-  imageSrc: string;
+  imageSrc: string | Promise<string>;
 };
 
 function VaultTableCell({
@@ -160,7 +155,10 @@ function CollateralsTableCell({
     <AvatarStack
       items={allocations.map(([collateral, allocation]) => {
         const token = tokens.get(collateral);
-        const logoUrl = [getTokenSymbolURI(token?.symbol), blo(collateral)];
+        const logoUrl: [Promise<string>, string] = [
+          getTokenURI({ symbol: token?.symbol, address: collateral, chainId: chain?.id }),
+          blo(collateral),
+        ];
         const lltvs = [...allocation.lltvs.values()];
         const oracles = [...allocation.oracles];
 

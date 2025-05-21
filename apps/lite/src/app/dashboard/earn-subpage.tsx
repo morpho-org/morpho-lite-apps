@@ -12,7 +12,7 @@ import { metaMorphoFactoryAbi } from "@morpho-org/uikit/assets/abis/meta-morpho-
 import useContractEvents from "@morpho-org/uikit/hooks/use-contract-events/use-contract-events";
 import { readAccrualVaults, readAccrualVaultsStateOverride } from "@morpho-org/uikit/lens/read-vaults";
 import { CORE_DEPLOYMENTS, getContractDeploymentInfo } from "@morpho-org/uikit/lib/deployments";
-import { getTokenSymbolURI, Token } from "@morpho-org/uikit/lib/utils";
+import { Token } from "@morpho-org/uikit/lib/utils";
 import { useMemo } from "react";
 import { useOutletContext } from "react-router";
 import { Address, Chain, erc20Abi, zeroAddress } from "viem";
@@ -25,6 +25,7 @@ import * as Merkl from "@/hooks/use-merkl-campaigns";
 import { useMerklOpportunities } from "@/hooks/use-merkl-opportunities";
 import { useTopNCurators } from "@/hooks/use-top-n-curators";
 import { getDisplayableCurators } from "@/lib/curators";
+import { getTokenURI } from "@/lib/utils";
 
 const STALE_TIME = 5 * 60 * 1000;
 
@@ -199,16 +200,16 @@ export function EarnSubPage() {
         vault,
         asset: {
           address: vault.asset,
-          imageSrc: getTokenSymbolURI(symbol),
+          imageSrc: getTokenURI({ symbol, address: vault.asset, chainId }),
           symbol,
           decimals,
         } as Token,
         curators: getDisplayableCurators(vault, topCurators),
         maxWithdraw: maxWithdraws[vault.address],
-        imageSrc: getTokenSymbolURI(symbol),
+        imageSrc: getTokenURI({ symbol, address: vault.asset, chainId }),
       };
     });
-  }, [vaults, tokens, maxWithdraws, topCurators]);
+  }, [vaults, tokens, maxWithdraws, topCurators, chainId]);
 
   const userRows = rows.filter((row) => (row.maxWithdraw ?? 0n) > 0n);
 

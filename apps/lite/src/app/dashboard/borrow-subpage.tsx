@@ -5,7 +5,7 @@ import useContractEvents from "@morpho-org/uikit/hooks/use-contract-events/use-c
 import { readAccrualVaults, readAccrualVaultsStateOverride } from "@morpho-org/uikit/lens/read-vaults";
 import { CORE_DEPLOYMENTS, getContractDeploymentInfo } from "@morpho-org/uikit/lib/deployments";
 import { restructure } from "@morpho-org/uikit/lib/restructure";
-import { getTokenSymbolURI, Token } from "@morpho-org/uikit/lib/utils";
+import { Token } from "@morpho-org/uikit/lib/utils";
 import { useMemo } from "react";
 import { useOutletContext } from "react-router";
 import { type Address, erc20Abi, type Chain, zeroAddress, type Hex } from "viem";
@@ -18,6 +18,7 @@ import * as Merkl from "@/hooks/use-merkl-campaigns";
 import { useMerklOpportunities } from "@/hooks/use-merkl-opportunities";
 import { useTopNCurators } from "@/hooks/use-top-n-curators";
 import { type DisplayableCurators, getDisplayableCurators } from "@/lib/curators";
+import { getTokenURI } from "@/lib/utils";
 
 const STALE_TIME = 5 * 60 * 1000;
 
@@ -190,17 +191,17 @@ export function BorrowSubPage() {
         address: market.params.collateralToken,
         symbol: collateralTokenSymbol,
         decimals: erc20Decimals?.[idx * 2].result,
-        imageSrc: getTokenSymbolURI(collateralTokenSymbol),
+        imageSrc: getTokenURI({ symbol: collateralTokenSymbol, address: market.params.collateralToken, chainId }),
       });
       map.set(market.params.loanToken, {
         address: market.params.loanToken,
         symbol: loanTokenSymbol,
         decimals: erc20Decimals?.[idx * 2 + 1].result,
-        imageSrc: getTokenSymbolURI(loanTokenSymbol),
+        imageSrc: getTokenURI({ symbol: loanTokenSymbol, address: market.params.loanToken, chainId }),
       });
     });
     return map;
-  }, [marketsArr, erc20Symbols, erc20Decimals]);
+  }, [marketsArr, erc20Symbols, erc20Decimals, chainId]);
 
   if (status === "reconnecting") return undefined;
 

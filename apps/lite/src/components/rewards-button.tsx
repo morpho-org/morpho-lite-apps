@@ -8,7 +8,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@morpho-org/uikit/components/shadcn/dialog";
-import { formatBalance, formatBalanceWithSymbol, getTokenSymbolURI } from "@morpho-org/uikit/lib/utils";
+import { formatBalance, formatBalanceWithSymbol } from "@morpho-org/uikit/lib/utils";
 import { blo } from "blo";
 import { Sparkles } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -18,6 +18,7 @@ import { useAccount } from "wagmi";
 import { NewsTicker } from "@/components/news-ticker";
 import { useMerklCampaigns } from "@/hooks/use-merkl-campaigns";
 import { useMerklRewards } from "@/hooks/use-merkl-rewards";
+import { getTokenURI } from "@/lib/utils";
 
 export function RewardsButton({ chainId }: { chainId: number | undefined }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -71,7 +72,14 @@ export function RewardsButton({ chainId }: { chainId: number | undefined }) {
               className="border-tertiary flex items-center justify-start gap-2 border-b p-2"
             >
               <Avatar className="h-4 w-4 rounded-full">
-                <AvatarImage src={getTokenSymbolURI(reward.token.symbol)} alt="Avatar" />
+                <AvatarImage
+                  src={getTokenURI({
+                    symbol: reward.token.symbol,
+                    address: reward.token.address as Address,
+                    chainId: reward.token.chainId,
+                  })}
+                  alt="Avatar"
+                />
                 <AvatarFallback delayMs={200}>
                   <img src={blo(reward.token.address as Address)} />
                 </AvatarFallback>
