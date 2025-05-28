@@ -99,9 +99,14 @@ export function EarnSubPage() {
       if (
         vault.name === "" ||
         vault.totalAssets === 0n ||
-        markets === undefined ||
         vaultData.allocations.some((allocation) => markets[allocation.id] === undefined)
       ) {
+        // Detailed logging of filtering reason to help curators diagnose their situation.
+        console.log(`Skipping vault '${vault.name}':
+- ${vault.name === "" ? "❌" : "✅"} name is defined
+- ${vault.totalAssets === 0n ? "❌" : "✅"} has deposits
+- ${vaultData.allocations.some((allocation) => markets[allocation.id] === undefined) ? "❌" : "✅"} fetched constituent markets
+`);
         return;
       }
 

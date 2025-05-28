@@ -22,6 +22,22 @@ export const ADDRESSES_DOCUMENTATION = "https://docs.morpho.org/overview/resourc
 export const SHARED_LIQUIDITY_DOCUMENTATION = "https://docs.morpho.org/overview/concepts/public-allocator/";
 
 export const BANNERS: Record<keyof Deployments, { color: string; text: ReactNode }> = {
+  [plumeMainnet.id]: {
+    color: "bg-[rgb(255,61,0)]",
+    text: (
+      <span className="grow py-2 text-center">
+        Access additional features and explore incentives via the interfaces offered by{" "}
+        <a className="underline" href="https://app.mysticfinance.xyz" rel="noopener noreferrer" target="_blank">
+          Mystic
+        </a>
+        {" and "}
+        <a className="underline" href="https://morpho.solera.market/" rel="noopener noreferrer" target="_blank">
+          Solera
+        </a>
+        .
+      </span>
+    ),
+  },
   [polygon.id]: {
     color: "bg-purple-500",
     text: (

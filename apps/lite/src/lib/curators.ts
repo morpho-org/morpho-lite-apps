@@ -28,6 +28,18 @@ export const MANUALLY_WHITELISTED_CURATORS: FragmentOf<typeof CuratorFragment>[]
     name: "Moonwell",
     url: "https://moonwell.fi/",
   },
+  {
+    addresses: [{ address: "0x5D845540D2e05422E8ef10CEDEd7C0bFB5Aac4A2", chainId: plumeMainnet.id }],
+    image: "/mystic.jpg",
+    name: "Mystic",
+    url: "https://mysticfinance.xyz",
+  },
+  {
+    addresses: [{ address: "0x4e16eF0278E89f4A79f3581aB0afDF467b1754cD", chainId: plumeMainnet.id }],
+    image: "/solera.svg",
+    name: "Solera",
+    url: "https://solera.market",
+  },
 ];
 
 export type DisplayableCurators = {
