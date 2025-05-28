@@ -92,8 +92,8 @@ importers:
   apps/fallback:
     dependencies:
       "@morpho-org/blue-sdk":
-        specifier: ^2.3.1
-        version: 2.3.2(@morpho-org/morpho-ts@2.3.0)
+        specifier: ^3.0.9
+        version: 3.0.9(@morpho-org/morpho-ts@2.3.0)
       "@morpho-org/uikit":
         specifier: workspace:*
         version: link:../../packages/uikit
@@ -171,8 +171,11 @@ importers:
         specifier: ^0.20.171
         version: 0.20.179(@opentelemetry/api@1.9.0)(@types/pg@8.6.1)(bufferutil@4.0.9)(graphql@16.11.0)(openapi-types@12.1.3)(typescript@5.7.3)(utf-8-validate@5.0.10)(zod@3.24.4)
       "@morpho-org/blue-sdk":
-        specifier: ^2.3.1
-        version: 2.3.2(@morpho-org/morpho-ts@2.3.0)
+        specifier: ^3.0.9
+        version: 3.0.9(@morpho-org/morpho-ts@2.3.0)
+      "@morpho-org/blue-sdk-viem":
+        specifier: ^3.1.1
+        version: 3.1.1(@morpho-org/blue-sdk@3.0.9(@morpho-org/morpho-ts@2.3.0))(@morpho-org/morpho-ts@2.3.0)(viem@2.29.2(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@5.0.10)(zod@3.24.4))
       "@morpho-org/uikit":
         specifier: workspace:*
         version: link:../../packages/uikit
@@ -2232,11 +2235,19 @@ packages:
       { integrity: sha512-9LfmxKTb1v+vUS1/emSk1f5ePmTLkb9Le9AxOB5T0XM59EUumwcS45z05h7aiZx3GI0Bl7mjb3FMEglYj+acuQ== }
     engines: { node: ">=18" }
 
-  "@morpho-org/blue-sdk@2.3.2":
+  "@morpho-org/blue-sdk-viem@3.1.1":
     resolution:
-      { integrity: sha512-zpbo+1K5AO4vwY9HJUnjpdLaA4nXJeETID5/1gRKqsvQfxRl/pmEa3hHYMsX6Pn+Zj8efuZPzgzm0QfRzTcT/Q== }
+      { integrity: sha512-lWeZSJ00SQCJ14WfQ+4mgL1jrG7OWnX+b7KHO1zrEhA3Y9IdqZeuEYqtPvDEXumbLvVb0rVRr0x/MzvHFvz8+g== }
     peerDependencies:
-      "@morpho-org/morpho-ts": ^2.1.0
+      "@morpho-org/blue-sdk": ^3.0.9
+      "@morpho-org/morpho-ts": ^2.3.0
+      viem: ^2.0.0
+
+  "@morpho-org/blue-sdk@3.0.9":
+    resolution:
+      { integrity: sha512-wmJexYTMNIaDrw1xt8fGl9BVQljI4EEd78WP3JNVGu2+oz4TIEt0q3+I2BMSbe07hw0tYYgFurR/w+LFAhSATw== }
+    peerDependencies:
+      "@morpho-org/morpho-ts": ^2.3.0
 
   "@morpho-org/morpho-ts@2.3.0":
     resolution:
@@ -13862,7 +13873,13 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  "@morpho-org/blue-sdk@2.3.2(@morpho-org/morpho-ts@2.3.0)":
+  "@morpho-org/blue-sdk-viem@3.1.1(@morpho-org/blue-sdk@3.0.9(@morpho-org/morpho-ts@2.3.0))(@morpho-org/morpho-ts@2.3.0)(viem@2.29.2(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@5.0.10)(zod@3.24.4))":
+    dependencies:
+      "@morpho-org/blue-sdk": 3.0.9(@morpho-org/morpho-ts@2.3.0)
+      "@morpho-org/morpho-ts": 2.3.0
+      viem: 2.29.2(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@5.0.10)(zod@3.24.4)
+
+  "@morpho-org/blue-sdk@3.0.9(@morpho-org/morpho-ts@2.3.0)":
     dependencies:
       "@morpho-org/morpho-ts": 2.3.0
       "@noble/hashes": 1.8.0
@@ -21125,7 +21142,7 @@ snapshots:
     dependencies:
       "@adraffy/ens-normalize": 1.11.0
       "@noble/curves": 1.8.1
-      "@noble/hashes": 1.7.1
+      "@noble/hashes": 1.8.0
       "@scure/bip32": 1.6.2
       "@scure/bip39": 1.5.4
       abitype: 1.0.8(typescript@5.7.3)(zod@3.24.4)
@@ -21139,7 +21156,7 @@ snapshots:
     dependencies:
       "@adraffy/ens-normalize": 1.11.0
       "@noble/curves": 1.8.2
-      "@noble/hashes": 1.7.2
+      "@noble/hashes": 1.8.0
       "@scure/bip32": 1.6.2
       "@scure/bip39": 1.5.4
       abitype: 1.0.8(typescript@5.7.3)(zod@3.22.4)
@@ -21153,7 +21170,7 @@ snapshots:
     dependencies:
       "@adraffy/ens-normalize": 1.11.0
       "@noble/curves": 1.8.2
-      "@noble/hashes": 1.7.2
+      "@noble/hashes": 1.8.0
       "@scure/bip32": 1.6.2
       "@scure/bip39": 1.5.4
       abitype: 1.0.8(typescript@5.7.3)(zod@3.24.4)

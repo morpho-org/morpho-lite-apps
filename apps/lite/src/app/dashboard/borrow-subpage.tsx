@@ -1,10 +1,10 @@
 import { AccrualPosition } from "@morpho-org/blue-sdk";
+import { restructure } from "@morpho-org/blue-sdk-viem";
 import { metaMorphoFactoryAbi } from "@morpho-org/uikit/assets/abis/meta-morpho-factory";
 import { morphoAbi } from "@morpho-org/uikit/assets/abis/morpho";
 import useContractEvents from "@morpho-org/uikit/hooks/use-contract-events/use-contract-events";
 import { readAccrualVaults, readAccrualVaultsStateOverride } from "@morpho-org/uikit/lens/read-vaults";
 import { CORE_DEPLOYMENTS, getContractDeploymentInfo } from "@morpho-org/uikit/lib/deployments";
-import { restructure } from "@morpho-org/uikit/lib/restructure";
 import { Token } from "@morpho-org/uikit/lib/utils";
 import { useMemo } from "react";
 import { useOutletContext } from "react-router";
