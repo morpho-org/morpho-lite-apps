@@ -67,7 +67,7 @@ const chains = [
   polygon,
   // scrollMainnet,
   // sonic,
-  // unichain,
+  unichain,
   worldchain,
 ] as const;
 
