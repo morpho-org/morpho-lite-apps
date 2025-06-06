@@ -241,9 +241,9 @@ function IdTableCell({ marketId }: { marketId: MarketId }) {
           className="text-primary-foreground rounded-3xl p-4 shadow-2xl"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="flex items-center gap-1">
+          <div className="wrap-anywhere flex max-w-[200px] items-center gap-1">
             <p>
-              Market ID: <code>{abbreviateAddress(marketId)}</code>
+              Market ID: <code>{marketId}</code>
             </p>
           </div>
         </TooltipContent>
