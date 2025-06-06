@@ -14,7 +14,7 @@ import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@morph
 import { formatLtv, formatBalanceWithSymbol, Token, abbreviateAddress } from "@morpho-org/uikit/lib/utils";
 import { blo } from "blo";
 import { CheckCheck, Copy, ExternalLink, Info } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { type Chain, type Hex, type Address } from "viem";
 
 import { BorrowSheetContent } from "@/components/borrow-sheet-content";
@@ -29,7 +29,7 @@ function TokenTableCell({ address, symbol, imageSrc, chain }: Token & { chain: C
       <Tooltip>
         <TooltipTrigger asChild>
           <div className="hover:bg-secondary flex w-min items-center gap-2 rounded-sm p-2">
-            <Avatar className="h-4 w-4 rounded-full">
+            <Avatar className="size-4 rounded-full">
               <AvatarImage src={imageSrc} alt="Avatar" />
               <AvatarFallback delayMs={1000}>
                 <img src={blo(address)} />
@@ -52,7 +52,7 @@ function TokenTableCell({ address, symbol, imageSrc, chain }: Token & { chain: C
                 rel="noopener noreferrer"
                 target="_blank"
               >
-                <ExternalLink className="h-4 w-4" />
+                <ExternalLink className="size-4" />
               </a>
             )}
           </div>
@@ -150,7 +150,7 @@ function VaultsTableCell({
                   target="_blank"
                 >
                   {abbreviateAddress(vault.address)}
-                  <ExternalLink className="h-4 w-4" />
+                  <ExternalLink className="size-4" />
                 </a>
               </div>
               <div className="flex items-center justify-between font-light">
@@ -165,7 +165,7 @@ function VaultsTableCell({
                       target="_blank"
                     >
                       {curator.imageSrc && (
-                        <Avatar className="h-4 w-4 rounded-full">
+                        <Avatar className="size-4 rounded-full">
                           <AvatarImage src={curator.imageSrc} alt="Loan Token" />
                         </Avatar>
                       )}
@@ -178,7 +178,7 @@ function VaultsTableCell({
                 <div className="flex items-center justify-between font-light">
                   Total Supply
                   <div className="flex items-end gap-1">
-                    <Avatar className="h-4 w-4 rounded-full">
+                    <Avatar className="size-4 rounded-full">
                       <AvatarImage src={token.imageSrc} alt="Loan Token" />
                     </Avatar>
                     {formatBalanceWithSymbol(vault.totalAssets, token.decimals, token.symbol, 5, true)}
@@ -212,30 +212,27 @@ function VaultsTableCell({
 
 function IdTableCell({ marketId }: { marketId: MarketId }) {
   const [recentlyCopiedText, setRecentlyCopiedText] = useState("");
-  useEffect(() => {
-    if (recentlyCopiedText === "") return;
-    const id = setTimeout(() => setRecentlyCopiedText(""), 500);
-    return () => clearTimeout(id);
-  }, [recentlyCopiedText]);
 
   return (
     <TooltipProvider>
       <Tooltip delayDuration={1000}>
         <TooltipTrigger asChild>
-          <div
+          <button
             className="hover:bg-secondary ml-[-8px] flex w-min cursor-pointer items-center gap-2 rounded-sm p-2"
             onClick={(event) => {
               event.stopPropagation();
               void navigator.clipboard.writeText(marketId);
+
               setRecentlyCopiedText(marketId);
+              setTimeout(() => setRecentlyCopiedText(""), 500);
             }}
           >
             {marketId === recentlyCopiedText ? (
-              <CheckCheck className="h-4 w-4 text-green-400" />
+              <CheckCheck className="size-4 text-green-400" />
             ) : (
-              <Copy className="h-4 w-4" />
+              <Copy className="size-4" />
             )}
-          </div>
+          </button>
         </TooltipTrigger>
         <TooltipContent
           className="text-primary-foreground rounded-3xl p-4 shadow-2xl"
@@ -280,7 +277,7 @@ export function BorrowTable({
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Info className="h-4 w-4" />
+                    <Info className="size-4" />
                   </TooltipTrigger>
                   <TooltipContent className="text-primary-foreground max-w-56 rounded-3xl p-4 text-xs shadow-2xl">
                     This value will be smaller than that of the full app. It doesn't include{" "}
