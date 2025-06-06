@@ -55,7 +55,9 @@ async function queryFn({ queryKey }: { queryKey: QueryKey }) {
   }
 
   const campaigns = campaignsOld.data.concat(campaignsNew.data);
-  return withOpportunity ? campaigns.filter((campaign) => campaign.Opportunity?.status === "LIVE") : campaigns;
+  return withOpportunity
+    ? campaigns.filter((campaign) => campaign.Opportunity?.status === "LIVE" && campaign.parentCampaignId === undefined)
+    : campaigns;
 }
 
 export function useMerklCampaigns({
