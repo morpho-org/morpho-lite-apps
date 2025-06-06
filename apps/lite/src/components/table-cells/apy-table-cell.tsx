@@ -38,7 +38,7 @@ export function ApyTableCell({
           className="text-primary-foreground rounded-3xl p-4 shadow-2xl"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="flex w-[240px] flex-col gap-3">
+          <div className="flex w-[240px] min-w-max flex-col gap-3">
             <div className="flex justify-between">
               <div className="flex items-end font-light">
                 <SignalHigh size={18} />
@@ -47,11 +47,11 @@ export function ApyTableCell({
               {formatApy(nativeApy)}
             </div>
             {rewards.map((reward) => (
-              <div className="flex justify-between" key={reward.opportunityId}>
+              <div className="flex justify-between gap-1" key={reward.opportunityId}>
                 <div className="flex items-end gap-1 font-light">
                   <img height={16} width={16} src={reward.rewardToken.imageSrc} />
                   {reward.rewardToken.symbol}
-                  {reward.depositUrl && (
+                  {reward.depositUrl && getDomain(reward.depositUrl) !== window.location.hostname && (
                     <a
                       href={reward.depositUrl}
                       className="bg-morpho-brand flex items-center gap-1 rounded-sm px-1"

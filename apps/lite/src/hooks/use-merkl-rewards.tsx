@@ -9,8 +9,9 @@ const merkl = MerklApi("https://api.merkl.xyz").v4;
 async function queryFn({ queryKey }: { queryKey: QueryKey }) {
   const [chainId, address] = queryKey.slice(2) as [number, Address];
 
+  // TODO: supports 1000 campaign breakdown items, but technically should be paginated
   const rewards = await merkl.users({ address }).rewards.get({
-    query: { chainId: [chainId], claimableOnly: true },
+    query: { chainId: [chainId.toFixed(0)], claimableOnly: true },
   });
 
   if (rewards.error) {

@@ -18,7 +18,7 @@
     "tada:cache": "gql-tada turbo"
   },
   "dependencies": {
-    "@merkl/api": "^0.20.171",
+    "@merkl/api": "^0.21.47",
     "@morpho-org/blue-sdk": "^3.0.9",
     "@morpho-org/blue-sdk-viem": "^3.1.1",
     "@morpho-org/uikit": "workspace:*",
