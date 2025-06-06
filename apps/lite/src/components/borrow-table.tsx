@@ -1,4 +1,4 @@
-import { AccrualPosition, Market } from "@morpho-org/blue-sdk";
+import { AccrualPosition, Market, type MarketId } from "@morpho-org/blue-sdk";
 import { AvatarStack } from "@morpho-org/uikit/components/avatar-stack";
 import { Avatar, AvatarFallback, AvatarImage } from "@morpho-org/uikit/components/shadcn/avatar";
 import { Sheet, SheetTrigger } from "@morpho-org/uikit/components/shadcn/sheet";
@@ -13,7 +13,8 @@ import {
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@morpho-org/uikit/components/shadcn/tooltip";
 import { formatLtv, formatBalanceWithSymbol, Token, abbreviateAddress } from "@morpho-org/uikit/lib/utils";
 import { blo } from "blo";
-import { ExternalLink, Info } from "lucide-react";
+import { CheckCheck, Copy, ExternalLink, Info } from "lucide-react";
+import { useEffect, useState } from "react";
 import { type Chain, type Hex, type Address } from "viem";
 
 import { BorrowSheetContent } from "@/components/borrow-sheet-content";
@@ -209,6 +210,48 @@ function VaultsTableCell({
   );
 }
 
+function IdTableCell({ marketId }: { marketId: MarketId }) {
+  const [recentlyCopiedText, setRecentlyCopiedText] = useState("");
+  useEffect(() => {
+    if (recentlyCopiedText === "") return;
+    const id = setTimeout(() => setRecentlyCopiedText(""), 500);
+    return () => clearTimeout(id);
+  }, [recentlyCopiedText]);
+
+  return (
+    <TooltipProvider>
+      <Tooltip delayDuration={1000}>
+        <TooltipTrigger asChild>
+          <div
+            className="hover:bg-secondary ml-[-8px] flex w-min cursor-pointer items-center gap-2 rounded-sm p-2"
+            onClick={(event) => {
+              event.stopPropagation();
+              void navigator.clipboard.writeText(marketId);
+              setRecentlyCopiedText(marketId);
+            }}
+          >
+            {marketId === recentlyCopiedText ? (
+              <CheckCheck className="h-4 w-4 text-green-400" />
+            ) : (
+              <Copy className="h-4 w-4" />
+            )}
+          </div>
+        </TooltipTrigger>
+        <TooltipContent
+          className="text-primary-foreground rounded-3xl p-4 shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex items-center gap-1">
+            <p>
+              Market ID: <code>{abbreviateAddress(marketId)}</code>
+            </p>
+          </div>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
 export function BorrowTable({
   chain,
   markets,
@@ -256,7 +299,8 @@ export function BorrowTable({
             </div>
           </TableHead>
           <TableHead className="text-secondary-foreground text-xs font-light">Rate</TableHead>
-          <TableHead className="text-secondary-foreground rounded-r-lg text-xs font-light">Vault Listing</TableHead>
+          <TableHead className="text-secondary-foreground text-xs font-light">Vault Listing</TableHead>
+          <TableHead className="text-secondary-foreground rounded-r-lg text-xs font-light">ID</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -295,12 +339,15 @@ export function BorrowTable({
                     mode="owe"
                   />
                 </TableCell>
-                <TableCell className="rounded-r-lg">
+                <TableCell>
                   <VaultsTableCell
                     token={tokens.get(market.params.loanToken)!}
                     vaults={marketVaults.get(market.params.id) ?? []}
                     chain={chain}
                   />
+                </TableCell>
+                <TableCell className="rounded-r-lg">
+                  <IdTableCell marketId={market.id} />
                 </TableCell>
               </TableRow>
             </SheetTrigger>
@@ -334,7 +381,8 @@ export function BorrowPositionTable({
           <TableHead className="text-secondary-foreground rounded-l-lg pl-4 text-xs font-light">Collateral</TableHead>
           <TableHead className="text-secondary-foreground text-xs font-light">Loan</TableHead>
           <TableHead className="text-secondary-foreground text-xs font-light">Rate</TableHead>
-          <TableHead className="text-secondary-foreground rounded-r-lg text-xs font-light">Health</TableHead>
+          <TableHead className="text-secondary-foreground text-xs font-light">Health</TableHead>
+          <TableHead className="text-secondary-foreground rounded-r-lg text-xs font-light">ID</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -380,13 +428,16 @@ export function BorrowPositionTable({
                       mode="owe"
                     />
                   </TableCell>
-                  <TableCell className="rounded-r-lg">
+                  <TableCell>
                     <HealthTableCell
                       market={market}
                       position={position}
                       loanToken={loanToken}
                       collateralToken={collateralToken}
                     />
+                  </TableCell>
+                  <TableCell className="rounded-r-lg">
+                    <IdTableCell marketId={market.id} />
                   </TableCell>
                 </TableRow>
               </SheetTrigger>
