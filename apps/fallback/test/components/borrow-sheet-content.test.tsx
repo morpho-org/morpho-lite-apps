@@ -1,4 +1,4 @@
-import { IMarket, MarketId, MarketParams } from "@morpho-org/blue-sdk";
+import { Market, MarketId, MarketParams } from "@morpho-org/blue-sdk";
 import { morphoAbi } from "@morpho-org/uikit/assets/abis/morpho";
 import { Dialog } from "@morpho-org/uikit/components/shadcn/dialog";
 import { Token } from "@morpho-org/uikit/lib/utils";
@@ -64,7 +64,7 @@ async function fetchMarket(client: PublicClient) {
       args: [marketId],
     }),
   ]);
-  return {
+  return new Market({
     params: new MarketParams({
       loanToken: marketParamsRaw[0],
       collateralToken: marketParamsRaw[1],
@@ -78,7 +78,7 @@ async function fetchMarket(client: PublicClient) {
     totalBorrowShares: marketRaw[3],
     lastUpdate: marketRaw[4],
     fee: marketRaw[5],
-  } as IMarket;
+  });
 }
 
 describe("supply collateral flow", () => {
