@@ -21,8 +21,6 @@ export type MerklOpportunities = {
 export function useMerklOpportunities({ chainId, subType }: { chainId: number | undefined; subType: Merkl.SubType }) {
   const { data: campaigns } = Merkl.useMerklCampaigns({ chainId, subType });
 
-  // console.log(campaigns);
-
   const paramKey = useMemo(() => {
     let paramKey = "";
     switch (subType) {
@@ -61,6 +59,16 @@ export function useMerklOpportunities({ chainId, subType }: { chainId: number | 
 
       if (rewardsMap.get(paramKeyValue)!.some((item) => item.opportunityId === opportunity.id)) {
         // Multiple campaigns can reference the same `opportunity.id`
+        return;
+      }
+
+      const reportedApr = opportunity.apr;
+      const computedApr = (100 * (opportunity.dailyRewards * 365)) / opportunity.tvl;
+      if (computedApr * 1.0001 < reportedApr) {
+        console.warn(
+          `Skipping opportunity ${opportunity.id} because reported APR doesn't apply to full deposit amount.`,
+          opportunity,
+        );
         return;
       }
 
