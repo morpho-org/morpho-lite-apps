@@ -1,5 +1,5 @@
 import { Address, isAddressEqual } from "viem";
-import { optimism, plumeMainnet } from "wagmi/chains";
+import { lisk, optimism, plumeMainnet } from "wagmi/chains";
 
 import { graphql, FragmentOf } from "@/graphql/graphql";
 
@@ -17,7 +17,10 @@ export const CuratorFragment = graphql(`
 
 export const MANUALLY_WHITELISTED_CURATORS: FragmentOf<typeof CuratorFragment>[] = [
   {
-    addresses: [{ address: "0xd6316AE37dDE77204b9A94072544F1FF9f3d6d54", chainId: plumeMainnet.id }],
+    addresses: [
+      { address: "0xd6316AE37dDE77204b9A94072544F1FF9f3d6d54", chainId: plumeMainnet.id },
+      { address: "0x4681fbeD0877815D5869Cf16e8A6C6Ceee365c02", chainId: lisk.id },
+    ],
     image: "https://cdn.morpho.org/v2/assets/images/re7.png",
     name: "RE7 Labs",
     url: "https://www.re7labs.xyz/",
