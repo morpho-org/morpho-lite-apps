@@ -13,7 +13,7 @@ import useContractEvents from "@morpho-org/uikit/hooks/use-contract-events/use-c
 import { readAccrualVaults, readAccrualVaultsStateOverride } from "@morpho-org/uikit/lens/read-vaults";
 import { CORE_DEPLOYMENTS, getContractDeploymentInfo } from "@morpho-org/uikit/lib/deployments";
 import { Token } from "@morpho-org/uikit/lib/utils";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useOutletContext } from "react-router";
 import { Address, Chain, erc20Abi, zeroAddress } from "viem";
 import { useAccount, useReadContract, useReadContracts } from "wagmi";
@@ -78,6 +78,17 @@ export function EarnSubPage() {
       notifyOnChangeProps: ["data"],
     },
   });
+
+  // Logging of whitelisting status to help curators diagnose their situation.
+  useEffect(() => {
+    for (const ev of createMetaMorphoEvents) {
+      if (vaultsData?.some((vd) => vd.vault.vault === ev.args.metaMorpho)) continue;
+      console.log(`Skipping vault '${ev.args.name}' (${ev.args.metaMorpho}):
+- ❌ owner is not whitelisted
+`);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [vaultsData]);
 
   const marketIds = useMemo(() => [...new Set(vaultsData?.flatMap((d) => d.vault.withdrawQueue) ?? [])], [vaultsData]);
   const markets = useMarkets({ chainId, marketIds, staleTime: STALE_TIME });

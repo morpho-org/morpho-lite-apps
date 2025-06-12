@@ -23,6 +23,12 @@ export const MANUALLY_WHITELISTED_CURATORS: FragmentOf<typeof CuratorFragment>[]
     url: "https://www.re7labs.xyz/",
   },
   {
+    addresses: [{ address: "0x4F08D2A771aCe406C733EC3E722827E857A33Db5", chainId: plumeMainnet.id }],
+    image: "https://cdn.morpho.org/v2/assets/images/mevcapital.png",
+    name: "MEV Capital",
+    url: "https://mevcapital.com/",
+  },
+  {
     addresses: [{ address: "0x17C9ba3fDa7EC71CcfD75f978Ef31E21927aFF3d", chainId: optimism.id }],
     image: "https://cdn.morpho.org/v2/assets/images/moonwell.svg",
     name: "Moonwell",
