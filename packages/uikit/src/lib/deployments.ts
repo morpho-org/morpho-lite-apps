@@ -118,9 +118,23 @@ export const DEPLOYMENTS: Deployments = {
     Morpho: { address: "0x68e37dE8d93d3496ae143F2E900490f6280C57cD", fromBlock: 1988429n },
     MetaMorphoV1_1Factory: { address: "0xec051b19d654C48c357dC974376DeB6272f24e53", fromBlock: 1988677n },
   },
+  [customChains.katana.id]: {
+    Morpho: { address: "0xD50F2DffFd62f94Ee4AEd9ca05C61d0753268aBc", fromBlock: 2741069n },
+    MetaMorphoV1_1Factory: { address: "0x1c8De6889acee12257899BFeAa2b7e534de32E16", fromBlock: 2741420n },
+  },
+  [customChains.tac.id]: {
+    Morpho: { address: "0xF0453e7368Ea01d6d6d6a222C26B5a06F1d816e9", fromBlock: 3669141n },
+    MetaMorphoV1_1Factory: { address: "0xAD03a229163cBc902992C10F8Ea279C11A4d6f27", fromBlock: 3669402n },
+  },
 };
 
-export const CORE_DEPLOYMENTS = new Set<keyof Deployments>([mainnet.id, base.id, polygon.id, unichain.id]);
+export const CORE_DEPLOYMENTS = new Set<keyof Deployments>([
+  mainnet.id,
+  base.id,
+  polygon.id,
+  unichain.id,
+  customChains.katana.id,
+]);
 
 export function getContractDeploymentInfo(chainId: number, name: OptionalContracts): DeploymentDetails | undefined;
 export function getContractDeploymentInfo(chainId: number, name: RequiredContracts): DeploymentDetails;

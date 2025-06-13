@@ -47,10 +47,13 @@ function createFallbackTransport(rpcs: { url: string; batch: HttpTransportConfig
 }
 
 const chains = [
-  // core
+  // full support
   mainnet,
   base,
-  // other (alphabetical)
+  polygon,
+  unichain,
+  customChains.katana,
+  // lite support (alphabetical)
   arbitrum,
   // NOTE: Camp is disabled because RPC rate limits are too strict
   // customChains.basecamp,
@@ -64,11 +67,9 @@ const chains = [
   modeMainnet,
   optimism,
   plumeMainnet,
-  polygon,
   scrollMainnet,
   soneium,
   sonic,
-  unichain,
   worldchain,
 ] as const;
 
@@ -145,6 +146,7 @@ const transports: Record<(typeof chains)[number]["id"], Transport> = {
   [customChains.hyperevm.id]: createFallbackTransport(
     customChains.hyperevm.rpcUrls.default.http.map((url) => ({ url, batch: false })),
   ),
+  [customChains.katana.id]: createFallbackTransport(soneium.rpcUrls.default.http.map((url) => ({ url, batch: false }))),
   // [customChains.basecamp.id]: createFallbackTransport(
   //   customChains.basecamp.rpcUrls.default.http.map((url) => ({ url, batch: false })),
   // ),

@@ -1,3 +1,4 @@
+import * as customChains from "@morpho-org/uikit/lib/chains";
 import { getDefaultConfig as createConnectKitConfigParams } from "connectkit";
 import type { Chain, HttpTransportConfig } from "viem";
 import { CreateConnectorFn, createConfig as createWagmiConfig, fallback, http, type Transport } from "wagmi";
@@ -8,6 +9,7 @@ import {
   fraxtal,
   hemi,
   ink,
+  lisk,
   mainnet,
   mode as modeMainnet,
   optimism,
@@ -54,20 +56,24 @@ function createAlchemyHttp(slug: string): ({ url: string } & HttpTransportConfig
 }
 
 const chains = [
+  // full support
   mainnet,
   base,
+  polygon,
+  unichain,
+  // customChains.katana,
+  // lite support (alphabetical)
   // arbitrum,
   // corn,
   // fraxtal,
   // hemi,
   // ink,
+  lisk,
   // modeMainnet,
   optimism,
   plumeMainnet,
-  polygon,
   // scrollMainnet,
   // sonic,
-  unichain,
   worldchain,
 ] as const;
 
@@ -90,6 +96,7 @@ const transports: { [K in (typeof chains)[number]["id"]]: Transport } & { [k: nu
     ...createAlchemyHttp("ink-mainnet"),
     { url: "https://ink.drpc.org", batch: false },
   ]),
+  [lisk.id]: createFallbackTransport(lisk.rpcUrls.default.http.map((url) => ({ url, batch: false }))),
   [optimism.id]: createFallbackTransport([
     ...createAlchemyHttp("opt-mainnet"),
     { url: "https://op-pokt.nodies.app", batch: { batchSize: 10 } },
@@ -132,6 +139,10 @@ const transports: { [K in (typeof chains)[number]["id"]]: Transport } & { [k: nu
   [modeMainnet.id]: createFallbackTransport([{ url: "https://mode.drpc.org", batch: false }]),
   [hemi.id]: createFallbackTransport([{ url: "https://rpc.hemi.network/rpc", batch: false }]),
   [plumeMainnet.id]: createFallbackTransport([{ url: "https://phoenix-rpc.plumenetwork.xyz", batch: false }]),
+  [customChains.katana.id]: createFallbackTransport([
+    { url: `https://rpc-katana.t.conduit.xyz/${import.meta.env.VITE_KATANA_KEY}`, batch: false },
+    ...customChains.katana.rpcUrls.default.http.map((url) => ({ url, batch: false })),
+  ]),
 };
 
 export function createConfig(args: {
