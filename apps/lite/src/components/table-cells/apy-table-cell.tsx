@@ -1,3 +1,4 @@
+import { SafeLink } from "@morpho-org/uikit/components/safe-link";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@morpho-org/uikit/components/shadcn/tooltip";
 import { formatApy, getDomain } from "@morpho-org/uikit/lib/utils";
 import { Sparkles, SignalHigh, ExternalLink, DollarSign } from "lucide-react";
@@ -52,15 +53,13 @@ export function ApyTableCell({
                   <img height={16} width={16} src={reward.rewardToken.imageSrc} />
                   {reward.rewardToken.symbol}
                   {reward.depositUrl && getDomain(reward.depositUrl) !== window.location.hostname && (
-                    <a
+                    <SafeLink
                       href={reward.depositUrl}
                       className="bg-morpho-brand flex items-center gap-1 rounded-sm px-1"
-                      rel="noopener noreferrer"
-                      target="_blank"
                     >
                       {getDomain(reward.depositUrl)}
                       <ExternalLink className="h-3 w-3" />
-                    </a>
+                    </SafeLink>
                   )}
                 </div>
                 {mode === "earn" ? "+" : "-"}

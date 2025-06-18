@@ -1,5 +1,7 @@
 import { AddressScreeningModal } from "@morpho-org/uikit/components/address-screening-modal";
+import { SafeLinkModal } from "@morpho-org/uikit/components/safe-link-modal";
 import { AddressScreeningProvider } from "@morpho-org/uikit/hooks/use-address-screening";
+import { SafeLinksProvider } from "@morpho-org/uikit/hooks/use-safe-links";
 import { cyrb64Hash } from "@morpho-org/uikit/lib/cyrb64";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import { QueryClient } from "@tanstack/react-query";
@@ -58,7 +60,10 @@ function App({ children, wagmiConfig = defaultWagmiConfig }: { children: ReactNo
         >
           <UrqlProvider value={urqlClient}>
             <AddressScreeningProvider>
-              {children}
+              <SafeLinksProvider>
+                {children}
+                <SafeLinkModal />
+              </SafeLinksProvider>
               <AddressScreeningModal />
             </AddressScreeningProvider>
           </UrqlProvider>
