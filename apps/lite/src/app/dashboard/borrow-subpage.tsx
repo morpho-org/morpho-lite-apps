@@ -22,6 +22,11 @@ import { getTokenURI } from "@/lib/tokens";
 
 const STALE_TIME = 5 * 60 * 1000;
 
+// This cannot be inlined because TanStack needs a stable reference to avoid re-renders.
+function restructurePositions(data: (readonly [bigint, bigint, bigint])[]) {
+  return data.map((x) => restructure(x, { abi: morphoAbi, name: "position", args: ["0x", "0x"] }));
+}
+
 export function BorrowSubPage() {
   const { status, address: userAddress } = useAccount();
   const { chain } = useOutletContext() as { chain?: Chain };
@@ -163,9 +168,7 @@ export function BorrowSubPage() {
       staleTime: 1 * 60 * 1000,
       gcTime: Infinity,
       enabled: !!morpho,
-      select(data) {
-        return data.map((x) => restructure(x, { abi: morphoAbi, name: "position", args: ["0x", "0x"] }));
-      },
+      select: restructurePositions,
     },
   });
 
