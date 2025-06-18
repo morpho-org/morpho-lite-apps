@@ -1,5 +1,6 @@
 import { AccrualVault } from "@morpho-org/blue-sdk";
 import { AvatarStack } from "@morpho-org/uikit/components/avatar-stack";
+import { SafeLink } from "@morpho-org/uikit/components/safe-link";
 import { AvatarImage, AvatarFallback, Avatar } from "@morpho-org/uikit/components/shadcn/avatar";
 import { Sheet, SheetTrigger } from "@morpho-org/uikit/components/shadcn/sheet";
 import {
@@ -133,9 +134,9 @@ function CuratorTableCell({
           ))}
           <br />
           {url != null && (
-            <a className="text-blue-200 underline" href={url} rel="noopener noreferrer" target="_blank">
+            <SafeLink className="text-blue-200 underline" href={url}>
               {url}
-            </a>
+            </SafeLink>
           )}
         </TooltipContent>
       </Tooltip>
