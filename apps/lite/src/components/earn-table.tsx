@@ -11,6 +11,7 @@ import {
   Table,
 } from "@morpho-org/uikit/components/shadcn/table";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@morpho-org/uikit/components/shadcn/tooltip";
+import { useModifierKey } from "@morpho-org/uikit/hooks/use-modifier-key";
 import { formatBalanceWithSymbol, Token, formatLtv, abbreviateAddress } from "@morpho-org/uikit/lib/utils";
 import { blo } from "blo";
 // @ts-expect-error: this package lacks types
@@ -235,6 +236,8 @@ export function EarnTable({
   lendingRewards: ReturnType<typeof useMerklOpportunities>;
   refetchPositions: () => void;
 }) {
+  const isShiftHeld = useModifierKey("Shift");
+
   return (
     <div className="text-primary-foreground w-full max-w-7xl px-2 lg:px-8">
       <Table className="border-separate border-spacing-y-3">
@@ -278,9 +281,9 @@ export function EarnTable({
                     <TableCell>
                       <div className="flex w-min gap-2">
                         {Object.keys(row.curators).length > 0
-                          ? Object.values(row.curators).map((curator) => (
-                              <CuratorTableCell key={curator.name} {...curator} chain={chain} />
-                            ))
+                          ? Object.values(row.curators)
+                              .slice(0, isShiftHeld ? undefined : 1)
+                              .map((curator) => <CuratorTableCell key={curator.name} {...curator} chain={chain} />)
                           : ownerText}
                       </div>
                     </TableCell>
