@@ -252,7 +252,9 @@ export function EarnTable({
             const ownerText = abbreviateAddress(row.vault.owner);
             const deposits =
               depositsMode === "userAssets"
-                ? row.userShares && row.vault.toAssets(row.userShares)
+                ? row.userShares !== undefined
+                  ? row.vault.toAssets(row.userShares)
+                  : undefined
                 : row.vault.totalAssets;
             return (
               <Sheet

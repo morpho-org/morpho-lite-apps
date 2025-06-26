@@ -146,19 +146,20 @@ export function EarnSubPage() {
       const assetIdx = assets.indexOf(args.asset);
       const symbol = assetIdx > -1 ? (assetsInfo?.[assetIdx * 2 + 0].result as string) : undefined;
       const decimals = assetIdx > -1 ? (assetsInfo?.[assetIdx * 2 + 1].result as number) : undefined;
+      const chunkIdx = idx * 8;
       return {
         address: args.metaMorpho,
         imageSrc: blo(args.metaMorpho),
         info: vaultsInfo
           ? {
-              owner: vaultsInfo[idx * 8 + 0] as Address,
-              curator: vaultsInfo[idx * 8 + 1] as Address,
-              guardian: vaultsInfo[idx * 8 + 2] as Address,
-              timelock: vaultsInfo[idx * 8 + 3] as bigint,
-              name: vaultsInfo[idx * 8 + 4] as string,
-              totalAssets: vaultsInfo[idx * 8 + 5] as bigint,
-              totalSupply: vaultsInfo[idx * 8 + 6] as bigint,
-              userShares: vaultsInfo[idx * 8 + 7] as bigint,
+              owner: vaultsInfo[chunkIdx + 0] as Address,
+              curator: vaultsInfo[chunkIdx + 1] as Address,
+              guardian: vaultsInfo[chunkIdx + 2] as Address,
+              timelock: vaultsInfo[chunkIdx + 3] as bigint,
+              name: vaultsInfo[chunkIdx + 4] as string,
+              totalAssets: vaultsInfo[chunkIdx + 5] as bigint,
+              totalSupply: vaultsInfo[chunkIdx + 6] as bigint,
+              userShares: vaultsInfo[chunkIdx + 7] as bigint,
             }
           : undefined,
         asset: {
