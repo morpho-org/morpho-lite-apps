@@ -29,7 +29,7 @@ export type Row = {
   vault: AccrualVault;
   asset: Token;
   curators: DisplayableCurators;
-  maxWithdraw: bigint | undefined;
+  userShares: bigint | undefined;
   imageSrc?: string;
 };
 
@@ -230,7 +230,7 @@ export function EarnTable({
 }: {
   chain: Chain | undefined;
   rows: Row[];
-  depositsMode: "totalAssets" | "maxWithdraw";
+  depositsMode: "totalAssets" | "userAssets";
   tokens: Map<Address, { decimals?: number; symbol?: string }>;
   lendingRewards: ReturnType<typeof useMerklOpportunities>;
   refetchPositions: () => void;
@@ -250,7 +250,10 @@ export function EarnTable({
         <TableBody>
           {rows.map((row) => {
             const ownerText = abbreviateAddress(row.vault.owner);
-            const deposits = depositsMode === "maxWithdraw" ? row.maxWithdraw : row.vault.totalAssets;
+            const deposits =
+              depositsMode === "userAssets"
+                ? row.userShares && row.vault.toAssets(row.userShares)
+                : row.vault.totalAssets;
             return (
               <Sheet
                 key={row.vault.address}

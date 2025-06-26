@@ -127,11 +127,12 @@ export function EarnSubPage() {
         { chainId, address: args.metaMorpho, abi: metaMorphoAbi, functionName: "timelock" } as const,
         { chainId, address: args.metaMorpho, abi: metaMorphoAbi, functionName: "name" } as const,
         { chainId, address: args.metaMorpho, abi: metaMorphoAbi, functionName: "totalAssets" } as const,
+        { chainId, address: args.metaMorpho, abi: metaMorphoAbi, functionName: "totalSupply" } as const,
         {
           chainId,
           address: args.metaMorpho,
           abi: metaMorphoAbi,
-          functionName: "maxWithdraw",
+          functionName: "balanceOf",
           args: [userAddress ?? "0x"],
         } as const,
       ])
@@ -150,13 +151,14 @@ export function EarnSubPage() {
         imageSrc: blo(args.metaMorpho),
         info: vaultsInfo
           ? {
-              owner: vaultsInfo[idx * 7 + 0] as Address,
-              curator: vaultsInfo[idx * 7 + 1] as Address,
-              guardian: vaultsInfo[idx * 7 + 2] as Address,
-              timelock: vaultsInfo[idx * 7 + 3] as bigint,
-              name: vaultsInfo[idx * 7 + 4] as string,
-              totalAssets: vaultsInfo[idx * 7 + 5] as bigint,
-              maxWithdraw: vaultsInfo[idx * 7 + 6] as bigint,
+              owner: vaultsInfo[idx * 8 + 0] as Address,
+              curator: vaultsInfo[idx * 8 + 1] as Address,
+              guardian: vaultsInfo[idx * 8 + 2] as Address,
+              timelock: vaultsInfo[idx * 8 + 3] as bigint,
+              name: vaultsInfo[idx * 8 + 4] as string,
+              totalAssets: vaultsInfo[idx * 8 + 5] as bigint,
+              totalSupply: vaultsInfo[idx * 8 + 6] as bigint,
+              userShares: vaultsInfo[idx * 8 + 7] as bigint,
             }
           : undefined,
         asset: {
@@ -169,9 +171,9 @@ export function EarnSubPage() {
     });
     // Sort vaults so that ones with an open balance appear first
     arr.sort((a, b) => {
-      if (!a.info?.maxWithdraw && !b.info?.maxWithdraw) return 0;
-      if (!a.info?.maxWithdraw) return 1;
-      if (!b.info?.maxWithdraw) return -1;
+      if (!a.info?.userShares && !b.info?.userShares) return 0;
+      if (!a.info?.userShares) return 1;
+      if (!b.info?.userShares) return -1;
       return 0;
     });
     return arr;
@@ -273,9 +275,9 @@ export function EarnSubPage() {
                           : "－"}
                       </TableCell>
                       <TableCell>
-                        {vault.info?.maxWithdraw && vault.asset.decimals
+                        {vault.info && vault.asset.decimals
                           ? formatBalanceWithSymbol(
-                              vault.info.maxWithdraw,
+                              (vault.info.userShares * vault.info.totalAssets) / vault.info.totalSupply,
                               vault.asset.decimals,
                               vault.asset.symbol,
                               5,
