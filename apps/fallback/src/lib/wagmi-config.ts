@@ -146,7 +146,9 @@ const transports: Record<(typeof chains)[number]["id"], Transport> = {
   [customChains.hyperevm.id]: createFallbackTransport(
     customChains.hyperevm.rpcUrls.default.http.map((url) => ({ url, batch: false })),
   ),
-  [customChains.katana.id]: createFallbackTransport(soneium.rpcUrls.default.http.map((url) => ({ url, batch: false }))),
+  [customChains.katana.id]: createFallbackTransport(
+    customChains.katana.rpcUrls.default.http.map((url) => ({ url, batch: false })),
+  ),
   // [customChains.basecamp.id]: createFallbackTransport(
   //   customChains.basecamp.rpcUrls.default.http.map((url) => ({ url, batch: false })),
   // ),

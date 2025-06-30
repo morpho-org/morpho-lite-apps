@@ -294,7 +294,7 @@ export function EarnTable({
                           ? Object.values(row.curators)
                               // By default, only show roles with `shouldAlwaysShow == true`.
                               // When shift key is held, remove filter and show all roles.
-                              .filter((curator) => (isShiftHeld ? true : curator.shouldAlwaysShow))
+                              .filter((curator) => isShiftHeld || curator.shouldAlwaysShow)
                               .map((curator) => <CuratorTableCell key={curator.name} {...curator} chain={chain} />)
                           : ownerText}
                       </div>
