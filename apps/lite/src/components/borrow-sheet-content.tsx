@@ -15,10 +15,10 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@morpho-org/uikit/comp
 import { TokenAmountInput } from "@morpho-org/uikit/components/token-amount-input";
 import { TransactionButton } from "@morpho-org/uikit/components/transaction-button";
 import { getContractDeploymentInfo } from "@morpho-org/uikit/lib/deployments";
-import { tryFormatBalance, formatLtv, Token } from "@morpho-org/uikit/lib/utils";
+import { tryFormatBalance, formatLtv, Token, min } from "@morpho-org/uikit/lib/utils";
 import { keepPreviousData } from "@tanstack/react-query";
 import { ArrowRight, CircleArrowLeft } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Toaster } from "sonner";
 import { Address, erc20Abi, parseUnits } from "viem";
 import { useAccount, useChainId, useReadContract, useReadContracts } from "wagmi";
@@ -78,6 +78,20 @@ export function BorrowSheetContent({
 
   const morpho = getContractDeploymentInfo(chainId, "Morpho").address;
 
+  const { data: balances, refetch: refetchBalances } = useReadContracts({
+    contracts: [imarket?.params.collateralToken, imarket?.params.loanToken].map(
+      (address) =>
+        ({
+          address: address ?? "0x",
+          abi: erc20Abi,
+          functionName: "balanceOf",
+          args: [userAddress ?? "0x"],
+        }) as const,
+    ),
+    allowFailure: false,
+    query: { enabled: !!imarket && !!userAddress, staleTime: 1 * 60 * 1000, placeholderData: keepPreviousData },
+  });
+
   const { data: positionRaw, refetch: refetchPosition } = useReadContract({
     address: morpho,
     abi: morphoAbi,
@@ -111,6 +125,12 @@ export function BorrowSheetContent({
     allowFailure: false,
     query: { enabled: !!userAddress, staleTime: 5_000, gcTime: 5_000 },
   });
+
+  const onTxnReceipt = useCallback(() => {
+    setTextInputValue("");
+    void refetchBalances();
+    void refetchPosition();
+  }, [refetchBalances, refetchPosition]);
 
   const market = useMemo(
     () => (imarket && price !== undefined ? new Market({ ...imarket, price }) : undefined),
@@ -326,7 +346,12 @@ export function BorrowSheetContent({
               Supply Collateral {token?.symbol ?? ""}
               <img className="max-h-[16px] rounded-full" height={16} width={16} src={token?.imageSrc} />
             </div>
-            <TokenAmountInput decimals={token?.decimals} value={textInputValue} onChange={setTextInputValue} />
+            <TokenAmountInput
+              decimals={token?.decimals}
+              value={textInputValue}
+              maxValue={balances?.[0]}
+              onChange={setTextInputValue}
+            />
           </div>
           {approvalTxnConfig ? (
             <TransactionButton
@@ -339,11 +364,8 @@ export function BorrowSheetContent({
           ) : (
             <TransactionButton
               variables={supplyCollateralTxnConfig}
-              disabled={!inputValue}
-              onTxnReceipt={() => {
-                setTextInputValue("");
-                void refetchPosition();
-              }}
+              disabled={!inputValue || (balances?.[0] !== undefined && inputValue > balances[0])}
+              onTxnReceipt={onTxnReceipt}
             >
               Supply Collateral
             </TransactionButton>
@@ -362,14 +384,7 @@ export function BorrowSheetContent({
               onChange={setTextInputValue}
             />
           </div>
-          <TransactionButton
-            variables={withdrawCollateralTxnConfig}
-            disabled={!inputValue}
-            onTxnReceipt={() => {
-              setTextInputValue("");
-              void refetchPosition();
-            }}
-          >
+          <TransactionButton variables={withdrawCollateralTxnConfig} disabled={!inputValue} onTxnReceipt={onTxnReceipt}>
             Withdraw Collateral
           </TransactionButton>
         </TabsContent>
@@ -386,14 +401,7 @@ export function BorrowSheetContent({
               onChange={setTextInputValue}
             />
           </div>
-          <TransactionButton
-            variables={borrowTxnConfig}
-            disabled={!inputValue}
-            onTxnReceipt={() => {
-              setTextInputValue("");
-              void refetchPosition();
-            }}
-          >
+          <TransactionButton variables={borrowTxnConfig} disabled={!inputValue} onTxnReceipt={onTxnReceipt}>
             Borrow
           </TransactionButton>
         </TabsContent>
@@ -406,7 +414,7 @@ export function BorrowSheetContent({
             <TokenAmountInput
               decimals={token?.decimals}
               value={textInputValue}
-              maxValue={repayMax}
+              maxValue={repayMax !== undefined && balances?.[1] ? min(repayMax, balances[1]) : repayMax}
               onChange={setTextInputValue}
             />
           </div>
@@ -421,11 +429,8 @@ export function BorrowSheetContent({
           ) : (
             <TransactionButton
               variables={repayTxnConfig}
-              disabled={!inputValue}
-              onTxnReceipt={() => {
-                setTextInputValue("");
-                void refetchPosition();
-              }}
+              disabled={!inputValue || (balances?.[1] !== undefined && inputValue > balances[1])}
+              onTxnReceipt={onTxnReceipt}
             >
               Repay
             </TransactionButton>
