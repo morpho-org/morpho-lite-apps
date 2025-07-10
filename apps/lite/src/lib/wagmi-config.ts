@@ -74,6 +74,7 @@ const chains = [
   plumeMainnet,
   // scrollMainnet,
   // sonic,
+  customChains.tac,
   worldchain,
 ] as const;
 
@@ -143,6 +144,9 @@ const transports: { [K in (typeof chains)[number]["id"]]: Transport } & { [k: nu
     { url: `https://rpc-katana.t.conduit.xyz/${import.meta.env.VITE_KATANA_KEY}`, batch: false },
     ...customChains.katana.rpcUrls.default.http.map((url) => ({ url, batch: false })),
   ]),
+  [customChains.tac.id]: createFallbackTransport(
+    customChains.tac.rpcUrls.default.http.map((url) => ({ url, batch: false })),
+  ),
 };
 
 export function createConfig(args: {

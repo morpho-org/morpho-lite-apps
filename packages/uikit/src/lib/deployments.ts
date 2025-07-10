@@ -123,8 +123,8 @@ export const DEPLOYMENTS: Deployments = {
     MetaMorphoV1_1Factory: { address: "0x1c8De6889acee12257899BFeAa2b7e534de32E16", fromBlock: 2741420n },
   },
   [customChains.tac.id]: {
-    Morpho: { address: "0xF0453e7368Ea01d6d6d6a222C26B5a06F1d816e9", fromBlock: 3669141n },
-    MetaMorphoV1_1Factory: { address: "0xAD03a229163cBc902992C10F8Ea279C11A4d6f27", fromBlock: 3669402n },
+    Morpho: { address: "0x918B9F2E4B44E20c6423105BB6cCEB71473aD35c", fromBlock: 853025n },
+    MetaMorphoV1_1Factory: { address: "0xcDA78f4979d17Ec93052A84A12001fe0088AD734", fromBlock: 978654n },
   },
 };
 
