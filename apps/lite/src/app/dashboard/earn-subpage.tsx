@@ -183,14 +183,14 @@ export function EarnSubPage() {
   }, [tokenAddresses, tokenData]);
 
   // MARK: Fetch user's balance in each vault
-  const { data: maxWithdrawsData, refetch: refetchMaxWithdraws } = useReadContracts({
+  const { data: balanceOfData, refetch: refetchBalanceOf } = useReadContracts({
     contracts: vaultsData?.map(
       (vaultData) =>
         ({
           chainId,
           address: vaultData.vault.vault,
           abi: metaMorphoAbi,
-          functionName: "maxWithdraw",
+          functionName: "balanceOf",
           args: userAddress && [userAddress],
         }) as const,
     ),
@@ -202,10 +202,9 @@ export function EarnSubPage() {
     },
   });
 
-  const maxWithdraws = useMemo(
-    () =>
-      Object.fromEntries(vaultsData?.map((vaultData, idx) => [vaultData.vault.vault, maxWithdrawsData?.[idx]]) ?? []),
-    [vaultsData, maxWithdrawsData],
+  const userShares = useMemo(
+    () => Object.fromEntries(vaultsData?.map((vaultData, idx) => [vaultData.vault.vault, balanceOfData?.[idx]]) ?? []),
+    [vaultsData, balanceOfData],
   ) as { [vault: Address]: bigint | undefined };
 
   const rows = useMemo(() => {
@@ -221,13 +220,13 @@ export function EarnSubPage() {
           decimals,
         } as Token,
         curators: getDisplayableCurators(vault, topCurators),
-        maxWithdraw: maxWithdraws[vault.address],
+        userShares: userShares[vault.address],
         imageSrc: getTokenURI({ symbol, address: vault.asset, chainId }),
       };
     });
-  }, [vaults, tokens, maxWithdraws, topCurators, chainId]);
+  }, [vaults, tokens, userShares, topCurators, chainId]);
 
-  const userRows = rows.filter((row) => (row.maxWithdraw ?? 0n) > 0n);
+  const userRows = rows.filter((row) => (row.userShares ?? 0n) > 0n);
 
   if (status === "reconnecting") return undefined;
 
@@ -251,10 +250,10 @@ export function EarnSubPage() {
             <EarnTable
               chain={chain}
               rows={userRows}
-              depositsMode="maxWithdraw"
+              depositsMode="userAssets"
               tokens={tokens}
               lendingRewards={lendingRewards}
-              refetchPositions={refetchMaxWithdraws}
+              refetchPositions={refetchBalanceOf}
             />
           </div>
         )
@@ -271,7 +270,7 @@ export function EarnSubPage() {
             depositsMode="totalAssets"
             tokens={tokens}
             lendingRewards={lendingRewards}
-            refetchPositions={refetchMaxWithdraws}
+            refetchPositions={refetchBalanceOf}
           />
         </div>
       </div>

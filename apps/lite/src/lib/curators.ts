@@ -51,30 +51,46 @@ export const MANUALLY_WHITELISTED_CURATORS: FragmentOf<typeof CuratorFragment>[]
   },
 ];
 
+export const ADDITIONAL_OFFCHAIN_CURATORS: Record<Address, DisplayableCurators> = {
+  "0x0b14D0bdAf647c541d3887c5b1A4bd64068fCDA7": {
+    Cicada: {
+      name: "Cicada",
+      roles: [],
+      url: "https://www.cicada.partners/",
+      imageSrc:
+        "https://static.wixstatic.com/media/f9d184_1702c7c11ec647f480ad8e0c8c4859c3~mv2.png/v1/fill/w_120,h_155,al_c,lg_1,q_85,enc_avif,quality_auto/Cicada%20Image_Black%20on%20White_25%25.png",
+      shouldAlwaysShow: true,
+    },
+  },
+};
+
 export type DisplayableCurators = {
   [name: string]: {
     name: string;
     roles: { name: string; address: Address }[];
     url: string | null;
     imageSrc: string | null;
+    shouldAlwaysShow: boolean;
   };
 };
 
 const ROLE_NAMES = ["owner", "curator", "guardian"] as const;
 export function getDisplayableCurators(
-  vault: { [role in (typeof ROLE_NAMES)[number]]: Address },
+  vault: { [role in (typeof ROLE_NAMES)[number]]: Address } & { address: Address },
   curators: FragmentOf<typeof CuratorFragment>[],
 ) {
   const result: DisplayableCurators = {};
-  for (const curator of curators) {
-    for (const roleName of ROLE_NAMES) {
+  for (const roleName of ROLE_NAMES) {
+    for (const curator of curators) {
       const address = curator.addresses
         ?.map((entry) => entry.address as Address)
         .find((a) => isAddressEqual(a, vault[roleName]));
       if (!address) continue;
 
       const roleNameCapitalized = `${roleName.charAt(0).toUpperCase()}${roleName.slice(1)}`;
+      const shouldAlwaysShow = roleName === "owner" || roleName === "curator";
       if (result[curator.name]) {
+        result[curator.name].shouldAlwaysShow ||= shouldAlwaysShow;
         result[curator.name].roles.push({ name: roleNameCapitalized, address });
       } else {
         result[curator.name] = {
@@ -82,9 +98,13 @@ export function getDisplayableCurators(
           roles: [{ name: roleNameCapitalized, address }],
           url: curator.url,
           imageSrc: curator.image,
+          shouldAlwaysShow,
         };
       }
     }
+  }
+  if (ADDITIONAL_OFFCHAIN_CURATORS[vault.address]) {
+    return { ...result, ...ADDITIONAL_OFFCHAIN_CURATORS[vault.address] };
   }
   return result;
 }

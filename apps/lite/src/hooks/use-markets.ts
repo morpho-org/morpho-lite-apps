@@ -8,6 +8,18 @@ import { useMemo } from "react";
 import { Hex } from "viem";
 import { useReadContracts } from "wagmi";
 
+// This cannot be inlined because TanStack needs a stable reference to avoid re-renders.
+function restructureMarketParams(
+  data: (readonly [`0x${string}`, `0x${string}`, `0x${string}`, `0x${string}`, bigint])[],
+) {
+  return data.map((x) => restructure(x, { abi: morphoAbi, name: "idToMarketParams", args: ["0x"] }));
+}
+
+// This cannot be inlined because TanStack needs a stable reference to avoid re-renders.
+function restructureMarket(data: (readonly [bigint, bigint, bigint, bigint, bigint, bigint])[]) {
+  return data.map((x) => restructure(x, { abi: morphoAbi, name: "market", args: ["0x"] }));
+}
+
 export function useMarkets({
   chainId,
   marketIds,
@@ -37,9 +49,8 @@ export function useMarkets({
       enabled: chainId !== undefined && !!morpho,
       staleTime: Infinity,
       gcTime: Infinity,
-      select(data) {
-        return data.map((x) => restructure(x, { abi: morphoAbi, name: "idToMarketParams", args: ["0x"] }));
-      },
+      select: restructureMarketParams,
+      notifyOnChangeProps: ["data"],
     },
   });
 
@@ -59,9 +70,8 @@ export function useMarkets({
       enabled: chainId !== undefined && !!morpho,
       staleTime,
       gcTime: Infinity,
-      select(data) {
-        return data.map((x) => restructure(x, { abi: morphoAbi, name: "market", args: ["0x"] }));
-      },
+      select: restructureMarket,
+      notifyOnChangeProps: ["data"],
     },
   });
 
@@ -81,6 +91,7 @@ export function useMarkets({
       enabled: chainId !== undefined && marketParamsData !== undefined,
       staleTime,
       gcTime: Infinity,
+      notifyOnChangeProps: ["data"],
     },
   });
 
@@ -93,6 +104,7 @@ export function useMarkets({
       enabled: chainId !== undefined && marketParamsData !== undefined && fetchPrices,
       staleTime,
       gcTime: Infinity,
+      notifyOnChangeProps: ["data"],
     },
   });
 

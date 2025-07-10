@@ -36,7 +36,7 @@ export function useMerklOpportunities({
         paramKey = "targetToken";
         break;
       case Merkl.SubType.BORROW:
-        paramKey = "marketId";
+        paramKey = "market";
         break;
     }
     return paramKey;
@@ -54,15 +54,26 @@ export function useMerklOpportunities({
         params: { blacklist, whitelist, ...params },
         Opportunity: opportunity,
       } = campaign;
+      // Temporary fix since old campaigns use "marketId" and new ones use "market"
+      if ("marketId" in params) {
+        params["market"] = params["marketId"];
+        delete params["marketId"];
+      }
       const paramKeyValue = params[paramKey] as Hex;
 
-      if (
-        (!userAddress && (blacklist.length > 0 || whitelist.length > 0)) ||
-        (blacklist.length > 0 && blacklist.includes(userAddress)) ||
-        (whitelist.length > 0 && !whitelist.includes(userAddress))
-      ) {
-        console.warn(`Skipping campaignId ${campaignId} because of whitelist/blacklist requirements.`);
-        return;
+      // If we know the `userAddress`, check whitelist/blacklist eligibility
+      if (userAddress) {
+        if (
+          (blacklist.length > 0 && blacklist.includes(userAddress)) ||
+          (whitelist.length > 0 && !whitelist.includes(userAddress))
+        )
+          return;
+      }
+      // Otherwise log a warning and show rewards optimistically
+      else if (blacklist.length > 0 || whitelist.length > 0) {
+        console.warn(
+          `\`userAddress\` is required to determine eligibility for campaignId ${campaignId}. Proceeding optimistically.`,
+        );
       }
 
       if (!rewardsMap.has(paramKeyValue)) {

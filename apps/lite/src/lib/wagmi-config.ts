@@ -61,7 +61,7 @@ const chains = [
   base,
   polygon,
   unichain,
-  // customChains.katana,
+  customChains.katana,
   // lite support (alphabetical)
   // arbitrum,
   // corn,
