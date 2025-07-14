@@ -1,3 +1,4 @@
+import * as customChains from "@morpho-org/uikit/lib/chains";
 import { Address, isAddressEqual } from "viem";
 import { lisk, optimism, plumeMainnet } from "wagmi/chains";
 
@@ -18,6 +19,7 @@ export const CuratorFragment = graphql(`
 export const MANUALLY_WHITELISTED_CURATORS: FragmentOf<typeof CuratorFragment>[] = [
   {
     addresses: [
+      { address: "0x6D3AB84Fb7Fc04961a15663C980feC275b889402", chainId: customChains.tac.id },
       { address: "0xd6316AE37dDE77204b9A94072544F1FF9f3d6d54", chainId: plumeMainnet.id },
       { address: "0x4681fbeD0877815D5869Cf16e8A6C6Ceee365c02", chainId: lisk.id },
     ],
