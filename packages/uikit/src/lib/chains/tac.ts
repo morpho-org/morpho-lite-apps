@@ -19,10 +19,6 @@ export const tac = defineChain({
       name: "TAC Explorer",
       url: "https://explorer.tac.build",
     },
-    blockscout: {
-      name: "Blockscout TAC",
-      url: "https://tac.blockscout.com/",
-    },
   },
   contracts: {
     multicall3: {
