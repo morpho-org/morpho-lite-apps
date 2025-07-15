@@ -11,6 +11,7 @@ import { metaMorphoAbi } from "@morpho-org/uikit/assets/abis/meta-morpho";
 import { metaMorphoFactoryAbi } from "@morpho-org/uikit/assets/abis/meta-morpho-factory";
 import useContractEvents from "@morpho-org/uikit/hooks/use-contract-events/use-contract-events";
 import { readAccrualVaults, readAccrualVaultsStateOverride } from "@morpho-org/uikit/lens/read-vaults";
+import { tac } from "@morpho-org/uikit/lib/chains/tac";
 import { CORE_DEPLOYMENTS, getContractDeploymentInfo } from "@morpho-org/uikit/lib/deployments";
 import { Token } from "@morpho-org/uikit/lib/utils";
 import { useEffect, useMemo } from "react";
@@ -69,8 +70,13 @@ export function EarnSubPage() {
       createMetaMorphoEvents.map((ev) => ev.args.metaMorpho),
       // NOTE: This assumes that if a curator controls an address on one chain, they control it across all chains.
       topCurators.flatMap((curator) => curator.addresses?.map((entry) => entry.address as Address) ?? []),
+      // TODO: For now, we use bytecode deployless reads on TAC, since the RPC doesn't support `stateOverride`.
+      //       This means we're forfeiting multicall in this special case, but at least it works. Once we have
+      //       a TAC RPC that supports `stateOverride`, remove the special case.
+      // @ts-expect-error function signature overloading was meant for hard-coded `true` or `false`
+      chainId === tac.id,
     ),
-    stateOverride: [readAccrualVaultsStateOverride()],
+    stateOverride: chainId === tac.id ? undefined : [readAccrualVaultsStateOverride()],
     query: {
       enabled: chainId !== undefined && fractionFetched > 0.99 && !!morpho?.address,
       staleTime: STALE_TIME,
@@ -107,15 +113,10 @@ export function EarnSubPage() {
         pendingTimelock: { value: 0n, validAt: 0n },
       });
 
-      if (
-        vault.name === "" ||
-        vault.totalAssets === 0n ||
-        vaultData.allocations.some((allocation) => markets[allocation.id] === undefined)
-      ) {
+      if (vault.name === "" || vaultData.allocations.some((allocation) => markets[allocation.id] === undefined)) {
         // Detailed logging of filtering reason to help curators diagnose their situation.
         console.log(`Skipping vault '${vault.name}':
 - ${vault.name === "" ? "❌" : "✅"} name is defined
-- ${vault.totalAssets === 0n ? "❌" : "✅"} has deposits
 - ${vaultData.allocations.some((allocation) => markets[allocation.id] === undefined) ? "❌" : "✅"} fetched constituent markets
 `);
         return;
