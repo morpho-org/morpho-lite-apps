@@ -53,6 +53,9 @@ function supportsNumBlocks(transportId: string, numBlocks: bigint | "unconstrain
   ) {
     return numBlocks !== "unconstrained" && numBlocks <= 10_000n;
   }
+  if (transportId.includes("rpc.tac.build")) {
+    return numBlocks !== "unconstrained" && numBlocks <= 2_000n;
+  }
 
   // default: assume it's supported and allow strategy to figure it out on the fly
   return true;
