@@ -73,7 +73,7 @@ async function queryFn({ queryKey }: { queryKey: QueryKey }) {
         merkl.campaigns.index.get({
           query: {
             ...query,
-            types,
+            ...(types.length > 1 ? { types } : { type: types[0] }),
             ...(subType !== undefined ? { subType } : {}),
           },
         }),
