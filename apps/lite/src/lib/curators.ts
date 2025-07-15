@@ -33,12 +33,12 @@ export const MANUALLY_WHITELISTED_CURATORS: FragmentOf<typeof CuratorFragment>[]
     name: "MEV Capital",
     url: "https://mevcapital.com/",
   },
-  // {
-  //   addresses: [{ address: "0xB2b9a27a6160Bf9ffbD1a8d245f5de75541b1DDD", chainId: customChains.tac.id }],
-  //   image: "https://cdn.morpho.org/v2/assets/images/edge-capital-ultrayield.svg",
-  //   name: "Edge Capital UltraYield",
-  //   url: "https://edgecapital.xyz/",
-  // },
+  {
+    addresses: [{ address: "0x1280e86Cd7787FfA55d37759C0342F8CD3c7594a", chainId: customChains.tac.id }],
+    image: "https://cdn.morpho.org/v2/assets/images/edge-capital-ultrayield.svg",
+    name: "Edge Capital UltraYield",
+    url: "https://edgecapital.xyz/",
+  },
   {
     addresses: [{ address: "0x17C9ba3fDa7EC71CcfD75f978Ef31E21927aFF3d", chainId: optimism.id }],
     image: "https://cdn.morpho.org/v2/assets/images/moonwell.svg",
