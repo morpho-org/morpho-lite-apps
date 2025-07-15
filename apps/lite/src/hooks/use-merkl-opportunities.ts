@@ -20,27 +20,14 @@ export type MerklOpportunities = {
 
 export function useMerklOpportunities({
   chainId,
-  subType,
+  side,
   userAddress,
 }: {
   chainId: number | undefined;
-  subType: Merkl.SubType;
+  side: Merkl.CampaignSide;
   userAddress?: Address;
 }) {
-  const { data: campaigns } = Merkl.useMerklCampaigns({ chainId, subType });
-
-  const paramKey = useMemo(() => {
-    let paramKey = "";
-    switch (subType) {
-      case Merkl.SubType.LEND:
-        paramKey = "targetToken";
-        break;
-      case Merkl.SubType.BORROW:
-        paramKey = "market";
-        break;
-    }
-    return paramKey;
-  }, [subType]);
+  const { data: campaigns } = Merkl.useMerklCampaigns({ chainId, side });
 
   return useMemo(() => {
     const rewardsMap = new Map<Hex, MerklOpportunities>();
@@ -54,12 +41,14 @@ export function useMerklOpportunities({
         params: { blacklist, whitelist, ...params },
         Opportunity: opportunity,
       } = campaign;
-      // Temporary fix since old campaigns use "marketId" and new ones use "market"
-      if ("marketId" in params) {
-        params["market"] = params["marketId"];
-        delete params["marketId"];
-      }
+
+      const campaignType = campaign.type as Merkl.CampaignType;
+      const campaignSubType = (campaign.subType ?? 0) as Merkl.CampaignSubType;
+
+      const paramKey = Merkl.CAMPAIGN_PARAM_KEYS[campaignType]?.[campaignSubType];
+      if (!paramKey) return;
       const paramKeyValue = params[paramKey] as Hex;
+      if (!paramKeyValue) return;
 
       // If we know the `userAddress`, check whitelist/blacklist eligibility
       if (userAddress) {
@@ -116,5 +105,5 @@ export function useMerklOpportunities({
     });
 
     return rewardsMap;
-  }, [campaigns, paramKey, userAddress]);
+  }, [campaigns, userAddress]);
 }

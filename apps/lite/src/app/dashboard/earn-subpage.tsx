@@ -44,7 +44,7 @@ export function EarnSubPage() {
     [chainId],
   );
 
-  const lendingRewards = useMerklOpportunities({ chainId, subType: Merkl.SubType.LEND, userAddress });
+  const lendingRewards = useMerklOpportunities({ chainId, side: Merkl.CampaignSide.EARN, userAddress });
 
   // MARK: Index `MetaMorphoFactory.CreateMetaMorpho` on all factory versions to get a list of all vault addresses
   const {
