@@ -68,8 +68,6 @@ async function queryFn({ queryKey }: { queryKey: QueryKey }) {
       linearized.get(fields.subType)?.push(fields.type);
     }
 
-    console.log("linearized", linearized);
-
     linearized.forEach((types, subType) =>
       promises.push(
         merkl.campaigns.index.get({
