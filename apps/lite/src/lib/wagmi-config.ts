@@ -144,7 +144,10 @@ const transports: { [K in (typeof chains)[number]["id"]]: Transport } & { [k: nu
     { url: `https://rpc-katana.t.conduit.xyz/${import.meta.env.VITE_KATANA_KEY}`, batch: false },
     ...customChains.katana.rpcUrls.default.http.map((url) => ({ url, batch: false })),
   ]),
-  [customChains.tac.id]: createFallbackTransport([{ url: "https://rpc.tac.build/", batch: { batchSize: 10 } }]),
+  [customChains.tac.id]: createFallbackTransport([
+    { url: `https://rpc.ankr.com/tac/${import.meta.env.VITE_ANKR_API_KEY}`, batch: { batchSize: 10 } },
+    { url: "https://rpc.tac.build/", batch: { batchSize: 10 } },
+  ]),
 };
 
 export function createConfig(args: {
