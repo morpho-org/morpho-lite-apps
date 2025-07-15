@@ -24,7 +24,7 @@ export function RewardsButton({ chainId }: { chainId: number | undefined }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { address: userAddress } = useAccount();
-  const { data: morphoCampaigns } = useMerklCampaigns({ chainId, subType: undefined, withOpportunity: false });
+  const { data: morphoCampaigns } = useMerklCampaigns({ chainId, side: undefined, withOpportunity: false });
   const rewards = useMerklRewards({
     chainId,
     address: userAddress,
