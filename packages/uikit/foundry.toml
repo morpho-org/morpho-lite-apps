@@ -1,0 +1,16 @@
+[profile.default]
+src = "src/lens"
+test = "forge/test"
+script = "forge/script"
+
+out = ".forge/out"
+cache_path = ".forge/cache"
+broadcast = ".forge/broadcast"
+
+libs = ["node_modules", "forge/lib"]
+remappings = ["solady/=node_modules/solady/"]
+
+bytecode_hash = "none"
+cbor_metadata = false
+
+# See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
