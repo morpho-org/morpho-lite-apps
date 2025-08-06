@@ -89,7 +89,7 @@ export function BorrowSheetContent({
         }) as const,
     ),
     allowFailure: false,
-    query: { enabled: !!imarket && !!userAddress, staleTime: 1 * 60 * 1000, placeholderData: keepPreviousData },
+    query: { enabled: !!imarket && !!userAddress, staleTime: 60_000, placeholderData: keepPreviousData },
   });
 
   const { data: positionRaw, refetch: refetchPosition } = useReadContract({
@@ -97,14 +97,14 @@ export function BorrowSheetContent({
     abi: morphoAbi,
     functionName: "position",
     args: userAddress ? [marketId, userAddress] : undefined,
-    query: { staleTime: 1 * 60 * 1000, placeholderData: keepPreviousData },
+    query: { staleTime: 60_000, placeholderData: keepPreviousData },
   });
 
   const { data: price } = useReadContract({
     address: marketParams.oracle,
     abi: oracleAbi,
     functionName: "price",
-    query: { staleTime: 1 * 10 * 1000, placeholderData: keepPreviousData, refetchInterval: 1 * 10 * 1000 },
+    query: { staleTime: 10_000, placeholderData: keepPreviousData, refetchInterval: 10_000 },
   });
 
   const { data: allowances, refetch: refetchAllowances } = useReadContracts({
