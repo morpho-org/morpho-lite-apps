@@ -1,8 +1,13 @@
 import { Address } from "viem";
 import {
+  abstract,
   arbitrum,
   base,
+  bitlayer,
+  bsc,
+  celo,
   corn,
+  etherlink,
   flame,
   fraxtal,
   hemi,
@@ -18,6 +23,7 @@ import {
   sonic,
   unichain,
   worldchain,
+  zircuit,
 } from "wagmi/chains";
 
 import * as customChains from "@/lib/chains";
@@ -110,6 +116,30 @@ export const DEPLOYMENTS: Deployments = {
     Morpho: { address: "0x63971484590b054b6Abc4FEe9F31BC6F68CfeC04", fromBlock: 5991116n },
     MetaMorphoV1_1Factory: { address: "0xf2BD176D3A89f6E9f6D0c7F17C4Ae6A3515007a8", fromBlock: 5991236n },
   },
+  [abstract.id]: {
+    Morpho: { address: "0xc85CE8ffdA27b646D269516B8d0Fa6ec2E958B55", fromBlock: 13947713n },
+    MetaMorphoV1_1Factory: { address: "0x83A7f60c9fc57cEf1e8001bda98783AA1A53E4b1", fromBlock: 13949369n },
+  },
+  [bsc.id]: {
+    Morpho: { address: "0x01b0Bd309AA75547f7a37Ad7B1219A898E67a83a", fromBlock: 54344680n },
+    MetaMorphoV1_1Factory: { address: "0x92983687e672cA6d96530f9Dbe11a196cE905d72", fromBlock: 54344985n },
+  },
+  [celo.id]: {
+    Morpho: { address: "0xd24ECdD8C1e0E57a4E26B1a7bbeAa3e95466A569", fromBlock: 40249329n },
+    MetaMorphoV1_1Factory: { address: "0x6870aA9f66C1e5Efe8Dbe8730e86E9e91f688275", fromBlock: 40259931n },
+  },
+  [etherlink.id]: {
+    Morpho: { address: "0xbCE7364E63C3B13C73E9977a83c9704E2aCa876e", fromBlock: 21047448n },
+    MetaMorphoV1_1Factory: { address: "0x997a79c3C04c5B9eb27d343ae126bcCFb5D74781", fromBlock: 21050315n },
+  },
+  [zircuit.id]: {
+    Morpho: { address: "0xA902A365Fe10B4a94339B5A2Dc64F60c1486a5c8", fromBlock: 14812316n },
+    MetaMorphoV1_1Factory: { address: "0xd2c9068aD68c4c9F1A4fE1Ea650BdFE13DC5EaF1", fromBlock: 14812226n },
+  },
+  [bitlayer.id]: {
+    Morpho: { address: "0xAeA7eFF1bD3c875c18ef50F0387892dF181431C6", fromBlock: 13516997n },
+    MetaMorphoV1_1Factory: { address: "0xb95De4a9C81Ba6240378F383f88592d30937d048", fromBlock: 13638155n },
+  },
   [customChains.basecamp.id]: {
     Morpho: { address: "0xc7CAd9B1377Eb8103397Cb07Cb5c4f03eb2eBEa8", fromBlock: 4804080n },
     MetaMorphoV1_1Factory: { address: "0xa8CD521d42b716821D7ddD2Ca6a237087aA5b487", fromBlock: 4804270n },
@@ -134,6 +164,7 @@ export const CORE_DEPLOYMENTS = new Set<keyof Deployments>([
   polygon.id,
   unichain.id,
   customChains.katana.id,
+  arbitrum.id,
 ]);
 
 export function getContractDeploymentInfo(chainId: number, name: OptionalContracts): DeploymentDetails | undefined;

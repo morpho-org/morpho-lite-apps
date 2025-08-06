@@ -3,6 +3,7 @@ import { getDefaultConfig as createConnectKitConfigParams } from "connectkit";
 import type { Chain, HttpTransportConfig } from "viem";
 import { CreateConnectorFn, createConfig as createWagmiConfig, fallback, http, type Transport } from "wagmi";
 import {
+  abstract,
   arbitrum,
   base,
   corn,
@@ -62,8 +63,9 @@ const chains = [
   polygon,
   unichain,
   customChains.katana,
+  arbitrum,
   // lite support (alphabetical)
-  // arbitrum,
+  abstract,
   // corn,
   // fraxtal,
   // hemi,
@@ -140,6 +142,10 @@ const transports: { [K in (typeof chains)[number]["id"]]: Transport } & { [k: nu
   [modeMainnet.id]: createFallbackTransport([{ url: "https://mode.drpc.org", batch: false }]),
   [hemi.id]: createFallbackTransport([{ url: "https://rpc.hemi.network/rpc", batch: false }]),
   [plumeMainnet.id]: createFallbackTransport([{ url: "https://phoenix-rpc.plumenetwork.xyz", batch: false }]),
+  [abstract.id]: createFallbackTransport([
+    ...createAlchemyHttp("abstract-mainnet"),
+    { url: "https://api.mainnet.abs.xyz", batch: false },
+  ]),
   [customChains.katana.id]: createFallbackTransport([
     { url: `https://rpc-katana.t.conduit.xyz/${import.meta.env.VITE_KATANA_KEY}`, batch: false },
     ...customChains.katana.rpcUrls.default.http.map((url) => ({ url, batch: false })),
