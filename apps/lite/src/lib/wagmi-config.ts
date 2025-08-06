@@ -38,17 +38,36 @@ function createFallbackTransport(rpcs: ({ url: string } & HttpTransportConfig)[]
   );
 }
 
-function createAlchemyHttp(slug: string): ({ url: string } & HttpTransportConfig)[] {
-  const alchemyApiKey = import.meta.env.VITE_ALCHEMY_API_KEY as string;
+function createPrivateAlchemyHttp(slug: string): ({ url: string } & HttpTransportConfig)[] {
+  const alchemyApiKey = import.meta.env.VITE_ALCHEMY_API_KEY;
+  const url = `https://${slug}.g.alchemy.com/v2/${alchemyApiKey}`;
   return [
     {
-      url: `https://${slug}.g.alchemy.com/v2/${alchemyApiKey}`,
+      url,
       batch: { batchSize: 10, wait: 20 },
       methods: { exclude: ["eth_getLogs"] },
       key: "alchemy-no-events", // NOTE: Ensures `useContractEvents` won't try to use this
     },
     {
-      url: `https://${slug}.g.alchemy.com/v2/${alchemyApiKey}`,
+      url,
+      batch: false,
+      methods: { include: ["eth_getLogs"] },
+    },
+  ];
+}
+
+function createPrivateAnkrHttp(slug: string): ({ url: string } & HttpTransportConfig)[] {
+  const ankrApiKey = import.meta.env.VITE_ANKR_API_KEY;
+  const url = `https://rpc.ankr.com/${slug}/${ankrApiKey}`;
+  return [
+    {
+      url,
+      batch: { batchSize: 10, wait: 20 },
+      methods: { exclude: ["eth_getLogs"] },
+      key: "ankr-no-events", // NOTE: Ensures `useContractEvents` won't try to use this
+    },
+    {
+      url,
       batch: false,
       methods: { include: ["eth_getLogs"] },
     },
@@ -80,55 +99,55 @@ const chains = [
 
 const transports: { [K in (typeof chains)[number]["id"]]: Transport } & { [k: number]: Transport } = {
   [mainnet.id]: createFallbackTransport([
-    ...createAlchemyHttp("eth-mainnet"),
+    ...createPrivateAlchemyHttp("eth-mainnet"),
     { url: "https://rpc.mevblocker.io", batch: { batchSize: 10 } },
     { url: "https://rpc.ankr.com/eth", batch: { batchSize: 10 } },
     { url: "https://eth.drpc.org", batch: false },
     { url: "https://eth.merkle.io", batch: false },
   ]),
   [base.id]: createFallbackTransport([
-    ...createAlchemyHttp("base-mainnet"),
+    ...createPrivateAlchemyHttp("base-mainnet"),
     { url: "https://base.gateway.tenderly.co", batch: { batchSize: 10 } },
     { url: "https://base.drpc.org", batch: false },
     { url: "https://mainnet.base.org", batch: { batchSize: 10 } },
     { url: "https://base.lava.build", batch: false },
   ]),
   [ink.id]: createFallbackTransport([
-    ...createAlchemyHttp("ink-mainnet"),
+    ...createPrivateAlchemyHttp("ink-mainnet"),
     { url: "https://ink.drpc.org", batch: false },
   ]),
   [lisk.id]: createFallbackTransport(lisk.rpcUrls.default.http.map((url) => ({ url, batch: false }))),
   [optimism.id]: createFallbackTransport([
-    ...createAlchemyHttp("opt-mainnet"),
+    ...createPrivateAlchemyHttp("opt-mainnet"),
     { url: "https://op-pokt.nodies.app", batch: { batchSize: 10 } },
     { url: "https://optimism.drpc.org", batch: false },
     { url: "https://optimism.lava.build", batch: false },
   ]),
   [arbitrum.id]: createFallbackTransport([
-    ...createAlchemyHttp("arb-mainnet"),
+    ...createPrivateAlchemyHttp("arb-mainnet"),
     { url: "https://arbitrum.gateway.tenderly.co", batch: { batchSize: 10 } },
     { url: "https://rpc.ankr.com/arbitrum", batch: { batchSize: 10 } },
     { url: "https://arbitrum.drpc.org", batch: false },
   ]),
   [polygon.id]: createFallbackTransport([
-    ...createAlchemyHttp("polygon-mainnet"),
+    ...createPrivateAlchemyHttp("polygon-mainnet"),
     { url: "https://polygon.drpc.org", batch: false },
   ]),
   [unichain.id]: createFallbackTransport([
-    ...createAlchemyHttp("unichain-mainnet"),
+    ...createPrivateAlchemyHttp("unichain-mainnet"),
     { url: "https://unichain.drpc.org", batch: false },
   ]),
   [worldchain.id]: createFallbackTransport([
-    ...createAlchemyHttp("worldchain-mainnet"),
+    ...createPrivateAlchemyHttp("worldchain-mainnet"),
     { url: "https://worldchain.drpc.org", batch: false },
   ]),
   [scrollMainnet.id]: createFallbackTransport([
-    ...createAlchemyHttp("scroll-mainnet"),
+    ...createPrivateAlchemyHttp("scroll-mainnet"),
     { url: "https://scroll.drpc.org", batch: false },
   ]),
   [fraxtal.id]: createFallbackTransport([{ url: "https://fraxtal.drpc.org", batch: false }]),
   [sonic.id]: createFallbackTransport([
-    ...createAlchemyHttp("sonic-mainnet"),
+    ...createPrivateAlchemyHttp("sonic-mainnet"),
     { url: "https://rpc.soniclabs.com", batch: false },
     { url: "https://rpc.ankr.com/sonic_mainnet", batch: false },
     { url: "https://sonic.drpc.org", batch: false },
@@ -145,8 +164,9 @@ const transports: { [K in (typeof chains)[number]["id"]]: Transport } & { [k: nu
     ...customChains.katana.rpcUrls.default.http.map((url) => ({ url, batch: false })),
   ]),
   [customChains.tac.id]: createFallbackTransport([
-    { url: `https://rpc.ankr.com/tac/${import.meta.env.VITE_ANKR_API_KEY}`, batch: { batchSize: 10 } },
-    { url: "https://rpc.tac.build/", batch: { batchSize: 10 } },
+    ...createPrivateAnkrHttp("tac"),
+    { url: "https://rpc.tac.build/", batch: false },
+    { url: "https://tac.therpc.io", batch: false },
   ]),
 };
 
