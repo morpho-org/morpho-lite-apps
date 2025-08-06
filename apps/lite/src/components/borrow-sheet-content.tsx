@@ -104,7 +104,7 @@ export function BorrowSheetContent({
     address: marketParams.oracle,
     abi: oracleAbi,
     functionName: "price",
-    query: { staleTime: 1 * 60 * 1000, placeholderData: keepPreviousData, refetchInterval: 1 * 60 * 1000 },
+    query: { staleTime: 1 * 10 * 1000, placeholderData: keepPreviousData, refetchInterval: 1 * 10 * 1000 },
   });
 
   const { data: allowances, refetch: refetchAllowances } = useReadContracts({
@@ -173,7 +173,10 @@ export function BorrowSheetContent({
   if (withdrawCollateralMax !== undefined && accrualPosition!.borrowAssets > 0n) {
     withdrawCollateralMax = (withdrawCollateralMax * 999n) / 1000n; // safety since interest is accruing
   }
-  const borrowMax = accrualPosition?.maxBorrowableAssets;
+  let borrowMax = accrualPosition?.maxBorrowableAssets;
+  if (borrowMax !== undefined && accrualPosition!.borrowAssets > 0n) {
+    borrowMax = (borrowMax * 999n) / 1000n; // safety since interest is accruing
+  }
   const repayMax = accrualPosition ? accrualPosition.borrowAssets : undefined;
   const isRepayMax = inputValue === repayMax;
 
