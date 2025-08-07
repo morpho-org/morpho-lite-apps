@@ -4,6 +4,7 @@ import { metaMorphoFactoryAbi } from "@morpho-org/uikit/assets/abis/meta-morpho-
 import { morphoAbi } from "@morpho-org/uikit/assets/abis/morpho";
 import useContractEvents from "@morpho-org/uikit/hooks/use-contract-events/use-contract-events";
 import { readAccrualVaults, readAccrualVaultsStateOverride } from "@morpho-org/uikit/lens/read-vaults";
+import { tac } from "@morpho-org/uikit/lib/chains/tac";
 import { CORE_DEPLOYMENTS, getContractDeploymentInfo } from "@morpho-org/uikit/lib/deployments";
 import { Token } from "@morpho-org/uikit/lib/utils";
 import { useMemo } from "react";
@@ -22,6 +23,11 @@ import { getTokenURI } from "@/lib/tokens";
 
 const STALE_TIME = 5 * 60 * 1000;
 
+// This cannot be inlined because TanStack needs a stable reference to avoid re-renders.
+function restructurePositions(data: (readonly [bigint, bigint, bigint])[]) {
+  return data.map((x) => restructure(x, { abi: morphoAbi, name: "position", args: ["0x", "0x"] }));
+}
+
 export function BorrowSubPage() {
   const { status, address: userAddress } = useAccount();
   const { chain } = useOutletContext() as { chain?: Chain };
@@ -36,7 +42,7 @@ export function BorrowSubPage() {
     [chainId],
   );
 
-  const borrowingRewards = useMerklOpportunities({ chainId, subType: Merkl.SubType.BORROW });
+  const borrowingRewards = useMerklOpportunities({ chainId, side: Merkl.CampaignSide.BORROW, userAddress });
 
   // MARK: Index `MetaMorphoFactory.CreateMetaMorpho` on all factory versions to get a list of all vault addresses
   const {
@@ -62,8 +68,13 @@ export function BorrowSubPage() {
       createMetaMorphoEvents.map((ev) => ev.args.metaMorpho),
       // NOTE: This assumes that if a curator controls an address on one chain, they control it across all chains.
       topCurators.flatMap((curator) => curator.addresses?.map((entry) => entry.address as Address) ?? []),
+      // TODO: For now, we use bytecode deployless reads on TAC, since the RPC doesn't support `stateOverride`.
+      //       This means we're forfeiting multicall in this special case, but at least it works. Once we have
+      //       a TAC RPC that supports `stateOverride`, remove the special case.
+      // @ts-expect-error function signature overloading was meant for hard-coded `true` or `false`
+      chainId === tac.id,
     ),
-    stateOverride: [readAccrualVaultsStateOverride()],
+    stateOverride: chainId === tac.id ? undefined : [readAccrualVaultsStateOverride()],
     query: {
       enabled: chainId !== undefined && fractionFetched > 0.99 && !!morpho?.address,
       staleTime: STALE_TIME,
@@ -117,7 +128,7 @@ export function BorrowSubPage() {
           name: vaultData.vault.name,
           address: vaultData.vault.vault,
           totalAssets: vaultData.vault.totalAssets,
-          curators: getDisplayableCurators(vaultData.vault, topCurators),
+          curators: getDisplayableCurators({ ...vaultData.vault, address: vaultData.vault.vault }, topCurators),
         });
       });
     });
@@ -163,9 +174,7 @@ export function BorrowSubPage() {
       staleTime: 1 * 60 * 1000,
       gcTime: Infinity,
       enabled: !!morpho,
-      select(data) {
-        return data.map((x) => restructure(x, { abi: morphoAbi, name: "position", args: ["0x", "0x"] }));
-      },
+      select: restructurePositions,
     },
   });
 

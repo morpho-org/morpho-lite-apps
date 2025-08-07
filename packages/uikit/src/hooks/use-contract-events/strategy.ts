@@ -47,9 +47,12 @@ function supportsNumBlocks(transportId: string, numBlocks: bigint | "unconstrain
   if (transportId.includes("tenderly.co")) return true;
   if (
     transportId.includes("drpc") ||
+    transportId.includes("ankr") ||
     transportId.includes("nodies.app") ||
+    transportId.includes("therpc.io") ||
     transportId.includes("mainnet.base.org") ||
-    transportId.includes("lava.build")
+    transportId.includes("lava.build") ||
+    transportId.includes("rpc.tac.build")
   ) {
     return numBlocks !== "unconstrained" && numBlocks <= 10_000n;
   }
@@ -100,7 +103,7 @@ export function getStrategyBasedOn<Transport extends EIP1193Transport>(
 
     const reliability = r.status === "success" ? 1 : 0;
     const latency = r.timestamp1 - r.timestamp0;
-    const throughput = Number(r.status === "success" ? r.numBlocks : 0n) / (latency + 1);
+    const throughput = Number(r.status === "success" ? r.numBlocks : 0n) / Math.max(latency, 1);
 
     const mapEntry: ReturnType<typeof transportStats.get> = transportStats.get(r.transportId) ?? {
       blockBinsStats: new Array(BLOCK_BINS.length).fill(undefined),

@@ -19,6 +19,8 @@ jobs:
     env:
       VITE_WALLET_KIT_PROJECT_ID: ${{ secrets.VITE_WALLET_KIT_PROJECT_ID }}
       VITE_ALCHEMY_API_KEY: ${{ secrets.VITE_ALCHEMY_API_KEY }}
+      VITE_ANKR_API_KEY: ${{ secrets.VITE_ANKR_API_KEY }}
+      VITE_KATANA_KEY: ${{ secrets. VITE_KATANA_KEY }}
       VITE_APP_TITLE: ${{ vars.VITE_APP_TITLE }}
     steps:
       - name: Checkout
@@ -39,6 +41,8 @@ jobs:
         run: |
           echo "VITE_WALLET_KIT_PROJECT_ID=${{ env.VITE_WALLET_KIT_PROJECT_ID }}" >> apps/lite/.env
           echo "VITE_ALCHEMY_API_KEY=${{ env.VITE_ALCHEMY_API_KEY }}" >> apps/lite/.env
+          echo "VITE_ANKR_API_KEY=${{ env.VITE_ANKR_API_KEY }}" >> apps/lite/.env
+          echo "VITE_KATANA_KEY=${{ env.VITE_KATANA_KEY }}" >> apps/lite/.env
           echo "VITE_APP_TITLE=${{ env.VITE_APP_TITLE }}" >> apps/lite/.env
 
       - name: Build lite app

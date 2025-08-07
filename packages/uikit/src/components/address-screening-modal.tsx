@@ -1,5 +1,5 @@
-import { useContext } from "react";
-import { useAccountEffect, useDisconnect } from "wagmi";
+import { useContext, useEffect } from "react";
+import { useAccount, useDisconnect } from "wagmi";
 
 import {
   AlertDialog,
@@ -14,12 +14,16 @@ export function AddressScreeningModal() {
   const { isAuthorized, screen } = useContext(AddressScreeningContext);
   const { disconnectAsync } = useDisconnect();
 
-  useAccountEffect({
-    async onConnect(data) {
+  const { address } = useAccount();
+
+  useEffect(() => {
+    if (!address) return;
+
+    void (async () => {
       // Screen newly-connected wallet, and if it's not authorized, disconnect it programmatically.
-      if (!(await screen(data.address))) return disconnectAsync();
-    },
-  });
+      if (!(await screen(address))) return disconnectAsync();
+    })();
+  }, [address, screen, disconnectAsync]);
 
   return (
     <AlertDialog open={!isAuthorized}>

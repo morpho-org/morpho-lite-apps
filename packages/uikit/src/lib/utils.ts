@@ -85,6 +85,19 @@ export function getTokenSymbolURI(symbol: string | undefined): Token["imageSrc"]
   } else if (symbol === "WLD") {
     // TODO: remove once it's included on Morpho CDN
     return "https://storage.googleapis.com/merkl-static-assets/tokens/WLD.jpeg";
+  } else if (symbol === "LSK") {
+    // TODO: remove once it's included on Morpho CDN
+    return "https://s2.coinmarketcap.com/static/img/coins/64x64/1214.png";
+  } else if (symbol === "M-BTC") {
+    // TODO: remove once it's included on Morpho CDN
+    return "https://s2.coinmarketcap.com/static/img/coins/64x64/34686.png";
+  } else if (symbol === "USD₮") {
+    return "https://cdn.morpho.org/assets/logos/usdt.svg";
+  } else if (symbol === "USD₮0") {
+    // TODO: remove once it's included on Morpho CDN
+    return "https://assets.coingecko.com/coins/images/53705/standard/usdt0.jpg";
+  } else if (symbol === "TON") {
+    return "https://s2.coinmarketcap.com/static/img/coins/64x64/11419.png";
   }
   return `https://cdn.morpho.org/assets/logos/${encodeURIComponent((symbol ?? "").toLowerCase())}.svg`;
 }

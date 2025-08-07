@@ -18,21 +18,16 @@ export type MerklOpportunities = {
   dailyRewards: number;
 }[];
 
-export function useMerklOpportunities({ chainId, subType }: { chainId: number | undefined; subType: Merkl.SubType }) {
-  const { data: campaigns } = Merkl.useMerklCampaigns({ chainId, subType });
-
-  const paramKey = useMemo(() => {
-    let paramKey = "";
-    switch (subType) {
-      case Merkl.SubType.LEND:
-        paramKey = "targetToken";
-        break;
-      case Merkl.SubType.BORROW:
-        paramKey = "marketId";
-        break;
-    }
-    return paramKey;
-  }, [subType]);
+export function useMerklOpportunities({
+  chainId,
+  side,
+  userAddress,
+}: {
+  chainId: number | undefined;
+  side: Merkl.CampaignSide;
+  userAddress?: Address;
+}) {
+  const { data: campaigns } = Merkl.useMerklCampaigns({ chainId, side });
 
   return useMemo(() => {
     const rewardsMap = new Map<Hex, MerklOpportunities>();
@@ -46,11 +41,28 @@ export function useMerklOpportunities({ chainId, subType }: { chainId: number | 
         params: { blacklist, whitelist, ...params },
         Opportunity: opportunity,
       } = campaign;
-      const paramKeyValue = params[paramKey] as Hex;
 
-      if (blacklist.length > 0 && whitelist.length > 0) {
-        console.warn(`Skipping campaignId ${campaignId} because blacklist/whitelist isn't implemented.`);
-        return;
+      const campaignType = campaign.type as Merkl.CampaignType;
+      const campaignSubType = (campaign.subType ?? 0) as Merkl.CampaignSubType;
+
+      const paramKey = Merkl.CAMPAIGN_PARAM_KEYS[campaignType]?.[campaignSubType];
+      if (!paramKey) return;
+      const paramKeyValue = params[paramKey] as Hex;
+      if (!paramKeyValue) return;
+
+      // If we know the `userAddress`, check whitelist/blacklist eligibility
+      if (userAddress) {
+        if (
+          (blacklist.length > 0 && blacklist.includes(userAddress)) ||
+          (whitelist.length > 0 && !whitelist.includes(userAddress))
+        )
+          return;
+      }
+      // Otherwise log a warning and show rewards optimistically
+      else if (blacklist.length > 0 || whitelist.length > 0) {
+        console.debug(
+          `\`userAddress\` is required to determine eligibility for campaignId ${campaignId}. Proceeding optimistically.`,
+        );
       }
 
       if (!rewardsMap.has(paramKeyValue)) {
@@ -93,5 +105,5 @@ export function useMerklOpportunities({ chainId, subType }: { chainId: number | 
     });
 
     return rewardsMap;
-  }, [campaigns, paramKey]);
+  }, [campaigns, userAddress]);
 }

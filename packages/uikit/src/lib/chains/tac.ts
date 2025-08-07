@@ -1,7 +1,7 @@
 import { defineChain } from "viem";
 
 export const tac = defineChain({
-  id: 2390,
+  id: 239,
   name: "TAC",
   network: "tac",
   nativeCurrency: {
@@ -11,13 +11,13 @@ export const tac = defineChain({
   },
   rpcUrls: {
     default: {
-      http: ["https://turin.rpc.tac.build/"],
+      http: ["https://rpc.tac.build/", "https://rpc.ankr.com/tac"],
     },
   },
   blockExplorers: {
     default: {
       name: "TAC Explorer",
-      url: "https://turin.explorer.tac.build",
+      url: "https://explorer.tac.build",
     },
   },
   contracts: {

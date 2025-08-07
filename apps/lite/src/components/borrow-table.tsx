@@ -157,20 +157,22 @@ function VaultsTableCell({
               <div className="flex items-center justify-between font-light">
                 <span>Curators</span>
                 <div className="flex items-end gap-1">
-                  {Object.values(vault.curators).map((curator) => (
-                    <SafeLink
-                      key={curator.name}
-                      className="hover:bg-secondary flex gap-1 rounded-sm p-1"
-                      href={curator.url ?? ""}
-                    >
-                      {curator.imageSrc && (
-                        <Avatar className="size-4 rounded-full">
-                          <AvatarImage src={curator.imageSrc} alt="Loan Token" />
-                        </Avatar>
-                      )}
-                      {curator.name}
-                    </SafeLink>
-                  ))}
+                  {Object.values(vault.curators)
+                    .filter((curator) => curator.shouldAlwaysShow)
+                    .map((curator) => (
+                      <SafeLink
+                        key={curator.name}
+                        className="hover:bg-secondary flex gap-1 rounded-sm p-1"
+                        href={curator.url ?? ""}
+                      >
+                        {curator.imageSrc && (
+                          <Avatar className="size-4 rounded-full">
+                            <AvatarImage src={curator.imageSrc} alt="Loan Token" />
+                          </Avatar>
+                        )}
+                        {curator.name}
+                      </a>
+                    ))}
                 </div>
               </div>
               {token.decimals !== undefined && (

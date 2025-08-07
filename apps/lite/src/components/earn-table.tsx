@@ -12,12 +12,13 @@ import {
   Table,
 } from "@morpho-org/uikit/components/shadcn/table";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@morpho-org/uikit/components/shadcn/tooltip";
+import { useModifierKey } from "@morpho-org/uikit/hooks/use-modifier-key";
 import { formatBalanceWithSymbol, Token, formatLtv, abbreviateAddress } from "@morpho-org/uikit/lib/utils";
 import { blo } from "blo";
 // @ts-expect-error: this package lacks types
 import humanizeDuration from "humanize-duration";
 import { ClockAlert, ExternalLink } from "lucide-react";
-import { Chain, hashMessage, Address, zeroAddress } from "viem";
+import { Chain, hashMessage, Address, zeroAddress, formatUnits } from "viem";
 
 import { EarnSheetContent } from "@/components/earn-sheet-content";
 import { ApyTableCell } from "@/components/table-cells/apy-table-cell";
@@ -30,7 +31,7 @@ export type Row = {
   vault: AccrualVault;
   asset: Token;
   curators: DisplayableCurators;
-  maxWithdraw: bigint | undefined;
+  userShares: bigint | undefined;
   imageSrc?: string;
 };
 
@@ -115,24 +116,29 @@ function CuratorTableCell({
           className="text-primary-foreground rounded-3xl p-4 shadow-2xl"
           onClick={(e) => e.stopPropagation()}
         >
-          <p className="underline">Roles</p>
-          {roles.map((role) => (
-            <div className="flex items-center gap-1" key={role.name}>
-              <p>
-                {role.name}: <code>{abbreviateAddress(role.address)}</code>
-              </p>
-              {chain?.blockExplorers?.default.url && (
-                <a
-                  href={`${chain.blockExplorers.default.url}/address/${role.address}`}
-                  rel="noopener noreferrer"
-                  target="_blank"
-                >
-                  <ExternalLink className="h-4 w-4" />
-                </a>
-              )}
-            </div>
-          ))}
-          <br />
+          {/* It's possible for a curator to have no onchain roles. In that case, just show their URL. */}
+          {roles.length > 0 && (
+            <>
+              <p className="underline">Roles</p>
+              {roles.map((role) => (
+                <div className="flex items-center gap-1" key={role.name}>
+                  <p>
+                    {role.name}: <code>{abbreviateAddress(role.address)}</code>
+                  </p>
+                  {chain?.blockExplorers?.default.url && (
+                    <a
+                      href={`${chain.blockExplorers.default.url}/address/${role.address}`}
+                      rel="noopener noreferrer"
+                      target="_blank"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                    </a>
+                  )}
+                </div>
+              ))}
+              <br />
+            </>
+          )}
           {url != null && (
             <SafeLink className="text-blue-200 underline" href={url}>
               {url}
@@ -231,11 +237,13 @@ export function EarnTable({
 }: {
   chain: Chain | undefined;
   rows: Row[];
-  depositsMode: "totalAssets" | "maxWithdraw";
+  depositsMode: "totalAssets" | "userAssets";
   tokens: Map<Address, { decimals?: number; symbol?: string }>;
   lendingRewards: ReturnType<typeof useMerklOpportunities>;
   refetchPositions: () => void;
 }) {
+  const isShiftHeld = useModifierKey("Shift");
+
   return (
     <div className="text-primary-foreground w-full max-w-7xl px-2 lg:px-8">
       <Table className="border-separate border-spacing-y-3">
@@ -251,7 +259,26 @@ export function EarnTable({
         <TableBody>
           {rows.map((row) => {
             const ownerText = abbreviateAddress(row.vault.owner);
-            const deposits = depositsMode === "maxWithdraw" ? row.maxWithdraw : row.vault.totalAssets;
+            const deposits =
+              depositsMode === "userAssets"
+                ? row.userShares !== undefined
+                  ? row.vault.toAssets(row.userShares)
+                  : undefined
+                : row.vault.totalAssets;
+
+            const rewardsVault = lendingRewards.get(row.vault.address) ?? [];
+            const rewardsMarkets = [...row.vault.allocations.keys()].flatMap((marketId) =>
+              (lendingRewards.get(marketId) ?? []).map((opportunity) => {
+                const proportion = parseFloat(formatUnits(row.vault.getAllocationProportion(marketId), 18));
+                return {
+                  ...opportunity,
+                  apr: opportunity.apr * proportion,
+                  dailyRewards: opportunity.dailyRewards * proportion,
+                };
+              }),
+            );
+            const rewards = rewardsVault.concat(rewardsMarkets);
+
             return (
               <Sheet
                 key={row.vault.address}
@@ -279,9 +306,11 @@ export function EarnTable({
                     <TableCell>
                       <div className="flex w-min gap-2">
                         {Object.keys(row.curators).length > 0
-                          ? Object.values(row.curators).map((curator) => (
-                              <CuratorTableCell key={curator.name} {...curator} chain={chain} />
-                            ))
+                          ? Object.values(row.curators)
+                              // By default, only show roles with `shouldAlwaysShow == true`.
+                              // When shift key is held, remove filter and show all roles.
+                              .filter((curator) => isShiftHeld || curator.shouldAlwaysShow)
+                              .map((curator) => <CuratorTableCell key={curator.name} {...curator} chain={chain} />)
                           : ownerText}
                       </div>
                     </TableCell>
@@ -289,12 +318,7 @@ export function EarnTable({
                       <CollateralsTableCell vault={row.vault} chain={chain} tokens={tokens} />
                     </TableCell>
                     <TableCell className="rounded-r-lg">
-                      <ApyTableCell
-                        nativeApy={row.vault.apy}
-                        fee={row.vault.fee}
-                        rewards={lendingRewards.get(row.vault.address) ?? []}
-                        mode="earn"
-                      />
+                      <ApyTableCell nativeApy={row.vault.apy} fee={row.vault.fee} rewards={rewards} mode="earn" />
                     </TableCell>
                   </TableRow>
                 </SheetTrigger>

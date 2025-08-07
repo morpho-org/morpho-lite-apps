@@ -11,6 +11,7 @@ import { metaMorphoAbi } from "@morpho-org/uikit/assets/abis/meta-morpho";
 import { metaMorphoFactoryAbi } from "@morpho-org/uikit/assets/abis/meta-morpho-factory";
 import useContractEvents from "@morpho-org/uikit/hooks/use-contract-events/use-contract-events";
 import { readAccrualVaults, readAccrualVaultsStateOverride } from "@morpho-org/uikit/lens/read-vaults";
+import { tac } from "@morpho-org/uikit/lib/chains/tac";
 import { CORE_DEPLOYMENTS, getContractDeploymentInfo } from "@morpho-org/uikit/lib/deployments";
 import { Token } from "@morpho-org/uikit/lib/utils";
 import { useEffect, useMemo } from "react";
@@ -43,7 +44,7 @@ export function EarnSubPage() {
     [chainId],
   );
 
-  const lendingRewards = useMerklOpportunities({ chainId, subType: Merkl.SubType.LEND });
+  const lendingRewards = useMerklOpportunities({ chainId, side: Merkl.CampaignSide.EARN, userAddress });
 
   // MARK: Index `MetaMorphoFactory.CreateMetaMorpho` on all factory versions to get a list of all vault addresses
   const {
@@ -69,8 +70,13 @@ export function EarnSubPage() {
       createMetaMorphoEvents.map((ev) => ev.args.metaMorpho),
       // NOTE: This assumes that if a curator controls an address on one chain, they control it across all chains.
       topCurators.flatMap((curator) => curator.addresses?.map((entry) => entry.address as Address) ?? []),
+      // TODO: For now, we use bytecode deployless reads on TAC, since the RPC doesn't support `stateOverride`.
+      //       This means we're forfeiting multicall in this special case, but at least it works. Once we have
+      //       a TAC RPC that supports `stateOverride`, remove the special case.
+      // @ts-expect-error function signature overloading was meant for hard-coded `true` or `false`
+      chainId === tac.id,
     ),
-    stateOverride: [readAccrualVaultsStateOverride()],
+    stateOverride: chainId === tac.id ? undefined : [readAccrualVaultsStateOverride()],
     query: {
       enabled: chainId !== undefined && fractionFetched > 0.99 && !!morpho?.address,
       staleTime: STALE_TIME,
@@ -81,6 +87,11 @@ export function EarnSubPage() {
 
   // Logging of whitelisting status to help curators diagnose their situation.
   useEffect(() => {
+    const urlSearchParams = new URLSearchParams(window.location.search);
+    if (!urlSearchParams.has("dev")) {
+      return;
+    }
+
     for (const ev of createMetaMorphoEvents) {
       if (vaultsData?.some((vd) => vd.vault.vault === ev.args.metaMorpho)) continue;
       console.log(`Skipping vault '${ev.args.name}' (${ev.args.metaMorpho}):
@@ -107,17 +118,15 @@ export function EarnSubPage() {
         pendingTimelock: { value: 0n, validAt: 0n },
       });
 
-      if (
-        vault.name === "" ||
-        vault.totalAssets === 0n ||
-        vaultData.allocations.some((allocation) => markets[allocation.id] === undefined)
-      ) {
-        // Detailed logging of filtering reason to help curators diagnose their situation.
-        console.log(`Skipping vault '${vault.name}':
+      if (vault.name === "" || vaultData.allocations.some((allocation) => markets[allocation.id] === undefined)) {
+        const urlSearchParams = new URLSearchParams(window.location.search);
+        if (urlSearchParams.has("dev")) {
+          // Detailed logging of filtering reason to help curators diagnose their situation.
+          console.log(`Skipping vault '${vault.name}':
 - ${vault.name === "" ? "❌" : "✅"} name is defined
-- ${vault.totalAssets === 0n ? "❌" : "✅"} has deposits
 - ${vaultData.allocations.some((allocation) => markets[allocation.id] === undefined) ? "❌" : "✅"} fetched constituent markets
 `);
+        }
         return;
       }
 
@@ -183,14 +192,14 @@ export function EarnSubPage() {
   }, [tokenAddresses, tokenData]);
 
   // MARK: Fetch user's balance in each vault
-  const { data: maxWithdrawsData, refetch: refetchMaxWithdraws } = useReadContracts({
+  const { data: balanceOfData, refetch: refetchBalanceOf } = useReadContracts({
     contracts: vaultsData?.map(
       (vaultData) =>
         ({
           chainId,
           address: vaultData.vault.vault,
           abi: metaMorphoAbi,
-          functionName: "maxWithdraw",
+          functionName: "balanceOf",
           args: userAddress && [userAddress],
         }) as const,
     ),
@@ -202,10 +211,9 @@ export function EarnSubPage() {
     },
   });
 
-  const maxWithdraws = useMemo(
-    () =>
-      Object.fromEntries(vaultsData?.map((vaultData, idx) => [vaultData.vault.vault, maxWithdrawsData?.[idx]]) ?? []),
-    [vaultsData, maxWithdrawsData],
+  const userShares = useMemo(
+    () => Object.fromEntries(vaultsData?.map((vaultData, idx) => [vaultData.vault.vault, balanceOfData?.[idx]]) ?? []),
+    [vaultsData, balanceOfData],
   ) as { [vault: Address]: bigint | undefined };
 
   const rows = useMemo(() => {
@@ -221,13 +229,13 @@ export function EarnSubPage() {
           decimals,
         } as Token,
         curators: getDisplayableCurators(vault, topCurators),
-        maxWithdraw: maxWithdraws[vault.address],
+        userShares: userShares[vault.address],
         imageSrc: getTokenURI({ symbol, address: vault.asset, chainId }),
       };
     });
-  }, [vaults, tokens, maxWithdraws, topCurators, chainId]);
+  }, [vaults, tokens, userShares, topCurators, chainId]);
 
-  const userRows = rows.filter((row) => (row.maxWithdraw ?? 0n) > 0n);
+  const userRows = rows.filter((row) => (row.userShares ?? 0n) > 0n);
 
   if (status === "reconnecting") return undefined;
 
@@ -251,10 +259,10 @@ export function EarnSubPage() {
             <EarnTable
               chain={chain}
               rows={userRows}
-              depositsMode="maxWithdraw"
+              depositsMode="userAssets"
               tokens={tokens}
               lendingRewards={lendingRewards}
-              refetchPositions={refetchMaxWithdraws}
+              refetchPositions={refetchBalanceOf}
             />
           </div>
         )
@@ -271,7 +279,7 @@ export function EarnSubPage() {
             depositsMode="totalAssets"
             tokens={tokens}
             lendingRewards={lendingRewards}
-            refetchPositions={refetchMaxWithdraws}
+            refetchPositions={refetchBalanceOf}
           />
         </div>
       </div>
