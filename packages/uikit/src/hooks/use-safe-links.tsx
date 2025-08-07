@@ -18,16 +18,13 @@ export const SafeLinksContext = createContext<SafeLinksContextType>({
 });
 
 export function SafeLinksProvider({ children }: { children: ReactNode }) {
-  const [isOpen, setIsOpen] = useState(false);
   const [href, setHref] = useState<string | null>(null);
 
   const showWarning = useCallback((href: string) => {
     setHref(href);
-    setIsOpen(true);
   }, []);
 
   const hideWarning = useCallback(() => {
-    setIsOpen(false);
     setHref(null);
   }, []);
 
@@ -41,7 +38,7 @@ export function SafeLinksProvider({ children }: { children: ReactNode }) {
   return (
     <SafeLinksContext
       value={{
-        isOpen,
+        isOpen: href != null,
         href,
         showWarning,
         hideWarning,

@@ -28,11 +28,11 @@ export const BANNERS: Record<keyof Deployments, { color: string; text: ReactNode
     text: (
       <span className="grow py-2 text-center">
         Access additional features and explore incentives via the interfaces offered by{" "}
-        <SafeLink className="underline" href="https://app.mysticfinance.xyz" rel="noopener noreferrer" target="_blank">
+        <SafeLink className="underline" href="https://app.mysticfinance.xyz">
           Mystic
         </SafeLink>
         {" and "}
-        <SafeLink className="underline" href="https://morpho.solera.market/" rel="noopener noreferrer" target="_blank">
+        <SafeLink className="underline" href="https://morpho.solera.market/">
           Solera
         </SafeLink>
         .
@@ -44,7 +44,7 @@ export const BANNERS: Record<keyof Deployments, { color: string; text: ReactNode
     text: (
       <span className="grow py-2 text-center">
         Claim rewards and access enhanced features on the external{" "}
-        <SafeLink className="underline" href="https://compound.blue" rel="noopener noreferrer" target="_blank">
+        <SafeLink className="underline" href="https://compound.blue">
           Compound Blue
         </SafeLink>{" "}
         interface.
@@ -56,7 +56,7 @@ export const BANNERS: Record<keyof Deployments, { color: string; text: ReactNode
     text: (
       <span className="grow py-2 text-center">
         The most popular OP Mainnet markets are also accessible on{" "}
-        <SafeLink className="underline" href="https://moonwell.fi" rel="noopener noreferrer" target="_blank">
+        <SafeLink className="underline" href="https://moonwell.fi">
           Moonwell
         </SafeLink>
         .
@@ -68,12 +68,7 @@ export const BANNERS: Record<keyof Deployments, { color: string; text: ReactNode
     text: (
       <span className="grow py-2 text-center">
         Claim rewards and access enhanced features on the external{" "}
-        <SafeLink
-          className="underline"
-          href="https://oku.trade/morpho/vaults?inputChain=worldchain"
-          rel="noopener noreferrer"
-          target="_blank"
-        >
+        <SafeLink className="underline" href="https://oku.trade/morpho/vaults?inputChain=worldchain">
           Oku Trade
         </SafeLink>{" "}
         interface.
