@@ -198,17 +198,32 @@ export function EarnSubPage() {
           <span>Indexing vaults</span>
           {(ffCreateMetaMorphoEvents * 100).toFixed(2)}%
         </div>
-        <Progress finalColor="bg-green-400" value={ffCreateMetaMorphoEvents * 100} />
+        <Progress
+          progressColor="bg-secondary-foreground"
+          finalColor="bg-green-400"
+          value={ffCreateMetaMorphoEvents * 100}
+          className="bg-secondary"
+        />
         <div className="flex justify-between">
           <span>Indexing your deposits</span>
           {(ffDepositEvents * 100).toFixed(2)}%
         </div>
-        <Progress finalColor="bg-green-400" value={ffDepositEvents * 100} className="mb-auto" />
+        <Progress
+          progressColor="bg-secondary-foreground"
+          finalColor="bg-green-400"
+          value={ffDepositEvents * 100}
+          className="bg-secondary mb-auto"
+        />
         <div className="bottom-0 flex justify-between">
           <i>Total Progress</i>
           {((totalProgress * 100) / 4).toFixed(2)}%
         </div>
-        <Progress finalColor="bg-green-400" value={(totalProgress * 100) / 4} />
+        <Progress
+          progressColor="bg-secondary-foreground"
+          finalColor="bg-green-400"
+          value={(totalProgress * 100) / 4}
+          className="bg-secondary"
+        />
       </CardContent>
     </Card>
   );

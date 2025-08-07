@@ -488,6 +488,9 @@ function coalesceQueries(queries: [QueryKey, QueryData][]) {
     if (toBlock < fromBlock) {
       console.warn("useContractEvents coalesce encountered toBlock < fromBlock");
       continue;
+    } else if (!Array.isArray(logs)) {
+      console.error("useContractEvents encountered poorly-typed logs:", logs);
+      continue;
     }
 
     const isFinalized = toBlock <= finalizedBlock;
