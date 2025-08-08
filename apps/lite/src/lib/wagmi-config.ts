@@ -138,7 +138,10 @@ const transports: { [K in (typeof chains)[number]["id"]]: Transport } & { [k: nu
     { url: "https://mainnet.corn-rpc.com", batch: false },
     { url: "https://maizenet-rpc.usecorn.com", batch: false },
   ]),
-  [soneium.id]: createFallbackTransport(soneium.rpcUrls.default.http.map((url) => ({ url, batch: false }))),
+  [soneium.id]: createFallbackTransport([
+    ...createAlchemyHttp("soneium-mainnet"),
+    ...soneium.rpcUrls.default.http.map((url) => ({ url, batch: false })),
+  ]),
   [modeMainnet.id]: createFallbackTransport([{ url: "https://mode.drpc.org", batch: false }]),
   [hemi.id]: createFallbackTransport([{ url: "https://rpc.hemi.network/rpc", batch: false }]),
   [plumeMainnet.id]: createFallbackTransport([{ url: "https://phoenix-rpc.plumenetwork.xyz", batch: false }]),
