@@ -1,6 +1,6 @@
 import * as customChains from "@morpho-org/uikit/lib/chains";
 import { Address, isAddressEqual } from "viem";
-import { lisk, optimism, plumeMainnet } from "wagmi/chains";
+import { lisk, optimism, plumeMainnet, soneium } from "wagmi/chains";
 
 import { graphql, FragmentOf } from "@/graphql/graphql";
 
@@ -22,6 +22,7 @@ export const MANUALLY_WHITELISTED_CURATORS: FragmentOf<typeof CuratorFragment>[]
       { address: "0x6D3AB84Fb7Fc04961a15663C980feC275b889402", chainId: customChains.tac.id },
       { address: "0xd6316AE37dDE77204b9A94072544F1FF9f3d6d54", chainId: plumeMainnet.id },
       { address: "0x4681fbeD0877815D5869Cf16e8A6C6Ceee365c02", chainId: lisk.id },
+      { address: "0x6D3AB84Fb7Fc04961a15663C980feC275b889402", chainId: soneium.id },
     ],
     image: "https://cdn.morpho.org/v2/assets/images/re7.png",
     name: "RE7 Labs",
