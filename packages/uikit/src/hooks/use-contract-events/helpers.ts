@@ -37,7 +37,7 @@ export function getRemainingSegments(
   const [requiredStart, requiredEnd] = requiredRange;
 
   if (requiredStart > requiredEnd) {
-    throw new Error("Invalid requiredRange: start is greater than end");
+    throw new Error(`Invalid requiredRange: start is greater than end, ${requiredRange}`);
   }
 
   // Filter and clip known ranges that intersect the required range.

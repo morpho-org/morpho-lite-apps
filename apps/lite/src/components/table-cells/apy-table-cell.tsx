@@ -64,7 +64,7 @@ export function ApyTableCell({
                   )}
                 </div>
                 {mode === "earn" ? "+" : "-"}
-                {formatApy(parseUnits(reward.apr.toString(), 16))}
+                {formatApy(parseUnits(reward.apr.toFixed(18), 16))}
               </div>
             ))}
             {fee > 0n || mode === "earn" ? (

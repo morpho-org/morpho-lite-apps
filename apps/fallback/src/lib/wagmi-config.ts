@@ -70,6 +70,7 @@ const chains = [
   scrollMainnet,
   soneium,
   sonic,
+  customChains.tac,
   worldchain,
 ] as const;
 
@@ -148,6 +149,9 @@ const transports: Record<(typeof chains)[number]["id"], Transport> = {
   ),
   [customChains.katana.id]: createFallbackTransport(
     customChains.katana.rpcUrls.default.http.map((url) => ({ url, batch: false })),
+  ),
+  [customChains.tac.id]: createFallbackTransport(
+    customChains.tac.rpcUrls.default.http.map((url) => ({ url, batch: false })),
   ),
   // [customChains.basecamp.id]: createFallbackTransport(
   //   customChains.basecamp.rpcUrls.default.http.map((url) => ({ url, batch: false })),

@@ -17,7 +17,7 @@ import { blo } from "blo";
 // @ts-expect-error: this package lacks types
 import humanizeDuration from "humanize-duration";
 import { ClockAlert, ExternalLink } from "lucide-react";
-import { Chain, hashMessage, Address, zeroAddress } from "viem";
+import { Chain, hashMessage, Address, zeroAddress, formatUnits } from "viem";
 
 import { EarnSheetContent } from "@/components/earn-sheet-content";
 import { ApyTableCell } from "@/components/table-cells/apy-table-cell";
@@ -264,6 +264,20 @@ export function EarnTable({
                   ? row.vault.toAssets(row.userShares)
                   : undefined
                 : row.vault.totalAssets;
+
+            const rewardsVault = lendingRewards.get(row.vault.address) ?? [];
+            const rewardsMarkets = [...row.vault.allocations.keys()].flatMap((marketId) =>
+              (lendingRewards.get(marketId) ?? []).map((opportunity) => {
+                const proportion = parseFloat(formatUnits(row.vault.getAllocationProportion(marketId), 18));
+                return {
+                  ...opportunity,
+                  apr: opportunity.apr * proportion,
+                  dailyRewards: opportunity.dailyRewards * proportion,
+                };
+              }),
+            );
+            const rewards = rewardsVault.concat(rewardsMarkets);
+
             return (
               <Sheet
                 key={row.vault.address}
@@ -303,12 +317,7 @@ export function EarnTable({
                       <CollateralsTableCell vault={row.vault} chain={chain} tokens={tokens} />
                     </TableCell>
                     <TableCell className="rounded-r-lg">
-                      <ApyTableCell
-                        nativeApy={row.vault.apy}
-                        fee={row.vault.fee}
-                        rewards={lendingRewards.get(row.vault.address) ?? []}
-                        mode="earn"
-                      />
+                      <ApyTableCell nativeApy={row.vault.apy} fee={row.vault.fee} rewards={rewards} mode="earn" />
                     </TableCell>
                   </TableRow>
                 </SheetTrigger>
