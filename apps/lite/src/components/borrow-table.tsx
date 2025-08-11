@@ -171,7 +171,7 @@ function VaultsTableCell({
                           </Avatar>
                         )}
                         {curator.name}
-                      </a>
+                      </SafeLink>
                     ))}
                 </div>
               </div>
