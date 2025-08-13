@@ -36,10 +36,10 @@ const httpConfig: HttpTransportConfig = {
   timeout: 30_000,
 };
 
-function createFallbackTransport(rpcs: { url: string; batch: HttpTransportConfig["batch"] }[]) {
+function createFallbackTransport(rpcs: ({ url: string } & HttpTransportConfig)[]) {
   return fallback(
     [
-      ...rpcs.map((rpc) => http(rpc.url, { ...httpConfig, batch: rpc.batch })),
+      ...rpcs.map((rpc) => http(rpc.url, { ...httpConfig, ...(({ url, ...rest }) => rest)(rpc) })),
       unstable_connector(injected, { key: "injected", name: "Injected", retryCount: 0 }),
     ],
     { retryCount: 6, retryDelay: 100 },
@@ -150,9 +150,14 @@ const transports: Record<(typeof chains)[number]["id"], Transport> = {
   [customChains.katana.id]: createFallbackTransport(
     customChains.katana.rpcUrls.default.http.map((url) => ({ url, batch: false })),
   ),
-  [customChains.tac.id]: createFallbackTransport(
-    customChains.tac.rpcUrls.default.http.map((url) => ({ url, batch: false })),
-  ),
+  [customChains.tac.id]: createFallbackTransport([
+    {
+      url: `https://v1-indexer.marble.live/rpc/${customChains.tac.id}`,
+      batch: false,
+      methods: { include: ["eth_getLogs"] },
+    },
+    ...customChains.tac.rpcUrls.default.http.map((url) => ({ url, batch: false })),
+  ]),
   // [customChains.basecamp.id]: createFallbackTransport(
   //   customChains.basecamp.rpcUrls.default.http.map((url) => ({ url, batch: false })),
   // ),

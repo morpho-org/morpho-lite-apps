@@ -170,6 +170,11 @@ const transports: { [K in (typeof chains)[number]["id"]]: Transport } & { [k: nu
     ...customChains.katana.rpcUrls.default.http.map((url) => ({ url, batch: false })),
   ]),
   [customChains.tac.id]: createFallbackTransport([
+    {
+      url: `https://v1-indexer.marble.live/rpc/${customChains.tac.id}`,
+      batch: false,
+      methods: { include: ["eth_getLogs"] },
+    },
     ...createPrivateAnkrHttp("tac"),
     { url: "https://rpc.tac.build/", batch: false },
     { url: "https://tac.therpc.io", batch: false },

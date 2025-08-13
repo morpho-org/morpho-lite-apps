@@ -43,8 +43,13 @@ function ema(x: number, update: number, alpha: number) {
 
 function supportsNumBlocks(transportId: string, numBlocks: bigint | "unconstrained") {
   if (transportId.includes("no-events")) return false;
-  if (transportId.includes("alchemy")) return true;
-  if (transportId.includes("tenderly.co")) return true;
+  if (
+    transportId.includes("alchemy") ||
+    transportId.includes("tenderly.co") ||
+    transportId.includes("marble.live/rpc")
+  ) {
+    return true;
+  }
   if (
     transportId.includes("drpc") ||
     transportId.includes("ankr") ||
