@@ -58,6 +58,12 @@ export const MANUALLY_WHITELISTED_CURATORS: FragmentOf<typeof CuratorFragment>[]
     name: "Solera",
     url: "https://solera.market",
   },
+  {
+    addresses: [{ address: "0xF8eCAefD0349a9f2138Bd5958e581A251278d54c", chainId: soneium.id }],
+    image: "https://x.com/BankUntitled/photo",
+    name: "Untitled Bank",
+    url: "https://untitledbank.co",
+  },
 ];
 
 export const ADDITIONAL_OFFCHAIN_CURATORS: Record<Address, DisplayableCurators> = {
