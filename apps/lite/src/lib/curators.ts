@@ -60,7 +60,7 @@ export const MANUALLY_WHITELISTED_CURATORS: FragmentOf<typeof CuratorFragment>[]
   },
   {
     addresses: [{ address: "0xF8eCAefD0349a9f2138Bd5958e581A251278d54c", chainId: soneium.id }],
-    image: "https://x.com/BankUntitled/photo",
+    image: "https://pbs.twimg.com/profile_images/1867495819018219525/4sM6lVef_400x400.jpg",
     name: "Untitled Bank",
     url: "https://untitledbank.co",
   },
