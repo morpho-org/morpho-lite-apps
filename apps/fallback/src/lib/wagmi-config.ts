@@ -108,7 +108,7 @@ const transports: Record<(typeof chains)[number]["id"], Transport> = {
     { url: "https://polygon.gateway.tenderly.co", batch: { batchSize: 10 } },
     { url: "https://polygon.drpc.org", batch: false },
   ]),
-  [plumeMainnet.id]: createFallbackTransport([{ url: "https://phoenix-rpc.plumenetwork.xyz", batch: false }]),
+  [plumeMainnet.id]: createFallbackTransport([{ url: "https://rpc.plume.org", batch: false }]),
   [unichain.id]: createFallbackTransport([
     { url: "https://mainnet.unichain.org", batch: false },
     { url: "https://unichain.drpc.org", batch: false },

@@ -166,7 +166,7 @@ const transports: { [K in (typeof chains)[number]["id"]]: Transport } & { [k: nu
   [hemi.id]: createFallbackTransport([{ url: "https://rpc.hemi.network/rpc", batch: false }]),
   [plumeMainnet.id]: createFallbackTransport([
     { url: `https://rpc-plume-mainnet-1.t.conduit.xyz/${import.meta.env.VITE_KATANA_KEY}`, batch: false },
-    { url: "https://phoenix-rpc.plumenetwork.xyz", batch: false },
+    { url: "https://rpc.plume.org", batch: false },
   ]),
   [customChains.katana.id]: createFallbackTransport([
     { url: `https://rpc-katana.t.conduit.xyz/${import.meta.env.VITE_KATANA_KEY}`, batch: false },
