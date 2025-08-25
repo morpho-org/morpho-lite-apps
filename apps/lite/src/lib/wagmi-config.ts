@@ -116,11 +116,16 @@ const transports: { [K in (typeof chains)[number]["id"]]: Transport } & { [k: nu
   ]),
   [ink.id]: createFallbackTransport([
     ...createPrivateAlchemyHttp("ink-mainnet"),
+    { url: "https://ink.gateway.tenderly.co", batch: { batchSize: 10 } },
     { url: "https://ink.drpc.org", batch: false },
   ]),
-  [lisk.id]: createFallbackTransport(lisk.rpcUrls.default.http.map((url) => ({ url, batch: false }))),
+  [lisk.id]: createFallbackTransport([
+    { url: "https://lisk.gateway.tenderly.co", batch: { batchSize: 10 } },
+    ...lisk.rpcUrls.default.http.map((url) => ({ url, batch: false })),
+  ]),
   [optimism.id]: createFallbackTransport([
     ...createPrivateAlchemyHttp("opt-mainnet"),
+    { url: "https://optimism.gateway.tenderly.co", batch: { batchSize: 10 } },
     { url: "https://op-pokt.nodies.app", batch: { batchSize: 10 } },
     { url: "https://optimism.drpc.org", batch: false },
     { url: "https://optimism.lava.build", batch: false },
@@ -133,43 +138,58 @@ const transports: { [K in (typeof chains)[number]["id"]]: Transport } & { [k: nu
   ]),
   [polygon.id]: createFallbackTransport([
     ...createPrivateAlchemyHttp("polygon-mainnet"),
+    { url: "https://polygon.gateway.tenderly.co", batch: { batchSize: 10 } },
     { url: "https://polygon.drpc.org", batch: false },
   ]),
   [unichain.id]: createFallbackTransport([
     ...createPrivateAlchemyHttp("unichain-mainnet"),
+    { url: "https://unichain.gateway.tenderly.co", batch: { batchSize: 10 } },
     { url: "https://unichain.drpc.org", batch: false },
   ]),
   [worldchain.id]: createFallbackTransport([
     ...createPrivateAlchemyHttp("worldchain-mainnet"),
+    { url: "https://worldchain-mainnet.gateway.tenderly.co", batch: { batchSize: 10 } },
     { url: "https://worldchain.drpc.org", batch: false },
   ]),
   [scrollMainnet.id]: createFallbackTransport([
     ...createPrivateAlchemyHttp("scroll-mainnet"),
+    { url: "https://scroll-mainnet.gateway.tenderly.co", batch: { batchSize: 10 } },
     { url: "https://scroll.drpc.org", batch: false },
   ]),
-  [fraxtal.id]: createFallbackTransport([{ url: "https://fraxtal.drpc.org", batch: false }]),
+  [fraxtal.id]: createFallbackTransport([
+    ...createPrivateAlchemyHttp("frax-mainnet"),
+    { url: "https://fraxtal.gateway.tenderly.co", batch: { batchSize: 10 } },
+    { url: "https://fraxtal.drpc.org", batch: false },
+  ]),
   [sonic.id]: createFallbackTransport([
     ...createPrivateAlchemyHttp("sonic-mainnet"),
+    { url: "https://sonic.gateway.tenderly.co", batch: { batchSize: 10 } },
     { url: "https://rpc.soniclabs.com", batch: false },
     { url: "https://rpc.ankr.com/sonic_mainnet", batch: false },
     { url: "https://sonic.drpc.org", batch: false },
   ]),
   [corn.id]: createFallbackTransport([
+    { url: "https://corn.gateway.tenderly.co", batch: { batchSize: 10 } },
     { url: "https://mainnet.corn-rpc.com", batch: false },
     { url: "https://maizenet-rpc.usecorn.com", batch: false },
   ]),
   [soneium.id]: createFallbackTransport([
     ...createPrivateAlchemyHttp("soneium-mainnet"),
+    { url: "https://soneium.gateway.tenderly.co", batch: { batchSize: 10 } },
     ...soneium.rpcUrls.default.http.map((url) => ({ url, batch: false })),
   ]),
-  [modeMainnet.id]: createFallbackTransport([{ url: "https://mode.drpc.org", batch: false }]),
+  [modeMainnet.id]: createFallbackTransport([
+    { url: "https://mode.gateway.tenderly.co", batch: false },
+    { url: "https://mainnet.mode.network", batch: false },
+    { url: "https://mode.drpc.org", batch: false },
+  ]),
   [hemi.id]: createFallbackTransport([{ url: "https://rpc.hemi.network/rpc", batch: false }]),
   [plumeMainnet.id]: createFallbackTransport([
-    { url: `https://rpc-plume-mainnet-1.t.conduit.xyz/${import.meta.env.VITE_KATANA_KEY}`, batch: false },
+    { url: `https://rpc-plume-mainnet-1.t.conduit.xyz/${import.meta.env.VITE_CONDUIT_API_KEY}`, batch: false },
     { url: "https://rpc.plume.org", batch: false },
   ]),
   [customChains.katana.id]: createFallbackTransport([
-    { url: `https://rpc-katana.t.conduit.xyz/${import.meta.env.VITE_KATANA_KEY}`, batch: false },
+    { url: `https://rpc-katana.t.conduit.xyz/${import.meta.env.VITE_CONDUIT_API_KEY}`, batch: false },
     ...customChains.katana.rpcUrls.default.http.map((url) => ({ url, batch: false })),
   ]),
   [customChains.tac.id]: createFallbackTransport([
