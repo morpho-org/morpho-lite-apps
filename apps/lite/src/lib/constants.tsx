@@ -1,7 +1,7 @@
 import { SafeLink } from "@morpho-org/uikit/components/safe-link";
 import { type Deployments } from "@morpho-org/uikit/lib/deployments";
 import { ReactNode } from "react";
-import { optimism, plumeMainnet, polygon, worldchain } from "wagmi/chains";
+import { optimism, plumeMainnet, polygon, worldchain, etherlink } from "wagmi/chains";
 
 export const APP_DETAILS = {
   // NOTE: Should always match the title in `index.html` (won't break anything, but should be correct)
@@ -50,6 +50,18 @@ export const BANNERS: Record<keyof Deployments, { color: string; text: ReactNode
           Compound Blue
         </SafeLink>{" "}
         interface.
+      </span>
+    ),
+  },
+  [etherlink.id]: {
+    color: "bg-[rgba(56,255,156,0.8)]", // "bg-[rgb(56,255,156)]",
+    text: (
+      <span className="grow py-2 text-center">
+        Access additional features and explore incentives via the interfaces offered by{" "}
+        <SafeLink className="underline" href="https://oku.trade/">
+          Oku
+        </SafeLink>
+        .
       </span>
     ),
   },

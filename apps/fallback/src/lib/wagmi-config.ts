@@ -13,6 +13,7 @@ import {
   arbitrum,
   base,
   corn,
+  etherlink,
   flame,
   fraxtal,
   hemi,
@@ -58,6 +59,7 @@ const chains = [
   // NOTE: Camp is disabled because RPC rate limits are too strict
   // customChains.basecamp,
   corn,
+  etherlink,
   flame,
   fraxtal,
   hemi,
@@ -99,6 +101,10 @@ const transports: Record<(typeof chains)[number]["id"], Transport> = {
     { url: "https://op-pokt.nodies.app", batch: { batchSize: 10 } },
     { url: "https://optimism.drpc.org", batch: false },
     { url: "https://optimism.lava.build", batch: false },
+  ]),
+  [etherlink.id]: createFallbackTransport([
+    { url: "https://rpc.ankr.com/etherlink_mainnet", batch: { batchSize: 10, wait: 20 } },
+    { url: "https://node.mainnet.etherlink.com", batch: { batchSize: 10, wait: 20 } },
   ]),
   [arbitrum.id]: createFallbackTransport([
     { url: "https://arbitrum.gateway.tenderly.co", batch: { batchSize: 10 } },
