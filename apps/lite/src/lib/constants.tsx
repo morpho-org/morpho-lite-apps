@@ -54,7 +54,7 @@ export const BANNERS: Record<keyof Deployments, { color: string; text: ReactNode
     ),
   },
   [etherlink.id]: {
-    color: "bg-[rgba(56,255,156,0.8)]", // "bg-[rgb(56,255,156)]",
+    color: "bg-[rgba(56,255,156,0.8)]",
     text: (
       <span className="grow py-2 text-center">
         Access additional features and explore incentives via the interfaces offered by{" "}
