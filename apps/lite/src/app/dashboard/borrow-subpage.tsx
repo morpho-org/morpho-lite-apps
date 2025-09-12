@@ -86,11 +86,8 @@ export function BorrowSubPage() {
   const marketIds = useMemo(
     () => [
       ...new Set(
-        vaultsData?.flatMap((d) =>
-          d.allocations
-            .filter((alloc) => alloc.config.enabled && alloc.position.supplyShares > 0n)
-            .map((alloc) => alloc.id),
-        ) ?? [],
+        vaultsData?.flatMap((d) => d.allocations.filter((alloc) => alloc.config.enabled).map((alloc) => alloc.id)) ??
+          [],
       ),
     ],
     [vaultsData],
