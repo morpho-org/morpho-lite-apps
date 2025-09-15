@@ -29,7 +29,7 @@ export type AnnotatedTransport = EIP1193Transport & {
 //       opting not to implement them for now.
 export type Strategy = AnnotatedTransport[];
 
-const BLOCK_BINS = [1n, 1_000n, 2_000n, 5_000n, 10_000n, "unconstrained" as const];
+const BLOCK_BINS = [1n, 500n, 1_000n, 2_000n, 5_000n, 10_000n, "unconstrained" as const];
 const ORDINARY_RETRIES = 4; // Num of `eth_getLogs` retries in bins that have succeeded before
 const EXPLORATORY_RETRIES = 1; // Num of `eth_getLogs` retries in untested bins
 const ORDINARY_RETRY_DELAY = 50; // Delay to pass to viem if retrying in bins that have have succeeded before (ms)
@@ -49,6 +49,9 @@ function supportsNumBlocks(transportId: string, numBlocks: bigint | "unconstrain
     transportId.includes("marble.live/rpc")
   ) {
     return true;
+  }
+  if (transportId.includes("etherlink")) {
+    return numBlocks !== "unconstrained" && numBlocks <= 500n;
   }
   if (
     transportId.includes("drpc") ||

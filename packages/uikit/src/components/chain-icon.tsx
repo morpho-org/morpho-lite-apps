@@ -4,6 +4,7 @@ import {
   arbitrum,
   base,
   corn,
+  etherlink,
   flame,
   fraxtal,
   hemi,
@@ -26,6 +27,7 @@ import BaseChainSvg from "@/assets/chains/base.svg?react";
 import CampSvg from "@/assets/chains/camp.svg?react";
 import CornSvg from "@/assets/chains/corn.svg?react";
 import EthereumChainSvg from "@/assets/chains/ethereum.svg?react";
+import EtherlinkSvg from "@/assets/chains/etherlink.svg?react";
 import FlameSvg from "@/assets/chains/flame.svg?react";
 import FraxtalSvg from "@/assets/chains/fraxtal.svg?react";
 import HemiSvg from "@/assets/chains/hemi.svg?react";
@@ -55,6 +57,8 @@ export function ChainIcon({ id }: { id: number | undefined }): JSX.Element {
       return <CampSvg />;
     case corn.id:
       return <CornSvg />;
+    case etherlink.id:
+      return <EtherlinkSvg />;
     case flame.id:
       return <FlameSvg />;
     case fraxtal.id:
