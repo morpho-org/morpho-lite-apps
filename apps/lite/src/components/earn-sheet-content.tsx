@@ -16,7 +16,7 @@ import { CircleArrowLeft } from "lucide-react";
 import { useState } from "react";
 import { Toaster } from "sonner";
 import { Address, erc20Abi, erc4626Abi, parseUnits } from "viem";
-import { useAccount, useReadContract, useReadContracts } from "wagmi";
+import { useAccount, useBytecode, useReadContract, useReadContracts } from "wagmi";
 
 import { RISKS_DOCUMENTATION, TRANSACTION_DATA_SUFFIX } from "@/lib/constants";
 
@@ -36,6 +36,13 @@ export function EarnSheetContent({ vaultAddress, asset }: { vaultAddress: Addres
 
   const [selectedTab, setSelectedTab] = useState(Actions.Deposit);
   const [textInputValue, setTextInputValue] = useState("");
+
+  // TODO: TEMPORARY
+  const { data: userBytecode } = useBytecode({
+    address: userAddress,
+    query: { enabled: !!userAddress },
+  });
+  const canInteract = userBytecode !== undefined && userBytecode === null;
 
   const { data: allowance, refetch: refetchAllowance } = useReadContract({
     address: asset.address,
@@ -152,7 +159,7 @@ export function EarnSheetContent({ vaultAddress, asset }: { vaultAddress: Addres
           {approvalTxnConfig ? (
             <TransactionButton
               variables={approvalTxnConfig}
-              disabled={inputValue === 0n}
+              disabled={inputValue === 0n || !canInteract}
               onTxnReceipt={() => refetchAllowance()}
             >
               Approve
@@ -160,7 +167,7 @@ export function EarnSheetContent({ vaultAddress, asset }: { vaultAddress: Addres
           ) : (
             <TransactionButton
               variables={depositTxnConfig}
-              disabled={!inputValue}
+              disabled={!inputValue || !canInteract}
               onTxnReceipt={() => {
                 setTextInputValue("");
                 void refetchMaxes();
