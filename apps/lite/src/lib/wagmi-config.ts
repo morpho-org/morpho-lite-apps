@@ -6,6 +6,7 @@ import {
   arbitrum,
   base,
   corn,
+  etherlink,
   fraxtal,
   hemi,
   ink,
@@ -85,6 +86,7 @@ const chains = [
   // lite support (alphabetical)
   // arbitrum,
   // corn,
+  etherlink,
   // fraxtal,
   // hemi,
   // ink,
@@ -113,6 +115,10 @@ const transports: { [K in (typeof chains)[number]["id"]]: Transport } & { [k: nu
     { url: "https://base.drpc.org", batch: false },
     { url: "https://mainnet.base.org", batch: { batchSize: 10 } },
     { url: "https://base.lava.build", batch: false },
+  ]),
+  [etherlink.id]: createFallbackTransport([
+    ...createPrivateAnkrHttp("etherlink_mainnet"),
+    ...etherlink.rpcUrls.default.http.map((url) => ({ url, batch: { batchSize: 10, wait: 20 } })),
   ]),
   [ink.id]: createFallbackTransport([
     ...createPrivateAlchemyHttp("ink-mainnet"),
