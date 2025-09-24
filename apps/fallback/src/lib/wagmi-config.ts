@@ -218,7 +218,7 @@ export function createConfig(args: {
         : [injected({ shimDisconnect: true })]),
     batch: {
       multicall: {
-        batchSize: 2048,
+        batchSize: 16383,
         wait: 100,
       },
     },
