@@ -59,15 +59,18 @@ export function BorrowSubPage() {
     query: { enabled: chainId !== undefined },
   });
 
-  // MARK: Fetch additional data for vaults owned by the top 1000 curators from core deployments
-  const topCurators = useTopNCurators({ n: "all", verifiedOnly: true, chainIds: [...CORE_DEPLOYMENTS] });
+  // MARK: Fetch additional data for whitelisted vaults
+  const curators = useTopNCurators({ n: "all", verifiedOnly: true, chainIds: [...CORE_DEPLOYMENTS] });
   const { data: vaultsData } = useReadContract({
     chainId,
     ...readAccrualVaults(
       morpho?.address ?? "0x",
       createMetaMorphoEvents.map((ev) => ev.args.metaMorpho),
-      // NOTE: This assumes that if a curator controls an address on one chain, they control it across all chains.
-      topCurators.flatMap((curator) => curator.addresses?.map((entry) => entry.address as Address) ?? []),
+      curators.flatMap(
+        (curator) =>
+          curator.addresses?.filter((entry) => entry.chainId === chainId).map((entry) => entry.address as Address) ??
+          [],
+      ),
       // TODO: For now, we use bytecode deployless reads on TAC, since the RPC doesn't support `stateOverride`.
       //       This means we're forfeiting multicall in this special case, but at least it works. Once we have
       //       a TAC RPC that supports `stateOverride`, remove the special case.
@@ -125,13 +128,13 @@ export function BorrowSubPage() {
           name: vaultData.vault.name,
           address: vaultData.vault.vault,
           totalAssets: vaultData.vault.totalAssets,
-          curators: getDisplayableCurators({ ...vaultData.vault, address: vaultData.vault.vault }, topCurators),
+          curators: getDisplayableCurators({ ...vaultData.vault, address: vaultData.vault.vault }, curators),
         });
       });
     });
 
     return map;
-  }, [vaultsData, topCurators]);
+  }, [vaultsData, curators]);
 
   const { data: erc20Symbols } = useReadContracts({
     contracts: marketsArr
