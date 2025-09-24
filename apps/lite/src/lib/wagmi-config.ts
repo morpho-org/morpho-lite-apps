@@ -3,6 +3,7 @@ import { getDefaultConfig as createConnectKitConfigParams } from "connectkit";
 import type { Chain, HttpTransportConfig } from "viem";
 import { CreateConnectorFn, createConfig as createWagmiConfig, fallback, http, type Transport } from "wagmi";
 import {
+  abstract,
   arbitrum,
   base,
   corn,
@@ -82,8 +83,9 @@ const chains = [
   polygon,
   unichain,
   customChains.katana,
+  arbitrum,
   // lite support (alphabetical)
-  // arbitrum,
+  // abstract,
   // corn,
   // fraxtal,
   // hemi,
@@ -187,6 +189,10 @@ const transports: { [K in (typeof chains)[number]["id"]]: Transport } & { [k: nu
   [plumeMainnet.id]: createFallbackTransport([
     { url: `https://rpc-plume-mainnet-1.t.conduit.xyz/${import.meta.env.VITE_CONDUIT_API_KEY}`, batch: false },
     { url: "https://rpc.plume.org", batch: false },
+  ]),
+  [abstract.id]: createFallbackTransport([
+    ...createPrivateAlchemyHttp("abstract-mainnet"),
+    { url: "https://api.mainnet.abs.xyz", batch: false },
   ]),
   [customChains.katana.id]: createFallbackTransport([
     { url: `https://rpc-katana.t.conduit.xyz/${import.meta.env.VITE_CONDUIT_API_KEY}`, batch: false },

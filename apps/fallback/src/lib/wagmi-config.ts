@@ -10,9 +10,13 @@ import {
   type Transport,
 } from "wagmi";
 import {
+  abstract,
   arbitrum,
   base,
+  bsc,
+  celo,
   corn,
+  etherlink,
   flame,
   fraxtal,
   hemi,
@@ -28,6 +32,7 @@ import {
   sonic,
   unichain,
   worldchain,
+  zircuit,
 } from "wagmi/chains";
 import { walletConnect } from "wagmi/connectors";
 
@@ -53,11 +58,13 @@ const chains = [
   polygon,
   unichain,
   customChains.katana,
-  // lite support (alphabetical)
   arbitrum,
-  // NOTE: Camp is disabled because RPC rate limits are too strict
-  // customChains.basecamp,
+  // lite support (alphabetical)
+  abstract,
+  bsc,
+  celo,
   corn,
+  etherlink,
   flame,
   fraxtal,
   hemi,
@@ -72,6 +79,10 @@ const chains = [
   sonic,
   customChains.tac,
   worldchain,
+  zircuit,
+  // NOTE: Disabled because RPC rate limits are too strict
+  // customChains.basecamp,
+  // bitlayer,
 ] as const;
 
 const transports: Record<(typeof chains)[number]["id"], Transport> = {
@@ -108,6 +119,19 @@ const transports: Record<(typeof chains)[number]["id"], Transport> = {
   [polygon.id]: createFallbackTransport([
     { url: "https://polygon.gateway.tenderly.co", batch: { batchSize: 10 } },
     { url: "https://polygon.drpc.org", batch: false },
+  ]),
+  [abstract.id]: createFallbackTransport([{ url: "https://api.mainnet.abs.xyz", batch: false }]),
+  [bsc.id]: createFallbackTransport([
+    { url: "https://bnb.rpc.subquery.network/public", batch: false },
+    { url: "https://bsc.rpc.blxrbdn.com", batch: false },
+    { url: "https://bsc-dataseed.bnbchain.org", batch: false },
+    { url: "https://bsc.drpc.org", batch: false },
+  ]),
+  [celo.id]: createFallbackTransport([{ url: "https://celo.drpc.org", batch: false }]),
+  [etherlink.id]: createFallbackTransport([{ url: "https://node.mainnet.etherlink.com", batch: false }]),
+  [zircuit.id]: createFallbackTransport([
+    { url: "https://zircuit-mainnet.drpc.org", batch: false },
+    { url: "https://mainnet.zircuit.com", batch: false },
   ]),
   [plumeMainnet.id]: createFallbackTransport([{ url: "https://rpc.plume.org", batch: false }]),
   [unichain.id]: createFallbackTransport([
@@ -173,6 +197,10 @@ const transports: Record<(typeof chains)[number]["id"], Transport> = {
   // [customChains.basecamp.id]: createFallbackTransport(
   //   customChains.basecamp.rpcUrls.default.http.map((url) => ({ url, batch: false })),
   // ),
+  // [bitlayer.id]: createFallbackTransport([
+  //   { url: "https://rpc.bitlayer.org", batch: false },
+  //   { url: "https://rpc-bitlayer.rockx.com", batch: false },
+  // ]),
 };
 
 export function createConfig(args: {
