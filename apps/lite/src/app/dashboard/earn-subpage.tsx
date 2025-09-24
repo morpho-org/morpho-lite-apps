@@ -87,6 +87,11 @@ export function EarnSubPage() {
 
   // Logging of whitelisting status to help curators diagnose their situation.
   useEffect(() => {
+    const urlSearchParams = new URLSearchParams(window.location.search);
+    if (!urlSearchParams.has("dev")) {
+      return;
+    }
+
     for (const ev of createMetaMorphoEvents) {
       if (vaultsData?.some((vd) => vd.vault.vault === ev.args.metaMorpho)) continue;
       console.log(`Skipping vault '${ev.args.name}' (${ev.args.metaMorpho}):
@@ -114,11 +119,14 @@ export function EarnSubPage() {
       });
 
       if (vault.name === "" || vaultData.allocations.some((allocation) => markets[allocation.id] === undefined)) {
-        // Detailed logging of filtering reason to help curators diagnose their situation.
-        console.log(`Skipping vault '${vault.name}':
+        const urlSearchParams = new URLSearchParams(window.location.search);
+        if (urlSearchParams.has("dev")) {
+          // Detailed logging of filtering reason to help curators diagnose their situation.
+          console.log(`Skipping vault '${vault.name}':
 - ${vault.name === "" ? "❌" : "✅"} name is defined
 - ${vaultData.allocations.some((allocation) => markets[allocation.id] === undefined) ? "❌" : "✅"} fetched constituent markets
 `);
+        }
         return;
       }
 

@@ -6,7 +6,7 @@ interface ImportMetaEnv {
   readonly VITE_ALCHEMY_API_KEY: string;
   readonly VITE_ANKR_API_KEY: string;
   readonly VITE_APP_TITLE: string;
-  readonly VITE_KATANA_KEY: string;
+  readonly VITE_CONDUIT_API_KEY: string;
 }
 
 interface ImportMeta {

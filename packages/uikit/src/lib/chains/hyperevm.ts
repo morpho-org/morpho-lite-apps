@@ -11,7 +11,12 @@ export const hyperevm = defineChain({
   },
   rpcUrls: {
     default: {
-      http: ["https://rpc.hyperliquid.xyz/evm", "http://rpc.hypurrscan.io/", "https://rpc.purroofgroup.com"],
+      http: [
+        "https://hyperliquid.drpc.org",
+        "https://rpc.hyperliquid.xyz/evm",
+        "http://rpc.hypurrscan.io/",
+        "https://rpc.purroofgroup.com",
+      ],
     },
   },
   blockExplorers: {

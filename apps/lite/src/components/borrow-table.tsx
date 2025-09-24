@@ -1,5 +1,6 @@
 import { AccrualPosition, Market, type MarketId } from "@morpho-org/blue-sdk";
 import { AvatarStack } from "@morpho-org/uikit/components/avatar-stack";
+import { SafeLink } from "@morpho-org/uikit/components/safe-link";
 import { Avatar, AvatarFallback, AvatarImage } from "@morpho-org/uikit/components/shadcn/avatar";
 import { Sheet, SheetTrigger } from "@morpho-org/uikit/components/shadcn/sheet";
 import {
@@ -159,12 +160,10 @@ function VaultsTableCell({
                   {Object.values(vault.curators)
                     .filter((curator) => curator.shouldAlwaysShow)
                     .map((curator) => (
-                      <a
+                      <SafeLink
                         key={curator.name}
                         className="hover:bg-secondary flex gap-1 rounded-sm p-1"
                         href={curator.url ?? ""}
-                        rel="noopener noreferrer"
-                        target="_blank"
                       >
                         {curator.imageSrc && (
                           <Avatar className="size-4 rounded-full">
@@ -172,7 +171,7 @@ function VaultsTableCell({
                           </Avatar>
                         )}
                         {curator.name}
-                      </a>
+                      </SafeLink>
                     ))}
                 </div>
               </div>

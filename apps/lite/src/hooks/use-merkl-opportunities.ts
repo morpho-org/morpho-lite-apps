@@ -60,7 +60,7 @@ export function useMerklOpportunities({
       }
       // Otherwise log a warning and show rewards optimistically
       else if (blacklist.length > 0 || whitelist.length > 0) {
-        console.warn(
+        console.debug(
           `\`userAddress\` is required to determine eligibility for campaignId ${campaignId}. Proceeding optimistically.`,
         );
       }
