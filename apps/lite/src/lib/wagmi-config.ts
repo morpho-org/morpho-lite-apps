@@ -65,7 +65,7 @@ const chains = [
   customChains.katana,
   arbitrum,
   // lite support (alphabetical)
-  abstract,
+  // abstract,
   // corn,
   // fraxtal,
   // hemi,
