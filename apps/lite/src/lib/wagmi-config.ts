@@ -88,7 +88,7 @@ const chains = [
   // abstract,
   // corn,
   // fraxtal,
-  // hemi,
+  hemi,
   // ink,
   lisk,
   // modeMainnet,
