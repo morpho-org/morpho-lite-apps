@@ -1,6 +1,6 @@
 import * as customChains from "@morpho-org/uikit/lib/chains";
 import { Address, isAddressEqual } from "viem";
-import { lisk, optimism, plumeMainnet, soneium } from "wagmi/chains";
+import { hemi, lisk, optimism, plumeMainnet, soneium, worldchain } from "wagmi/chains";
 
 import { graphql, FragmentOf } from "@/graphql/graphql";
 
@@ -23,6 +23,7 @@ export const MANUALLY_WHITELISTED_CURATORS: FragmentOf<typeof CuratorFragment>[]
       { address: "0xd6316AE37dDE77204b9A94072544F1FF9f3d6d54", chainId: plumeMainnet.id },
       { address: "0x4681fbeD0877815D5869Cf16e8A6C6Ceee365c02", chainId: lisk.id },
       { address: "0x6D3AB84Fb7Fc04961a15663C980feC275b889402", chainId: soneium.id },
+      { address: "0xD8B0F4e54a8dac04E0A57392f5A630cEdb99C940", chainId: worldchain.id },
     ],
     image: "https://cdn.morpho.org/v2/assets/images/re7.png",
     name: "RE7 Labs",
@@ -34,12 +35,12 @@ export const MANUALLY_WHITELISTED_CURATORS: FragmentOf<typeof CuratorFragment>[]
     name: "MEV Capital",
     url: "https://mevcapital.com/",
   },
-  // {
-  //   addresses: [{ address: "0xB2b9a27a6160Bf9ffbD1a8d245f5de75541b1DDD", chainId: customChains.tac.id }],
-  //   image: "https://cdn.morpho.org/v2/assets/images/edge-capital-ultrayield.svg",
-  //   name: "Edge Capital UltraYield",
-  //   url: "https://edgecapital.xyz/",
-  // },
+  {
+    addresses: [{ address: "0x1280e86Cd7787FfA55d37759C0342F8CD3c7594a", chainId: customChains.tac.id }],
+    image: "https://cdn.morpho.org/v2/assets/images/edge-capital-ultrayield.svg",
+    name: "Edge Capital UltraYield",
+    url: "https://edgecapital.xyz/",
+  },
   {
     addresses: [{ address: "0x17C9ba3fDa7EC71CcfD75f978Ef31E21927aFF3d", chainId: optimism.id }],
     image: "https://cdn.morpho.org/v2/assets/images/moonwell.svg",
@@ -63,6 +64,30 @@ export const MANUALLY_WHITELISTED_CURATORS: FragmentOf<typeof CuratorFragment>[]
     image: "https://pbs.twimg.com/profile_images/1867495819018219525/4sM6lVef_400x400.jpg",
     name: "Untitled Bank",
     url: "https://untitledbank.co",
+  },
+  {
+    addresses: [
+      { address: "0x23E6aecB76675462Ad8f2B31eC7C492060c2fAEF", chainId: customChains.tac.id },
+      { address: "0xC868BFb240Ed207449Afe71D2ecC781D5E10C85C", chainId: customChains.tac.id },
+    ],
+    image: "https://cdn.morpho.org/v2/assets/images/9summits.png",
+    name: "9Summits",
+    url: "https://9summits.io/",
+  },
+  {
+    addresses: [{ address: "0x46057881E0B9d190920FB823F840B837f65745d5", chainId: customChains.tac.id }],
+    image: "https://cdn.morpho.org/v2/assets/images/singularv.svg",
+    name: "SingularV",
+    url: "https://www.singularv.xyz/",
+  },
+  {
+    addresses: [
+      { address: "0x30988479C2E6a03E7fB65138b94762D41a733458", chainId: hemi.id },
+      { address: "0x72882eb5D27C7088DFA6DDE941DD42e5d184F0ef", chainId: hemi.id },
+    ],
+    image: "https://cdn.morpho.org/v2/assets/images/clearstar.svg",
+    name: "Clearstar",
+    url: "https://www.clearstar.xyz/",
   },
 ];
 

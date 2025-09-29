@@ -96,7 +96,7 @@ export function useTopNCurators({
     staleTime,
     gcTime: Infinity,
     notifyOnChangeProps: ["data"],
-    enabled: n !== "all",
+    enabled: n !== "all" && chainIds.length > 0,
   });
 
   const { data: curators } = useQuery({
