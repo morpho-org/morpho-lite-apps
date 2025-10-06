@@ -17,6 +17,7 @@ import {
   plumeMainnet,
   polygon,
   scroll as scrollMainnet,
+  sei,
   soneium,
   sonic,
   unichain,
@@ -95,6 +96,7 @@ const chains = [
   optimism,
   plumeMainnet,
   // scrollMainnet,
+  sei,
   soneium,
   // sonic,
   customChains.tac,
@@ -157,6 +159,11 @@ const transports: { [K in (typeof chains)[number]["id"]]: Transport } & { [k: nu
     ...createPrivateAlchemyHttp("scroll-mainnet"),
     { url: "https://scroll-mainnet.gateway.tenderly.co", batch: { batchSize: 10 } },
     { url: "https://scroll.drpc.org", batch: false },
+  ]),
+  [sei.id]: createFallbackTransport([
+    ...createPrivateAlchemyHttp("sei-mainnet"),
+    { url: "https://sei.drpc.org", batch: false },
+    { url: "https://evm-rpc.sei-apis.com", batch: false },
   ]),
   [fraxtal.id]: createFallbackTransport([
     ...createPrivateAlchemyHttp("frax-mainnet"),
