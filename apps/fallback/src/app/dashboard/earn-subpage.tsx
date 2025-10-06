@@ -21,7 +21,7 @@ import { blo } from "blo";
 // @ts-expect-error: this package lacks types
 import humanizeDuration from "humanize-duration";
 import { useMemo } from "react";
-import { Address, erc20Abi, erc4626Abi } from "viem";
+import { Address, erc20Abi } from "viem";
 import { useAccount, useChainId, useReadContracts } from "wagmi";
 
 import { CtaCard } from "@/components/cta-card";
@@ -74,20 +74,24 @@ export function EarnSubPage() {
     query: { enabled: chainId !== undefined },
   });
 
-  // MARK: Fetch `ERC4626.Deposit` so that we know where user has deposited. Includes non-MetaMorpho ERC4626 deposits
-  const {
-    logs: { all: depositEvents },
-    isFetching: isFetchingDepositEvents,
-    fractionFetched: ffDepositEvents,
-  } = useContractEvents({
-    chainId,
-    abi: erc4626Abi,
-    fromBlock: factory?.fromBlock ?? factoryV1_1?.fromBlock,
-    reverseChronologicalOrder: true,
-    eventName: "Deposit", // ERC-4626
-    args: { receiver: userAddress },
-    strict: true,
+  // MARK: multicall user's `balanceOf` for every vault
+  const { data: userShares, isFetching: isFetchingUserShares } = useReadContracts({
+    contracts: createMetaMorphoEvents.map(
+      (ev) =>
+        ({
+          chainId,
+          abi: erc20Abi,
+          address: ev.args.metaMorpho,
+          functionName: "balanceOf",
+          args: [userAddress ?? "0x"],
+        }) as const,
+    ),
+    allowFailure: false,
     query: {
+      staleTime: Infinity,
+      gcTime: Infinity,
+      refetchOnMount: "always",
+      placeholderData: keepPreviousData,
       enabled:
         chainId !== undefined &&
         userAddress !== undefined &&
@@ -96,14 +100,14 @@ export function EarnSubPage() {
     },
   });
 
-  // MARK: Figure out what vaults the user is actually in, and the set of assets involved
-  const [filteredCreateMetaMorphoArgs, assets] = useMemo(() => {
+  // MARK: Organize data fetched thus far
+  const [vaultsPreamble, assets] = useMemo(() => {
     const args = createMetaMorphoEvents
-      .filter((ev) => depositEvents.some((deposit) => deposit.address === ev.args.metaMorpho.toLowerCase()))
-      .map((ev) => ev.args);
+      .map((ev, idx) => ({ ...ev.args, userShares: userShares?.[idx] ?? 0n }))
+      .filter((ev) => ev.userShares > 0n);
     const unique = Array.from(new Set(args.map((x) => x.asset)));
     return [args, unique];
-  }, [createMetaMorphoEvents, depositEvents]);
+  }, [createMetaMorphoEvents, userShares]);
 
   // MARK: Fetch metadata for every ERC20 asset
   const { data: assetsInfo, isFetching: isFetchingAssetsInfo } = useReadContracts({
@@ -119,7 +123,7 @@ export function EarnSubPage() {
 
   // MARK: Fetch metadata for every MetaMorpho vault
   const { data: vaultsInfo, isFetching: isFetchingVaultsInfo } = useReadContracts({
-    contracts: filteredCreateMetaMorphoArgs
+    contracts: vaultsPreamble
       .map((args) => [
         { chainId, address: args.metaMorpho, abi: metaMorphoAbi, functionName: "owner" } as const,
         { chainId, address: args.metaMorpho, abi: metaMorphoAbi, functionName: "curator" } as const,
@@ -128,13 +132,6 @@ export function EarnSubPage() {
         { chainId, address: args.metaMorpho, abi: metaMorphoAbi, functionName: "name" } as const,
         { chainId, address: args.metaMorpho, abi: metaMorphoAbi, functionName: "totalAssets" } as const,
         { chainId, address: args.metaMorpho, abi: metaMorphoAbi, functionName: "totalSupply" } as const,
-        {
-          chainId,
-          address: args.metaMorpho,
-          abi: metaMorphoAbi,
-          functionName: "balanceOf",
-          args: [userAddress ?? "0x"],
-        } as const,
       ])
       .flat(),
     allowFailure: false,
@@ -142,14 +139,14 @@ export function EarnSubPage() {
   });
 
   const vaults = useMemo(() => {
-    const arr = filteredCreateMetaMorphoArgs.map((args, idx) => {
-      const assetIdx = assets.indexOf(args.asset);
+    const arr = vaultsPreamble.map((preamble, idx) => {
+      const assetIdx = assets.indexOf(preamble.asset);
       const symbol = assetIdx > -1 ? (assetsInfo?.[assetIdx * 2 + 0].result as string) : undefined;
       const decimals = assetIdx > -1 ? (assetsInfo?.[assetIdx * 2 + 1].result as number) : undefined;
-      const chunkIdx = idx * 8;
+      const chunkIdx = idx * 7;
       return {
-        address: args.metaMorpho,
-        imageSrc: blo(args.metaMorpho),
+        address: preamble.metaMorpho,
+        imageSrc: blo(preamble.metaMorpho),
         info: vaultsInfo
           ? {
               owner: vaultsInfo[chunkIdx + 0] as Address,
@@ -159,11 +156,11 @@ export function EarnSubPage() {
               name: vaultsInfo[chunkIdx + 4] as string,
               totalAssets: vaultsInfo[chunkIdx + 5] as bigint,
               totalSupply: vaultsInfo[chunkIdx + 6] as bigint,
-              userShares: vaultsInfo[chunkIdx + 7] as bigint,
+              userShares: preamble.userShares,
             }
           : undefined,
         asset: {
-          address: args.asset,
+          address: preamble.asset,
           imageSrc: getTokenSymbolURI(symbol),
           symbol,
           decimals,
@@ -178,12 +175,12 @@ export function EarnSubPage() {
       return 0;
     });
     return arr;
-  }, [filteredCreateMetaMorphoArgs, assets, assetsInfo, vaultsInfo]);
+  }, [vaultsPreamble, assets, assetsInfo, vaultsInfo]);
 
   let totalProgress = isFetchingCreateMetaMorphoEvents
     ? ffCreateMetaMorphoEvents
-    : isFetchingDepositEvents
-      ? 1 + ffDepositEvents
+    : isFetchingUserShares
+      ? 1
       : isFetchingAssetsInfo
         ? 2
         : isFetchingVaultsInfo
@@ -205,16 +202,6 @@ export function EarnSubPage() {
           className="bg-secondary"
         />
         <div className="flex justify-between">
-          <span>Indexing your deposits</span>
-          {(ffDepositEvents * 100).toFixed(2)}%
-        </div>
-        <Progress
-          progressColor="bg-secondary-foreground"
-          finalColor="bg-green-400"
-          value={ffDepositEvents * 100}
-          className="bg-secondary mb-auto"
-        />
-        <div className="bottom-0 flex justify-between">
           <i>Total Progress</i>
           {((totalProgress * 100) / 4).toFixed(2)}%
         </div>
@@ -246,7 +233,7 @@ export function EarnSubPage() {
           <RequestChart />
         </div>
       ) : (
-        <div className="flex h-96 w-full max-w-5xl flex-col gap-4 px-8 pb-14 pt-24 md:m-auto md:px-0 md:pt-32 dark:bg-neutral-900">
+        <div className="flex w-full max-w-5xl flex-col gap-4 px-8 pb-14 pt-24 md:m-auto md:px-0 md:pt-32 dark:bg-neutral-900">
           {progressCard}
         </div>
       )}
