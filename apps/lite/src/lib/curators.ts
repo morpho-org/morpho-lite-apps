@@ -1,6 +1,6 @@
 import * as customChains from "@morpho-org/uikit/lib/chains";
 import { Address, isAddressEqual } from "viem";
-import { hemi, lisk, optimism, plumeMainnet, soneium, worldchain } from "wagmi/chains";
+import { hemi, lisk, optimism, plumeMainnet, sei, soneium, worldchain } from "wagmi/chains";
 
 import { graphql, FragmentOf } from "@/graphql/graphql";
 
@@ -88,6 +88,12 @@ export const MANUALLY_WHITELISTED_CURATORS: FragmentOf<typeof CuratorFragment>[]
     image: "https://cdn.morpho.org/v2/assets/images/clearstar.svg",
     name: "Clearstar",
     url: "https://www.clearstar.xyz/",
+  },
+  {
+    addresses: [{ address: "0xf7F66970Cf68Cad32D321A37F6FF55Ad27d0b83D", chainId: sei.id }],
+    image: "/feather.svg",
+    name: "Feather",
+    url: "https://feather.zone",
   },
 ];
 

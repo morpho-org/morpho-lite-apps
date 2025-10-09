@@ -19,6 +19,7 @@ import {
   plumeMainnet,
   polygon,
   scroll as scrollMainnet,
+  sei,
   soneium,
   sonic,
   unichain,
@@ -139,6 +140,10 @@ export const DEPLOYMENTS: Deployments = {
   [bitlayer.id]: {
     Morpho: { address: "0xAeA7eFF1bD3c875c18ef50F0387892dF181431C6", fromBlock: 13516997n },
     MetaMorphoV1_1Factory: { address: "0xb95De4a9C81Ba6240378F383f88592d30937d048", fromBlock: 13638155n },
+  },
+  [sei.id]: {
+    Morpho: { address: "0xc9cDAc20FCeAAF616f7EB0bb6Cd2c69dcfa9094c", fromBlock: 166036723n },
+    MetaMorphoV1_1Factory: { address: "0x8Dea49ec5bd5AeAc8bcf96B3E187F59354118291", fromBlock: 168896078n },
   },
   [customChains.basecamp.id]: {
     Morpho: { address: "0xc7CAd9B1377Eb8103397Cb07Cb5c4f03eb2eBEa8", fromBlock: 4804080n },

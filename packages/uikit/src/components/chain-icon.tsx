@@ -20,6 +20,7 @@ import {
   plumeMainnet,
   polygon,
   scroll as scrollMainnet,
+  sei,
   soneium,
   sonic,
   unichain,
@@ -49,6 +50,7 @@ import OptimismSvg from "@/assets/chains/op.svg?react";
 import PlumeSvg from "@/assets/chains/plume.svg?react";
 import PolygonSvg from "@/assets/chains/polygon.svg?react";
 import ScrollSvg from "@/assets/chains/scroll.svg?react";
+import SeiSvg from "@/assets/chains/sei.svg?react";
 import SoneiumSvg from "@/assets/chains/soneium.svg?react";
 import SonicSvg from "@/assets/chains/sonic.svg?react";
 import TacSvg from "@/assets/chains/tac.svg?react";
@@ -103,6 +105,8 @@ export function ChainIcon({ id }: { id: number | undefined }): JSX.Element {
       return <PolygonSvg />;
     case scrollMainnet.id:
       return <ScrollSvg />;
+    case sei.id:
+      return <SeiSvg />;
     case soneium.id:
       return <SoneiumSvg />;
     case sonic.id:

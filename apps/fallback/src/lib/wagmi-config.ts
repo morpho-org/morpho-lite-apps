@@ -28,6 +28,7 @@ import {
   plumeMainnet,
   polygon,
   scroll as scrollMainnet,
+  sei,
   soneium,
   sonic,
   unichain,
@@ -75,6 +76,7 @@ const chains = [
   optimism,
   plumeMainnet,
   scrollMainnet,
+  sei,
   soneium,
   sonic,
   customChains.tac,
@@ -178,6 +180,10 @@ const transports: Record<(typeof chains)[number]["id"], Transport> = {
   [soneium.id]: createFallbackTransport([
     { url: "https://soneium.gateway.tenderly.co", batch: { batchSize: 10 } },
     ...soneium.rpcUrls.default.http.map((url) => ({ url, batch: false })),
+  ]),
+  [sei.id]: createFallbackTransport([
+    { url: "https://sei.drpc.org", batch: false },
+    { url: "https://evm-rpc.sei-apis.com", batch: false },
   ]),
   [customChains.hyperevm.id]: createFallbackTransport(
     customChains.hyperevm.rpcUrls.default.http.map((url) => ({ url, batch: false })),
