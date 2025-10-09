@@ -74,11 +74,9 @@ export function useMerklOpportunities({
         return;
       }
 
-      const reportedApr = opportunity.apr;
-      const computedApr = (100 * (opportunity.dailyRewards * 365)) / opportunity.tvl;
-      if (computedApr * 1.0001 < reportedApr) {
+      if ("hooks" in campaign || "computeScoreParameters" in campaign) {
         console.warn(
-          `Skipping opportunity ${opportunity.id} because reported APR doesn't apply to full deposit amount.`,
+          `Skipping opportunity ${opportunity.id} (campaign ${campaignId}) because it has hooks or computeScoreParameters.`,
           opportunity,
         );
         return;
