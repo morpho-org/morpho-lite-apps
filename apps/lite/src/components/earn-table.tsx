@@ -268,14 +268,16 @@ export function EarnTable({
 
             const rewardsVault = lendingRewards.get(row.vault.address) ?? [];
             const rewardsMarkets = [...row.vault.allocations.keys()].flatMap((marketId) =>
-              (lendingRewards.get(marketId) ?? []).map((opportunity) => {
-                const proportion = parseFloat(formatUnits(row.vault.getAllocationProportion(marketId), 18));
-                return {
-                  ...opportunity,
-                  apr: opportunity.apr * proportion,
-                  dailyRewards: opportunity.dailyRewards * proportion,
-                };
-              }),
+              (lendingRewards.get(marketId) ?? [])
+                .map((opportunity) => {
+                  const proportion = parseFloat(formatUnits(row.vault.getAllocationProportion(marketId), 18));
+                  return {
+                    ...opportunity,
+                    apr: opportunity.apr * proportion,
+                    dailyRewards: opportunity.dailyRewards * proportion,
+                  };
+                })
+                .filter((opportunity) => opportunity.apr > 0),
             );
             const rewards = rewardsVault.concat(rewardsMarkets);
 
