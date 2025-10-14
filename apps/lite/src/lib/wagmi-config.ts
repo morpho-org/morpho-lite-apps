@@ -41,7 +41,7 @@ function createFallbackTransport(rpcs: ({ url: string } & HttpTransportConfig)[]
   );
 }
 
-function createPrivateAlchemyHttp(slug: string): ({ url: string } & HttpTransportConfig)[] {
+function createPrivateAlchemyHttp(slug: string, hasArchive = true): ({ url: string } & HttpTransportConfig)[] {
   const alchemyApiKey = import.meta.env.VITE_ALCHEMY_API_KEY;
   const url = `https://${slug}.g.alchemy.com/v2/${alchemyApiKey}`;
   return [
@@ -49,12 +49,15 @@ function createPrivateAlchemyHttp(slug: string): ({ url: string } & HttpTranspor
       url,
       batch: { batchSize: 10, wait: 20 },
       methods: { exclude: ["eth_getLogs"] },
-      key: "alchemy-no-events", // NOTE: Ensures `useContractEvents` won't try to use this
+      key: "alchemy-maxNum-0", // NOTE: Ensures `useContractEvents` won't try to use this
     },
+    // NOTE: If Alchemy has archive nodes, disable batching and make block range unconstrained.
+    // Otherwise, enable batching and set max block range = 2000.
     {
       url,
-      batch: false,
+      batch: hasArchive ? false : { batchSize: 20, wait: 50 },
       methods: { include: ["eth_getLogs"] },
+      ...(hasArchive ? {} : { key: "alchemy-maxNum-2000" }),
     },
   ];
 }
@@ -161,9 +164,15 @@ const transports: { [K in (typeof chains)[number]["id"]]: Transport } & { [k: nu
     { url: "https://scroll.drpc.org", batch: false },
   ]),
   [sei.id]: createFallbackTransport([
-    ...createPrivateAlchemyHttp("sei-mainnet"),
-    { url: "https://sei.drpc.org", batch: false },
-    { url: "https://evm-rpc.sei-apis.com", batch: false },
+    {
+      url: `https://v1-indexer.marble.live/rpc/${sei.id}`,
+      batch: false,
+      methods: { include: ["eth_getLogs"] },
+    },
+    ...createPrivateAlchemyHttp("sei-mainnet", false),
+    { url: "https://sei-public.nodies.app", batch: false, key: "sei-nodies-maxNum-2000" },
+    { url: "https://sei.therpc.io", batch: false, key: "sei-therpc-maxNum-2000" },
+    { url: "https://sei.drpc.org", batch: false, key: "sei-drpc-maxNum-2000" },
   ]),
   [fraxtal.id]: createFallbackTransport([
     ...createPrivateAlchemyHttp("frax-mainnet"),
