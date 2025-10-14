@@ -38,9 +38,11 @@ export function useMerklOpportunities({
         startTimestamp,
         endTimestamp,
         rewardToken,
+        apr,
+        dailyRewards,
         params: { blacklist, whitelist, ...params },
         Opportunity: opportunity,
-      } = campaign;
+      } = campaign as typeof campaign & { apr: number; dailyRewards: number };
 
       const campaignType = campaign.type as Merkl.CampaignType;
       const campaignSubType = (campaign.subType ?? 0) as Merkl.CampaignSubType;
@@ -69,18 +71,8 @@ export function useMerklOpportunities({
         rewardsMap.set(paramKeyValue, []);
       }
 
-      if (rewardsMap.get(paramKeyValue)!.some((item) => item.opportunityId === opportunity.id)) {
-        // Multiple campaigns can reference the same `opportunity.id`
-        return;
-      }
-
-      const reportedApr = opportunity.apr;
-      const computedApr = (100 * (opportunity.dailyRewards * 365)) / opportunity.tvl;
-      if (computedApr * 1.0001 < reportedApr) {
-        console.warn(
-          `Skipping opportunity ${opportunity.id} because reported APR doesn't apply to full deposit amount.`,
-          opportunity,
-        );
+      if ("hooks" in campaign || "computeScoreParameters" in campaign) {
+        console.warn(`Skipping campaign ${campaignId} because it has hooks or computeScoreParameters.`, campaign);
         return;
       }
 
@@ -99,8 +91,8 @@ export function useMerklOpportunities({
           decimals: rewardToken.decimals,
           imageSrc: rewardToken.icon,
         },
-        apr: opportunity.apr,
-        dailyRewards: opportunity.dailyRewards,
+        apr,
+        dailyRewards,
       });
     });
 

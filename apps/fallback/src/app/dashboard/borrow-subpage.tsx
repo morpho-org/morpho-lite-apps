@@ -235,7 +235,7 @@ export function BorrowSubPage() {
           <RequestChart />
         </div>
       ) : (
-        <div className="flex h-96 w-full max-w-5xl flex-col gap-4 px-8 pb-14 pt-24 md:m-auto md:px-0 md:pt-32 dark:bg-neutral-900">
+        <div className="flex w-full max-w-5xl flex-col gap-4 px-8 pb-14 pt-24 md:m-auto md:px-0 md:pt-32 dark:bg-neutral-900">
           {progressCard}
         </div>
       )}
