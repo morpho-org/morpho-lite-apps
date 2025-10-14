@@ -91,9 +91,7 @@ async function queryFn({ queryKey }: { queryKey: QueryKey }) {
 
   const campaigns = results.map((result) => result.data!).flat(1);
 
-  return withOpportunity
-    ? campaigns.filter((campaign) => campaign.Opportunity?.status === "LIVE" && campaign.parentCampaignId === undefined)
-    : campaigns;
+  return withOpportunity ? campaigns.filter((campaign) => campaign.Opportunity?.status === "LIVE") : campaigns;
 }
 
 export function useMerklCampaigns({
