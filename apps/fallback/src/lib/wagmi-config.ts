@@ -182,8 +182,14 @@ const transports: Record<(typeof chains)[number]["id"], Transport> = {
     ...soneium.rpcUrls.default.http.map((url) => ({ url, batch: false })),
   ]),
   [sei.id]: createFallbackTransport([
-    { url: "https://sei.drpc.org", batch: false },
-    { url: "https://evm-rpc.sei-apis.com", batch: false },
+    {
+      url: `https://v1-indexer.marble.live/rpc/${sei.id}`,
+      batch: false,
+      methods: { include: ["eth_getLogs"] },
+    },
+    { url: "https://sei-public.nodies.app", batch: false, key: "sei-nodies-maxNum-2000" },
+    { url: "https://sei.therpc.io", batch: false, key: "sei-therpc-maxNum-2000" },
+    { url: "https://sei.drpc.org", batch: false, key: "sei-drpc-maxNum-2000" },
   ]),
   [customChains.hyperevm.id]: createFallbackTransport(
     customChains.hyperevm.rpcUrls.default.http.map((url) => ({ url, batch: false })),
