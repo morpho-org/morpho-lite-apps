@@ -42,7 +42,10 @@ function ema(x: number, update: number, alpha: number) {
 }
 
 function supportsNumBlocks(transportId: string, numBlocks: bigint | "unconstrained") {
-  if (transportId.includes("no-events")) return false;
+  if (transportId.includes("maxNum")) {
+    const maxNum = transportId.match(/maxNum-(\d+)/)?.[1] ?? "0";
+    return numBlocks !== "unconstrained" && numBlocks <= BigInt(maxNum);
+  }
   if (
     transportId.includes("alchemy") ||
     transportId.includes("tenderly.co") ||

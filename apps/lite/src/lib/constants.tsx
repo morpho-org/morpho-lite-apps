@@ -1,7 +1,7 @@
 import { SafeLink } from "@morpho-org/uikit/components/safe-link";
 import { type Deployments } from "@morpho-org/uikit/lib/deployments";
 import { ReactNode } from "react";
-import { optimism, plumeMainnet, polygon, worldchain } from "wagmi/chains";
+import { hemi, optimism, plumeMainnet, polygon, sei, worldchain } from "wagmi/chains";
 
 export const APP_DETAILS = {
   // NOTE: Should always match the title in `index.html` (won't break anything, but should be correct)
@@ -25,6 +25,18 @@ export const ADDRESSES_DOCUMENTATION = "https://docs.morpho.org/getting-started/
 export const SHARED_LIQUIDITY_DOCUMENTATION = "https://docs.morpho.org/build/borrow/concepts/public-allocator";
 
 export const BANNERS: Record<keyof Deployments, { color: string; text: ReactNode }> = {
+  [hemi.id]: {
+    color: "bg-[rgb(238,117,53)]",
+    text: (
+      <span className="grow py-2 text-center text-black">
+        Access additional features and explore incentives via the interface offered by{" "}
+        <SafeLink className="underline" href="https://morpho.solera.market/earn?chains=Hemi">
+          Solera
+        </SafeLink>
+        .
+      </span>
+    ),
+  },
   [plumeMainnet.id]: {
     color: "bg-[rgb(255,61,0)]",
     text: (
@@ -34,7 +46,7 @@ export const BANNERS: Record<keyof Deployments, { color: string; text: ReactNode
           Mystic
         </SafeLink>
         {" and "}
-        <SafeLink className="underline" href="https://morpho.solera.market/">
+        <SafeLink className="underline" href="https://morpho.solera.market/earn?chains=Plume">
           Solera
         </SafeLink>
         .
@@ -48,6 +60,18 @@ export const BANNERS: Record<keyof Deployments, { color: string; text: ReactNode
         Claim rewards and access enhanced features on the external{" "}
         <SafeLink className="underline" href="https://compound.blue">
           Compound Blue
+        </SafeLink>{" "}
+        interface.
+      </span>
+    ),
+  },
+  [sei.id]: {
+    color: "bg-[rgb(145,44,34)]",
+    text: (
+      <span className="grow py-2 text-center">
+        Claim rewards and access enhanced features on the external{" "}
+        <SafeLink className="underline" href="https://feather.zone">
+          Feather
         </SafeLink>{" "}
         interface.
       </span>

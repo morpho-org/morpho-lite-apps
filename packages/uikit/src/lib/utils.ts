@@ -104,6 +104,8 @@ export function getTokenSymbolURI(symbol: string | undefined): Token["imageSrc"]
     return "https://s2.coinmarketcap.com/static/img/coins/64x64/7236.png";
   } else if (symbol === "cEUR") {
     return "https://s2.coinmarketcap.com/static/img/coins/64x64/9467.png";
+  } else if (symbol === "tsTON") {
+    return "https://s2.coinmarketcap.com/static/img/coins/64x64/38450.png";
   }
   return `https://cdn.morpho.org/assets/logos/${encodeURIComponent((symbol ?? "").toLowerCase())}.svg`;
 }
