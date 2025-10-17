@@ -52,6 +52,15 @@ function createFallbackTransport(rpcs: ({ url: string } & HttpTransportConfig)[]
   );
 }
 
+function createPonderHttp(chainId: number) {
+  return [
+    {
+      url: `https://v1-indexer.marble.live/rpc/${chainId}`,
+      batch: false,
+      methods: { include: ["eth_getLogs"] },
+    },
+  ];
+}
 const chains = [
   // full support
   mainnet,
@@ -60,7 +69,8 @@ const chains = [
   unichain,
   customChains.katana,
   arbitrum,
-  // lite support (alphabetical)
+  customChains.hyperevm,
+  // fallback support (alphabetical)
   abstract,
   bsc,
   celo,
@@ -69,7 +79,6 @@ const chains = [
   flame,
   fraxtal,
   hemi,
-  customChains.hyperevm,
   ink,
   lisk,
   modeMainnet,
@@ -88,7 +97,9 @@ const chains = [
 ] as const;
 
 const transports: Record<(typeof chains)[number]["id"], Transport> = {
+  // full support
   [mainnet.id]: createFallbackTransport([
+    ...createPonderHttp(mainnet.id),
     { url: "https://rpc.mevblocker.io", batch: { batchSize: 10 } },
     { url: "https://rpc.ankr.com/eth", batch: { batchSize: 10 } },
     { url: "https://eth-pokt.nodies.app", batch: false },
@@ -96,11 +107,39 @@ const transports: Record<(typeof chains)[number]["id"], Transport> = {
     { url: "https://eth.merkle.io", batch: false },
   ]),
   [base.id]: createFallbackTransport([
+    ...createPonderHttp(base.id),
     { url: "https://base.gateway.tenderly.co", batch: { batchSize: 10 } },
     { url: "https://base.drpc.org", batch: false },
     { url: "https://mainnet.base.org", batch: { batchSize: 10 } },
     { url: "https://base.lava.build", batch: false },
   ]),
+  [polygon.id]: createFallbackTransport([
+    ...createPonderHttp(polygon.id),
+    { url: "https://polygon.gateway.tenderly.co", batch: { batchSize: 10 } },
+    { url: "https://polygon.drpc.org", batch: false },
+  ]),
+  [unichain.id]: createFallbackTransport([
+    ...createPonderHttp(unichain.id),
+    { url: "https://unichain.gateway.tenderly.co", batch: { batchSize: 10 } },
+    { url: "https://mainnet.unichain.org", batch: false },
+    { url: "https://unichain.drpc.org", batch: false },
+  ]),
+  [customChains.katana.id]: createFallbackTransport([
+    ...createPonderHttp(customChains.katana.id),
+    { url: "https://katana.gateway.tenderly.co", batch: { batchSize: 10 } },
+    ...customChains.katana.rpcUrls.default.http.map((url) => ({ url, batch: false })),
+  ]),
+  [arbitrum.id]: createFallbackTransport([
+    ...createPonderHttp(arbitrum.id),
+    { url: "https://arbitrum.gateway.tenderly.co", batch: { batchSize: 10 } },
+    { url: "https://rpc.ankr.com/arbitrum", batch: { batchSize: 10 } },
+    { url: "https://arbitrum.drpc.org", batch: false },
+  ]),
+  [customChains.hyperevm.id]: createFallbackTransport([
+    ...createPonderHttp(customChains.hyperevm.id),
+    ...customChains.hyperevm.rpcUrls.default.http.map((url) => ({ url, batch: false })),
+  ]),
+  // fallback support
   [ink.id]: createFallbackTransport([
     { url: "https://ink.gateway.tenderly.co", batch: { batchSize: 10 } },
     { url: "https://rpc-gel.inkonchain.com", batch: false },
@@ -112,15 +151,6 @@ const transports: Record<(typeof chains)[number]["id"], Transport> = {
     { url: "https://op-pokt.nodies.app", batch: { batchSize: 10 } },
     { url: "https://optimism.drpc.org", batch: false },
     { url: "https://optimism.lava.build", batch: false },
-  ]),
-  [arbitrum.id]: createFallbackTransport([
-    { url: "https://arbitrum.gateway.tenderly.co", batch: { batchSize: 10 } },
-    { url: "https://rpc.ankr.com/arbitrum", batch: { batchSize: 10 } },
-    { url: "https://arbitrum.drpc.org", batch: false },
-  ]),
-  [polygon.id]: createFallbackTransport([
-    { url: "https://polygon.gateway.tenderly.co", batch: { batchSize: 10 } },
-    { url: "https://polygon.drpc.org", batch: false },
   ]),
   [abstract.id]: createFallbackTransport([{ url: "https://api.mainnet.abs.xyz", batch: false }]),
   [bsc.id]: createFallbackTransport([
@@ -136,11 +166,6 @@ const transports: Record<(typeof chains)[number]["id"], Transport> = {
     { url: "https://mainnet.zircuit.com", batch: false },
   ]),
   [plumeMainnet.id]: createFallbackTransport([{ url: "https://rpc.plume.org", batch: false }]),
-  [unichain.id]: createFallbackTransport([
-    { url: "https://unichain.gateway.tenderly.co", batch: { batchSize: 10 } },
-    { url: "https://mainnet.unichain.org", batch: false },
-    { url: "https://unichain.drpc.org", batch: false },
-  ]),
   [worldchain.id]: createFallbackTransport([
     { url: "https://worldchain-mainnet.gateway.tenderly.co", batch: { batchSize: 10 } },
     { url: "https://worldchain.drpc.org", batch: false },
@@ -182,28 +207,13 @@ const transports: Record<(typeof chains)[number]["id"], Transport> = {
     ...soneium.rpcUrls.default.http.map((url) => ({ url, batch: false })),
   ]),
   [sei.id]: createFallbackTransport([
-    {
-      url: `https://v1-indexer.marble.live/rpc/${sei.id}`,
-      batch: false,
-      methods: { include: ["eth_getLogs"] },
-    },
+    ...createPonderHttp(sei.id),
     { url: "https://sei-public.nodies.app", batch: false, key: "sei-nodies-maxNum-2000" },
     { url: "https://sei.therpc.io", batch: false, key: "sei-therpc-maxNum-2000" },
     { url: "https://sei.drpc.org", batch: false, key: "sei-drpc-maxNum-2000" },
   ]),
-  [customChains.hyperevm.id]: createFallbackTransport(
-    customChains.hyperevm.rpcUrls.default.http.map((url) => ({ url, batch: false })),
-  ),
-  [customChains.katana.id]: createFallbackTransport([
-    { url: "https://katana.gateway.tenderly.co", batch: { batchSize: 10 } },
-    ...customChains.katana.rpcUrls.default.http.map((url) => ({ url, batch: false })),
-  ]),
   [customChains.tac.id]: createFallbackTransport([
-    {
-      url: `https://v1-indexer.marble.live/rpc/${customChains.tac.id}`,
-      batch: false,
-      methods: { include: ["eth_getLogs"] },
-    },
+    ...createPonderHttp(customChains.tac.id),
     ...customChains.tac.rpcUrls.default.http.map((url) => ({ url, batch: false })),
   ]),
   // [customChains.basecamp.id]: createFallbackTransport(
