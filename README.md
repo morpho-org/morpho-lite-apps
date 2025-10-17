@@ -67,3 +67,17 @@ You're reading the monorepo summary. For more details on individual apps, check 
 
 - [README - Fallback App](apps/fallback/README.md)
 - [README - Lite App](apps/lite/README.md)
+
+## Deployments
+
+The Lite and Fallback apps are automatically released when merging `main` → `release`. Recommended flow:
+
+1. Wait for checks to pass on `main` (otherwise you won't be able to push your merge commit)
+2. Locally, do the following:
+   ```
+   git checkout release
+   git pull
+   git merge origin/main
+   git push
+   ```
+3. Check GitHub UI to verify that deployment actions are running on `release`
