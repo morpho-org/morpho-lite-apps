@@ -70,7 +70,7 @@ export const BANNERS: Record<keyof Deployments, { color: string; text: ReactNode
     text: (
       <span className="grow py-2 text-center">
         Claim rewards and access enhanced features on the external{" "}
-        <SafeLink className="underline" href="https://feather.zone">
+        <SafeLink className="underline" href="https://app.feather.zone/portfolio">
           Feather
         </SafeLink>{" "}
         interface.
