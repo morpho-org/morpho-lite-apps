@@ -279,7 +279,36 @@ export function EarnTable({
                 })
                 .filter((opportunity) => opportunity.apr > 0),
             );
-            const rewards = rewardsVault.concat(rewardsMarkets);
+
+            console.log(`[EarnTable] Vault ${row.vault.name} (${row.vault.address}):`, {
+              vaultRewardsCount: rewardsVault.length,
+              vaultRewards: rewardsVault.map((r) => ({
+                campaignId: r.campaignId,
+                apr: r.apr,
+                token: r.rewardToken.symbol,
+              })),
+              marketRewardsCount: rewardsMarkets.length,
+              marketRewards: rewardsMarkets.map((r) => ({
+                campaignId: r.campaignId,
+                apr: r.apr,
+                token: r.rewardToken.symbol,
+              })),
+            });
+
+            // When a vault has vault-level rewards, use those instead of market-level rewards
+            // because vault campaigns are configured specifically for the vault's allocation
+            const rewards = rewardsVault.length > 0 ? rewardsVault : rewardsMarkets;
+
+            console.log(`[EarnTable] Final rewards for ${row.vault.name}:`, {
+              count: rewards.length,
+              totalApr: rewards.reduce((sum, r) => sum + r.apr, 0),
+              source: rewardsMarkets.length > 0 ? "markets" : "vault",
+              rewards: rewards.map((r) => ({
+                campaignId: r.campaignId,
+                apr: r.apr,
+                token: r.rewardToken.symbol,
+              })),
+            });
 
             return (
               <Sheet
