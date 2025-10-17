@@ -279,7 +279,9 @@ export function EarnTable({
                 })
                 .filter((opportunity) => opportunity.apr > 0),
             );
-            const rewards = rewardsVault.concat(rewardsMarkets);
+            // When a vault has vault-level rewards, use those instead of market-level rewards
+            // because vault campaigns are configured specifically for the vault's allocation
+            const rewards = rewardsVault.length > 0 ? rewardsVault : rewardsMarkets;
 
             return (
               <Sheet
