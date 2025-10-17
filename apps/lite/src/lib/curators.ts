@@ -1,6 +1,6 @@
 import * as customChains from "@morpho-org/uikit/lib/chains";
 import { Address, isAddressEqual } from "viem";
-import { hemi, lisk, optimism, plumeMainnet, sei, soneium, worldchain } from "wagmi/chains";
+import { celo, hemi, lisk, optimism, plumeMainnet, sei, soneium, worldchain } from "wagmi/chains";
 
 import { graphql, FragmentOf } from "@/graphql/graphql";
 
@@ -30,7 +30,10 @@ export const MANUALLY_WHITELISTED_CURATORS: FragmentOf<typeof CuratorFragment>[]
     url: "https://www.re7labs.xyz/",
   },
   {
-    addresses: [{ address: "0x4F08D2A771aCe406C733EC3E722827E857A33Db5", chainId: plumeMainnet.id }],
+    addresses: [
+      { address: "0x4F08D2A771aCe406C733EC3E722827E857A33Db5", chainId: plumeMainnet.id },
+      { address: "0xB672Ea44A1EC692A9Baf851dC90a1Ee3DB25F1C4", chainId: celo.id },
+    ],
     image: "https://cdn.morpho.org/v2/assets/images/mevcapital.png",
     name: "MEV Capital",
     url: "https://mevcapital.com/",

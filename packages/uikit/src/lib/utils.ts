@@ -98,6 +98,12 @@ export function getTokenSymbolURI(symbol: string | undefined): Token["imageSrc"]
     return "https://assets.coingecko.com/coins/images/53705/standard/usdt0.jpg";
   } else if (symbol === "TON") {
     return "https://s2.coinmarketcap.com/static/img/coins/64x64/11419.png";
+  } else if (symbol === "CELO") {
+    return "https://s2.coinmarketcap.com/static/img/coins/64x64/5567.png";
+  } else if (symbol === "cUSD") {
+    return "https://s2.coinmarketcap.com/static/img/coins/64x64/7236.png";
+  } else if (symbol === "cEUR") {
+    return "https://s2.coinmarketcap.com/static/img/coins/64x64/9467.png";
   } else if (symbol === "tsTON") {
     return "https://s2.coinmarketcap.com/static/img/coins/64x64/38450.png";
   }

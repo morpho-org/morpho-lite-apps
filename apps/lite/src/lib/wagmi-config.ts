@@ -6,6 +6,7 @@ import {
   abstract,
   arbitrum,
   base,
+  celo,
   corn,
   fraxtal,
   hemi,
@@ -90,6 +91,7 @@ const chains = [
   arbitrum,
   // lite support (alphabetical)
   // abstract,
+  celo,
   // corn,
   // fraxtal,
   hemi,
@@ -209,6 +211,10 @@ const transports: { [K in (typeof chains)[number]["id"]]: Transport } & { [k: nu
   [abstract.id]: createFallbackTransport([
     ...createPrivateAlchemyHttp("abstract-mainnet"),
     { url: "https://api.mainnet.abs.xyz", batch: false },
+  ]),
+  [celo.id]: createFallbackTransport([
+    ...createPrivateAlchemyHttp("celo-mainnet"),
+    { url: "https://celo.drpc.org", batch: false },
   ]),
   [customChains.katana.id]: createFallbackTransport([
     { url: `https://rpc-katana.t.conduit.xyz/${import.meta.env.VITE_CONDUIT_API_KEY}`, batch: false },
