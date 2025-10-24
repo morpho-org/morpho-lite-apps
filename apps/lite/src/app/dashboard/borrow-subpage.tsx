@@ -9,8 +9,9 @@ import { CORE_DEPLOYMENTS, getContractDeploymentInfo } from "@morpho-org/uikit/l
 import { Token } from "@morpho-org/uikit/lib/utils";
 import { useMemo } from "react";
 import { useOutletContext } from "react-router";
-import { type Address, erc20Abi, type Chain, zeroAddress, type Hex } from "viem";
-import { useAccount, useReadContract, useReadContracts } from "wagmi";
+import { type Address, erc20Abi, type Chain, zeroAddress, type Hex, type BlockTag, type BlockNumber } from "viem";
+import { sei } from "viem/chains";
+import { useAccount, useBlockNumber, useReadContract, useReadContracts } from "wagmi";
 
 import { BorrowPositionTable, BorrowTable } from "@/components/borrow-table";
 import { CtaCard } from "@/components/cta-card";
@@ -42,6 +43,17 @@ export function BorrowSubPage() {
     [chainId],
   );
 
+  const { data: blockNumber } = useBlockNumber({ cacheTime: 60_000, chainId, watch: { pollingInterval: 60_000 } });
+  const fromBlock = factory?.fromBlock ?? factoryV1_1?.fromBlock;
+  let toBlock: BlockTag | BlockNumber | undefined = "finalized";
+  if (chainId === sei.id) {
+    // sei has terrible RPC support and super fast blocks (2Hz), so the Ponder indexer
+    // can't keep up either. We set `toBlock` ~12 hours in the past so that Ponder can
+    // (hopefully) serve cached data -- we basically want to avoid hitting *any* RPC
+    // for recent logs.
+    toBlock = blockNumber ? blockNumber - 86_400n : fromBlock;
+  }
+
   const borrowingRewards = useMerklOpportunities({ chainId, side: Merkl.CampaignSide.BORROW, userAddress });
 
   // MARK: Index `MetaMorphoFactory.CreateMetaMorpho` on all factory versions to get a list of all vault addresses
@@ -52,11 +64,12 @@ export function BorrowSubPage() {
     chainId,
     abi: metaMorphoFactoryAbi,
     address: factoryV1_1 ? [factoryV1_1.address].concat(factory ? [factory.address] : []) : [],
-    fromBlock: factory?.fromBlock ?? factoryV1_1?.fromBlock,
+    fromBlock,
+    toBlock,
     reverseChronologicalOrder: true,
     eventName: "CreateMetaMorpho",
     strict: true,
-    query: { enabled: chainId !== undefined },
+    query: { enabled: chainId !== undefined && fromBlock !== undefined && toBlock !== undefined },
   });
 
   // MARK: Fetch additional data for whitelisted vaults
