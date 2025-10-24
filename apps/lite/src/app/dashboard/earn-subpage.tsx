@@ -244,7 +244,7 @@ export function EarnSubPage() {
           symbol,
           decimals,
         } as Token,
-        curators: getDisplayableCurators(vault, curators),
+        curators: getDisplayableCurators(vault, curators, chainId),
         userShares: userShares[vault.address],
         imageSrc: getTokenURI({ symbol, address: vault.asset, chainId }),
       };

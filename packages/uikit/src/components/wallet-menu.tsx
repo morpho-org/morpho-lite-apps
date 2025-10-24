@@ -1,6 +1,7 @@
 import { blo } from "blo";
 import { ExternalLink, LoaderCircle, PowerOff } from "lucide-react";
 import { ReactNode, useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { type Address } from "viem";
 import {
   useAccount,
@@ -146,6 +147,10 @@ export function WalletMenu({
     [chains, selectedChainSlug],
   );
 
+  const onSwitchChainError = (chainName: string, e: { message: string }) => {
+    toast.error(`Wallet refused to switch to ${chainName} (⚠︎ ${e.message})`, { duration: 10_000 });
+  };
+
   useEffect(() => {
     // Wallet isn't connected, so we can't do anything.
     if (status !== "connected") return;
@@ -153,7 +158,13 @@ export function WalletMenu({
     if (!didInitialSync && chainInUi?.id !== undefined) {
       // Need initial sync (adjust wallet to match `chainInUi`)
       if (chainInUi.id !== chainInWallet?.id) {
-        switchChain({ chainId: chainInUi.id }, { onSuccess: () => setDidInitialSync(true) });
+        switchChain(
+          { chainId: chainInUi.id },
+          {
+            onSettled: () => setDidInitialSync(true),
+            onError: (e) => onSwitchChainError(chainInUi.name, e),
+          },
+        );
       } else {
         setDidInitialSync(true);
       }
@@ -161,11 +172,12 @@ export function WalletMenu({
     }
 
     if (didInitialSync && chainInWallet?.id !== undefined && chainInWallet.id !== chainInUi?.id) {
+      toast.success(`Wallet switched to ${chainInWallet.name}`, { duration: 10_000 });
       // After initial sync, updates flow the other way (adjust UI to match `chainInWallet`)
       setSelectedChainSlug(getChainSlug(chainInWallet));
       return;
     }
-  }, [status, didInitialSync, chainInWallet, chainInUi?.id, switchChain, setSelectedChainSlug]);
+  }, [status, didInitialSync, chainInWallet, chainInUi?.id, chainInUi?.name, switchChain, setSelectedChainSlug]);
 
   const isShiftHeld = useModifierKey("Shift");
 
@@ -177,7 +189,7 @@ export function WalletMenu({
           const target = chains.find((chain) => getChainSlug(chain) === value);
           if (target && getChainSlug(target) !== selectedChainSlug) {
             if (status === "connected") {
-              switchChain({ chainId: target.id });
+              switchChain({ chainId: target.id }, { onError: (e) => onSwitchChainError(target.name, e) });
             } else {
               setSelectedChainSlug(getChainSlug(target));
             }
