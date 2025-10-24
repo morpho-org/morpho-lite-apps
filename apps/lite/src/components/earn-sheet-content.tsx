@@ -14,7 +14,6 @@ import { formatBalance, Token } from "@morpho-org/uikit/lib/utils";
 import { keepPreviousData } from "@tanstack/react-query";
 import { CircleArrowLeft } from "lucide-react";
 import { useState } from "react";
-import { Toaster } from "sonner";
 import { Address, erc20Abi, erc4626Abi, parseUnits } from "viem";
 import { useAccount, useBytecode, useReadContract, useReadContracts } from "wagmi";
 
@@ -107,7 +106,6 @@ export function EarnSheetContent({ vaultAddress, asset }: { vaultAddress: Addres
 
   return (
     <SheetContent className="bg-background z-[9999] w-full gap-3 overflow-y-scroll sm:w-[500px] sm:min-w-[500px] sm:max-w-[500px]">
-      <Toaster theme="dark" position="bottom-left" richColors />
       <SheetHeader>
         <SheetTitle>Your Position</SheetTitle>
         <SheetDescription>

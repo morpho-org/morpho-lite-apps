@@ -141,13 +141,13 @@ export function BorrowSubPage() {
           name: vaultData.vault.name,
           address: vaultData.vault.vault,
           totalAssets: vaultData.vault.totalAssets,
-          curators: getDisplayableCurators({ ...vaultData.vault, address: vaultData.vault.vault }, curators),
+          curators: getDisplayableCurators({ ...vaultData.vault, address: vaultData.vault.vault }, curators, chainId),
         });
       });
     });
 
     return map;
-  }, [vaultsData, curators]);
+  }, [vaultsData, curators, chainId]);
 
   const { data: erc20Symbols } = useReadContracts({
     contracts: marketsArr

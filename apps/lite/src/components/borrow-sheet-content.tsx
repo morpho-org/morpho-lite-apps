@@ -19,7 +19,6 @@ import { tryFormatBalance, formatLtv, Token, min } from "@morpho-org/uikit/lib/u
 import { keepPreviousData } from "@tanstack/react-query";
 import { ArrowRight, CircleArrowLeft } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
-import { Toaster } from "sonner";
 import { Address, erc20Abi, parseUnits } from "viem";
 import { useAccount, useChainId, useReadContract, useReadContracts } from "wagmi";
 
@@ -284,7 +283,6 @@ export function BorrowSheetContent({
 
   return (
     <SheetContent className="bg-background z-[9999] w-full gap-3 overflow-y-scroll sm:w-[500px] sm:min-w-[500px] sm:max-w-[500px]">
-      <Toaster theme="dark" position="bottom-left" richColors />
       <SheetHeader>
         <SheetTitle>Your Position</SheetTitle>
         <SheetDescription>

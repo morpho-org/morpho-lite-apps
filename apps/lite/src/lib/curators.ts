@@ -127,13 +127,14 @@ const ROLE_NAMES = ["owner", "curator", "guardian"] as const;
 export function getDisplayableCurators(
   vault: { [role in (typeof ROLE_NAMES)[number]]: Address } & { address: Address },
   curators: FragmentOf<typeof CuratorFragment>[],
+  chainId: number | undefined,
 ) {
   const result: DisplayableCurators = {};
   for (const roleName of ROLE_NAMES) {
     for (const curator of curators) {
-      const address = curator.addresses
-        ?.map((entry) => entry.address as Address)
-        .find((a) => isAddressEqual(a, vault[roleName]));
+      const address = curator.addresses?.find(
+        (entry) => entry.chainId === chainId && isAddressEqual(entry.address as Address, vault[roleName]),
+      )?.address as Address | undefined;
       if (!address) continue;
 
       const roleNameCapitalized = `${roleName.charAt(0).toUpperCase()}${roleName.slice(1)}`;
