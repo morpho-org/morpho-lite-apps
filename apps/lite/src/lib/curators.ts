@@ -1,6 +1,6 @@
 import * as customChains from "@morpho-org/uikit/lib/chains";
 import { Address, isAddressEqual } from "viem";
-import { celo, hemi, lisk, optimism, plumeMainnet, sei, soneium, worldchain } from "wagmi/chains";
+import { abstract,celo, hemi, lisk, optimism, plumeMainnet, sei, soneium, worldchain } from "wagmi/chains";
 
 import { graphql, FragmentOf } from "@/graphql/graphql";
 
@@ -24,6 +24,7 @@ export const MANUALLY_WHITELISTED_CURATORS: FragmentOf<typeof CuratorFragment>[]
       { address: "0x4681fbeD0877815D5869Cf16e8A6C6Ceee365c02", chainId: lisk.id },
       { address: "0x6D3AB84Fb7Fc04961a15663C980feC275b889402", chainId: soneium.id },
       { address: "0xD8B0F4e54a8dac04E0A57392f5A630cEdb99C940", chainId: worldchain.id },
+      { address: "0x036845F9BE6DF938Da01Abe33e056D3CcaA836a2", chainId: abstract.id },
     ],
     image: "https://cdn.morpho.org/v2/assets/images/re7.png",
     name: "RE7 Labs",
@@ -32,6 +33,7 @@ export const MANUALLY_WHITELISTED_CURATORS: FragmentOf<typeof CuratorFragment>[]
   {
     addresses: [
       { address: "0x4F08D2A771aCe406C733EC3E722827E857A33Db5", chainId: plumeMainnet.id },
+      { address: "0xf452caAaF039E8E40A10861f84d1191e84693951", chainId: plumeMainnet.id },
       { address: "0xB672Ea44A1EC692A9Baf851dC90a1Ee3DB25F1C4", chainId: celo.id },
     ],
     image: "https://cdn.morpho.org/v2/assets/images/mevcapital.png",
