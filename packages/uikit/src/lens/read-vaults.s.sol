@@ -150,7 +150,7 @@ contract Lens {
             });
 
             if (!isInflatable) {
-                if (_isMarketInflatable(morpho, id)) isInflatable = true;
+                isInflatable = _isMarketInflatable(morpho, id);
             }
         }
 
