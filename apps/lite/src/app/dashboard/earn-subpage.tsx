@@ -71,8 +71,16 @@ export function EarnSubPage() {
     reverseChronologicalOrder: true,
     eventName: "CreateMetaMorpho",
     strict: true,
-    query: { enabled: chainId !== undefined && fromBlock !== undefined && toBlock !== undefined },
+    query: { enabled: chainId !== undefined && fromBlock !== undefined && toBlock !== undefined && chainId !== sei.id },
   });
+
+  const vaultAddresses = useMemo(() => {
+    if (chainId === undefined) return [];
+    const hardcodedVaultAddresses: Record<number, Address[]> = {
+      [sei.id]: ["0x015F10a56e97e02437D294815D8e079e1903E41C", "0x948FcC6b7f68f4830Cd69dB1481a9e1A142A4923"],
+    };
+    return createMetaMorphoEvents.map((ev) => ev.args.metaMorpho).concat(hardcodedVaultAddresses[chainId]);
+  }, [chainId, createMetaMorphoEvents]);
 
   // MARK: Fetch additional data for whitelisted vaults
   const curators = useTopNCurators({ n: "all", verifiedOnly: true, chainIds: [...CORE_DEPLOYMENTS] });
@@ -80,7 +88,7 @@ export function EarnSubPage() {
     chainId,
     ...readAccrualVaults(
       morpho?.address ?? "0x",
-      createMetaMorphoEvents.map((ev) => ev.args.metaMorpho),
+      vaultAddresses,
       curators.flatMap(
         (curator) =>
           curator.addresses?.filter((entry) => entry.chainId === chainId).map((entry) => entry.address as Address) ??
@@ -94,7 +102,7 @@ export function EarnSubPage() {
     ),
     stateOverride: chainId === tac.id ? undefined : [readAccrualVaultsStateOverride()],
     query: {
-      enabled: chainId !== undefined && fractionFetched > 0.99 && !!morpho?.address,
+      enabled: chainId !== undefined && (fractionFetched > 0.99 || chainId === sei.id) && !!morpho?.address,
       staleTime: STALE_TIME,
       gcTime: Infinity,
       notifyOnChangeProps: ["data"],
