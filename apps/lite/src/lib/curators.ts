@@ -32,6 +32,7 @@ export const MANUALLY_WHITELISTED_CURATORS: FragmentOf<typeof CuratorFragment>[]
   {
     addresses: [
       { address: "0x4F08D2A771aCe406C733EC3E722827E857A33Db5", chainId: plumeMainnet.id },
+      { address: "0xf452caAaF039E8E40A10861f84d1191e84693951", chainId: plumeMainnet.id },
       { address: "0xB672Ea44A1EC692A9Baf851dC90a1Ee3DB25F1C4", chainId: celo.id },
     ],
     image: "https://cdn.morpho.org/v2/assets/images/mevcapital.png",
