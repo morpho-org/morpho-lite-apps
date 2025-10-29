@@ -101,7 +101,7 @@ const chains = [
   arbitrum,
   customChains.hyperevm,
   // lite support (alphabetical)
-  // abstract,
+  abstract,
   celo,
   // corn,
   // fraxtal,

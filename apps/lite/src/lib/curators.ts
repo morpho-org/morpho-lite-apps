@@ -1,6 +1,6 @@
 import * as customChains from "@morpho-org/uikit/lib/chains";
 import { Address, isAddressEqual } from "viem";
-import { abstract,celo, hemi, lisk, optimism, plumeMainnet, sei, soneium, worldchain } from "wagmi/chains";
+import { abstract, celo, hemi, lisk, optimism, plumeMainnet, sei, soneium, worldchain } from "wagmi/chains";
 
 import { graphql, FragmentOf } from "@/graphql/graphql";
 
