@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import { LibSort } from "solady/src/utils/LibSort.sol";
+import {FixedPointMathLib} from "solady/src/utils/FixedPointMathLib.sol";
+import {LibSort} from "solady/src/utils/LibSort.sol";
 
 type Id is bytes32;
 
@@ -60,11 +61,16 @@ interface IMetaMorpho {
     function asset() external view returns (address);
     function totalSupply() external view returns (uint256);
     function totalAssets() external view returns (uint256);
+    function balanceOf(address user) external view returns (uint256);
 }
 
 contract Lens {
+    uint256 constant MAX_SAFE_SHARE_PRICE = 100e6;
+    uint256 constant MIN_SAFE_DEAD_BALANCE = 1e9;
+    address constant DEAD_ADDRESS = 0x000000000000000000000000000000000000dEaD;
+
     struct Vault {
-        address vault;
+        IMetaMorpho vault;
         string name;
         string symbol;
         uint8 decimalsOffset;
@@ -92,25 +98,29 @@ contract Lens {
     struct AccrualVault {
         Vault vault;
         VaultMarketAllocation[] allocations;
+        bool isInflatable;
     }
 
     /**
      * Reads vault data for each `IMetaMorpho` entry that has an owner in `includedOwners`. For non-included ones,
      * only the `owner` field is read to save gas.
-     * 
+     *
      * @param metaMorphos Array of `IMetaMorpho`s to search through and (possibly) read as a vault.
      * @param includedOwners Array of owners whose vaults should be included in the returned array.
      * MUST be strictly ascending (sorted and unique).
      */
-    function getAccrualVaults(IMorpho morpho, IMetaMorpho[] calldata metaMorphos, address[] memory includedOwners) external view returns (AccrualVault[] memory) {
+    function getAccrualVaults(IMorpho morpho, IMetaMorpho[] calldata metaMorphos, address[] memory includedOwners)
+        external
+        view
+        returns (AccrualVault[] memory)
+    {
         require(LibSort.isSortedAndUniquified(includedOwners), "sort");
 
-        address[] memory owners = new address[](metaMorphos.length);
+        bool[] memory include = new bool[](metaMorphos.length);
         uint256 count;
         for (uint256 i; i < metaMorphos.length; i++) {
-            address owner = metaMorphos[i].owner();
-            if (LibSort.inSorted(includedOwners, owner)) {
-                owners[i] = metaMorphos[i].owner();
+            if (LibSort.inSorted(includedOwners, metaMorphos[i].owner())) {
+                include[i] = true;
                 count++;
             }
         }
@@ -118,26 +128,18 @@ contract Lens {
         AccrualVault[] memory vaults = new AccrualVault[](count);
         count = 0;
         for (uint256 i; i < metaMorphos.length; i++) {
-            address owner = owners[i];
-            if (owner != address(0)) {
-                vaults[count] = _getAccrualVault(morpho, metaMorphos[i], owner);
+            if (include[i]) {
+                vaults[count] = getAccrualVault(morpho, metaMorphos[i]);
                 count++;
             }
         }
         return vaults;
     }
 
-    function getAccrualVault(IMorpho morpho, IMetaMorpho metaMorpho) external view returns (AccrualVault memory) {
-        return _getAccrualVault(morpho, metaMorpho, metaMorpho.owner());
-    }
-
-    function getVault(IMetaMorpho metaMorpho) external view returns (Vault memory) {
-        return _getVault(metaMorpho, metaMorpho.owner());
-    }
-
-    function _getAccrualVault(IMorpho morpho, IMetaMorpho metaMorpho, address owner) private view returns (AccrualVault memory) {
-        Vault memory vault = _getVault(metaMorpho, owner);
+    function getAccrualVault(IMorpho morpho, IMetaMorpho metaMorpho) public view returns (AccrualVault memory) {
+        Vault memory vault = getVault(metaMorpho);
         VaultMarketAllocation[] memory allocations = new VaultMarketAllocation[](vault.withdrawQueue.length);
+        bool isInflatable = _isVaultInflatable(vault.vault, vault.decimalsOffset);
 
         for (uint256 i; i < allocations.length; i++) {
             Id id = vault.withdrawQueue[i];
@@ -146,20 +148,24 @@ contract Lens {
                 position: morpho.position(id, address(metaMorpho)),
                 config: metaMorpho.config(id)
             });
+
+            if (!isInflatable) {
+                if (_isMarketInflatable(morpho, id)) isInflatable = true;
+            }
         }
 
-        return AccrualVault({ vault: vault, allocations: allocations });
+        return AccrualVault({vault: vault, allocations: allocations, isInflatable: isInflatable});
     }
 
-    function _getVault(IMetaMorpho metaMorpho, address owner) private view returns (Vault memory) {
+    function getVault(IMetaMorpho metaMorpho) public view returns (Vault memory) {
         return Vault({
-            vault: address(metaMorpho),
+            vault: metaMorpho,
             name: metaMorpho.name(),
             symbol: metaMorpho.symbol(),
             decimalsOffset: metaMorpho.DECIMALS_OFFSET(),
             asset: metaMorpho.asset(),
             curator: metaMorpho.curator(),
-            owner: owner,
+            owner: metaMorpho.owner(),
             guardian: metaMorpho.guardian(),
             fee: metaMorpho.fee(),
             feeRecipient: metaMorpho.feeRecipient(),
@@ -173,17 +179,44 @@ contract Lens {
         });
     }
 
+    function _isVaultInflatable(IMetaMorpho metaMorpho, uint8 decimalsOffset) private view returns (bool) {
+        uint256 deadShares = metaMorpho.balanceOf(DEAD_ADDRESS);
+        if (deadShares < MIN_SAFE_DEAD_BALANCE) return true;
+
+        uint256 sharePrice =
+            FixedPointMathLib.fullMulDiv(metaMorpho.totalAssets(), 10 ** (6 + decimalsOffset), metaMorpho.totalSupply());
+        if (sharePrice > MAX_SAFE_SHARE_PRICE) return true;
+
+        return false;
+    }
+
+    function _isMarketInflatable(IMorpho morpho, Id id) private view returns (bool) {
+        uint256 deadShares = morpho.position(id, DEAD_ADDRESS).supplyShares;
+        if (deadShares < MIN_SAFE_DEAD_BALANCE) return true;
+
+        Market memory market = morpho.market(id);
+        uint256 sharePrice =
+            FixedPointMathLib.fullMulDiv(market.totalSupplyAssets + 1, 1e6, market.totalSupplyShares + 1e6);
+        if (sharePrice > MAX_SAFE_SHARE_PRICE) return true;
+
+        return false;
+    }
+
     function _getSupplyQueue(IMetaMorpho metaMorpho) private view returns (Id[] memory ids) {
         uint256 length = metaMorpho.supplyQueueLength();
 
         ids = new Id[](length);
-        for (uint256 i; i < length; i++) ids[i] = metaMorpho.supplyQueue(i);
+        for (uint256 i; i < length; i++) {
+            ids[i] = metaMorpho.supplyQueue(i);
+        }
     }
 
     function _getWithdrawQueue(IMetaMorpho metaMorpho) private view returns (Id[] memory ids) {
         uint256 length = metaMorpho.withdrawQueueLength();
 
         ids = new Id[](length);
-        for (uint256 i; i < length; i++) ids[i] = metaMorpho.withdrawQueue(i);
+        for (uint256 i; i < length; i++) {
+            ids[i] = metaMorpho.withdrawQueue(i);
+        }
     }
 }
