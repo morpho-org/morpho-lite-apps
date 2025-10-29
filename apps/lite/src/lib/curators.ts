@@ -24,7 +24,6 @@ export const MANUALLY_WHITELISTED_CURATORS: FragmentOf<typeof CuratorFragment>[]
       { address: "0x4681fbeD0877815D5869Cf16e8A6C6Ceee365c02", chainId: lisk.id },
       { address: "0x6D3AB84Fb7Fc04961a15663C980feC275b889402", chainId: soneium.id },
       { address: "0xD8B0F4e54a8dac04E0A57392f5A630cEdb99C940", chainId: worldchain.id },
-      { address: "0x036845F9BE6DF938Da01Abe33e056D3CcaA836a2", chainId: abstract.id },
     ],
     image: "https://cdn.morpho.org/v2/assets/images/re7.png",
     name: "RE7 Labs",
