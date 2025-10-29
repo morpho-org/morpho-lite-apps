@@ -4,14 +4,12 @@ import { metaMorphoFactoryAbi } from "@morpho-org/uikit/assets/abis/meta-morpho-
 import { morphoAbi } from "@morpho-org/uikit/assets/abis/morpho";
 import useContractEvents from "@morpho-org/uikit/hooks/use-contract-events/use-contract-events";
 import { readAccrualVaults, readAccrualVaultsStateOverride } from "@morpho-org/uikit/lens/read-vaults";
-import { tac } from "@morpho-org/uikit/lib/chains/tac";
 import { CORE_DEPLOYMENTS, getContractDeploymentInfo } from "@morpho-org/uikit/lib/deployments";
 import { Token } from "@morpho-org/uikit/lib/utils";
 import { useMemo } from "react";
 import { useOutletContext } from "react-router";
-import { type Address, erc20Abi, type Chain, zeroAddress, type Hex, type BlockTag, type BlockNumber } from "viem";
-import { sei } from "viem/chains";
-import { useAccount, useBlockNumber, useReadContract, useReadContracts } from "wagmi";
+import { type Address, erc20Abi, type Chain, zeroAddress, type Hex } from "viem";
+import { useAccount, useReadContract, useReadContracts } from "wagmi";
 
 import { BorrowPositionTable, BorrowTable } from "@/components/borrow-table";
 import { CtaCard } from "@/components/cta-card";
@@ -20,6 +18,7 @@ import * as Merkl from "@/hooks/use-merkl-campaigns";
 import { useMerklOpportunities } from "@/hooks/use-merkl-opportunities";
 import { useTopNCurators } from "@/hooks/use-top-n-curators";
 import { type DisplayableCurators, getDisplayableCurators } from "@/lib/curators";
+import { CREATE_METAMORPHO_EVENT_OVERRIDES, getDeploylessMode } from "@/lib/overrides";
 import { getTokenURI } from "@/lib/tokens";
 
 const STALE_TIME = 5 * 60 * 1000;
@@ -34,6 +33,9 @@ export function BorrowSubPage() {
   const { chain } = useOutletContext() as { chain?: Chain };
   const chainId = chain?.id;
 
+  const shouldOverrideCreateMetaMorphoEvents = chainId !== undefined && chainId in CREATE_METAMORPHO_EVENT_OVERRIDES;
+  const shouldUseDeploylessReads = getDeploylessMode(chainId) === "deployless";
+
   const [morpho, factory, factoryV1_1] = useMemo(
     () => [
       getContractDeploymentInfo(chainId, "Morpho"),
@@ -43,20 +45,10 @@ export function BorrowSubPage() {
     [chainId],
   );
 
-  const { data: blockNumber } = useBlockNumber({ cacheTime: 60_000, chainId, watch: { pollingInterval: 60_000 } });
-  const fromBlock = factory?.fromBlock ?? factoryV1_1?.fromBlock;
-  let toBlock: BlockTag | BlockNumber | undefined = "finalized";
-  if (chainId === sei.id) {
-    // sei has terrible RPC support and super fast blocks (2Hz), so the Ponder indexer
-    // can't keep up either. We set `toBlock` ~12 hours in the past so that Ponder can
-    // (hopefully) serve cached data -- we basically want to avoid hitting *any* RPC
-    // for recent logs.
-    toBlock = blockNumber ? blockNumber - 86_400n : fromBlock;
-  }
-
   const borrowingRewards = useMerklOpportunities({ chainId, side: Merkl.CampaignSide.BORROW, userAddress });
 
   // MARK: Index `MetaMorphoFactory.CreateMetaMorpho` on all factory versions to get a list of all vault addresses
+  const fromBlock = factory?.fromBlock ?? factoryV1_1?.fromBlock;
   const {
     logs: { all: createMetaMorphoEvents },
     fractionFetched,
@@ -65,12 +57,19 @@ export function BorrowSubPage() {
     abi: metaMorphoFactoryAbi,
     address: factoryV1_1 ? [factoryV1_1.address].concat(factory ? [factory.address] : []) : [],
     fromBlock,
-    toBlock,
+    toBlock: "finalized",
     reverseChronologicalOrder: true,
     eventName: "CreateMetaMorpho",
     strict: true,
-    query: { enabled: chainId !== undefined && fromBlock !== undefined && toBlock !== undefined },
+    query: { enabled: chainId !== undefined && !shouldOverrideCreateMetaMorphoEvents && fromBlock !== undefined },
   });
+  const vaultAddresses = useMemo(
+    () =>
+      shouldOverrideCreateMetaMorphoEvents
+        ? CREATE_METAMORPHO_EVENT_OVERRIDES[chainId]
+        : createMetaMorphoEvents.map((ev) => ev.args.metaMorpho),
+    [chainId, shouldOverrideCreateMetaMorphoEvents, createMetaMorphoEvents],
+  );
 
   // MARK: Fetch additional data for whitelisted vaults
   const curators = useTopNCurators({ n: "all", verifiedOnly: true, chainIds: [...CORE_DEPLOYMENTS] });
@@ -78,21 +77,19 @@ export function BorrowSubPage() {
     chainId,
     ...readAccrualVaults(
       morpho?.address ?? "0x",
-      createMetaMorphoEvents.map((ev) => ev.args.metaMorpho),
+      vaultAddresses,
       curators.flatMap(
         (curator) =>
           curator.addresses?.filter((entry) => entry.chainId === chainId).map((entry) => entry.address as Address) ??
           [],
       ),
-      // TODO: For now, we use bytecode deployless reads on TAC, since the RPC doesn't support `stateOverride`.
-      //       This means we're forfeiting multicall in this special case, but at least it works. Once we have
-      //       a TAC RPC that supports `stateOverride`, remove the special case.
       // @ts-expect-error function signature overloading was meant for hard-coded `true` or `false`
-      chainId === tac.id,
+      shouldUseDeploylessReads,
     ),
-    stateOverride: chainId === tac.id ? undefined : [readAccrualVaultsStateOverride()],
+    stateOverride: shouldUseDeploylessReads ? undefined : [readAccrualVaultsStateOverride()],
     query: {
-      enabled: chainId !== undefined && fractionFetched > 0.99 && !!morpho?.address,
+      enabled:
+        chainId !== undefined && (fractionFetched > 0.99 || shouldOverrideCreateMetaMorphoEvents) && !!morpho?.address,
       staleTime: STALE_TIME,
       gcTime: Infinity,
       notifyOnChangeProps: ["data"],
