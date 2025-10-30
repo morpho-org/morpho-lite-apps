@@ -3,7 +3,11 @@ import { restructure } from "@morpho-org/blue-sdk-viem";
 import { metaMorphoFactoryAbi } from "@morpho-org/uikit/assets/abis/meta-morpho-factory";
 import { morphoAbi } from "@morpho-org/uikit/assets/abis/morpho";
 import useContractEvents from "@morpho-org/uikit/hooks/use-contract-events/use-contract-events";
-import { readAccrualVaults, readAccrualVaultsStateOverride } from "@morpho-org/uikit/lens/read-vaults";
+import {
+  marketHasDeadDeposit,
+  readAccrualVaults,
+  readAccrualVaultsStateOverride,
+} from "@morpho-org/uikit/lens/read-vaults";
 import { CORE_DEPLOYMENTS, getContractDeploymentInfo } from "@morpho-org/uikit/lib/deployments";
 import { Token } from "@morpho-org/uikit/lib/utils";
 import { useMemo } from "react";
@@ -18,7 +22,7 @@ import * as Merkl from "@/hooks/use-merkl-campaigns";
 import { useMerklOpportunities } from "@/hooks/use-merkl-opportunities";
 import { useTopNCurators } from "@/hooks/use-top-n-curators";
 import { type DisplayableCurators, getDisplayableCurators } from "@/lib/curators";
-import { CREATE_METAMORPHO_EVENT_OVERRIDES, getDeploylessMode } from "@/lib/overrides";
+import { CREATE_METAMORPHO_EVENT_OVERRIDES, getDeploylessMode, getShouldEnforceDeadDeposit } from "@/lib/overrides";
 import { getTokenURI } from "@/lib/tokens";
 
 const STALE_TIME = 5 * 60 * 1000;
@@ -35,6 +39,7 @@ export function BorrowSubPage() {
 
   const shouldOverrideCreateMetaMorphoEvents = chainId !== undefined && chainId in CREATE_METAMORPHO_EVENT_OVERRIDES;
   const shouldUseDeploylessReads = getDeploylessMode(chainId) === "deployless";
+  const shouldEnforceDeadDeposit = getShouldEnforceDeadDeposit(chainId);
 
   const [morpho, factory, factoryV1_1] = useMemo(
     () => [
@@ -99,11 +104,14 @@ export function BorrowSubPage() {
   const marketIds = useMemo(
     () => [
       ...new Set(
-        vaultsData?.flatMap((d) => d.allocations.filter((alloc) => alloc.config.enabled).map((alloc) => alloc.id)) ??
-          [],
+        vaultsData?.flatMap((d) =>
+          d.allocations
+            .filter((alloc) => alloc.config.enabled && (!shouldEnforceDeadDeposit || marketHasDeadDeposit(d, alloc.id)))
+            .map((alloc) => alloc.id),
+        ) ?? [],
       ),
     ],
-    [vaultsData],
+    [shouldEnforceDeadDeposit, vaultsData],
   );
   const markets = useMarkets({ chainId, marketIds, staleTime: STALE_TIME, fetchPrices: true });
   const marketsArr = useMemo(() => {

@@ -1,4 +1,11 @@
-import { type Address, getContractAddress, type Hex, hexToBigInt, type StateOverride } from "viem";
+import {
+  type Address,
+  type ContractFunctionReturnType,
+  getContractAddress,
+  type Hex,
+  hexToBigInt,
+  type StateOverride,
+} from "viem";
 
 import { CREATE2_FACTORY, CREATE2_SALT } from "@/lens/constants";
 import { Lens } from "@/lens/read-vaults.s.sol";
@@ -82,4 +89,42 @@ export function readAccrualVaultsStateOverride(): StateOverride[number] {
     address,
     code: Lens.deployedBytecode,
   };
+}
+
+/*//////////////////////////////////////////////////////////////
+                            HELPERS
+//////////////////////////////////////////////////////////////*/
+
+export function getDeadDepositsBitmap(
+  accrualVault: ContractFunctionReturnType<
+    typeof Lens.read.getAccrualVault.abi,
+    "view",
+    typeof Lens.read.getAccrualVault.functionName
+  >,
+) {
+  const withdrawQueue = accrualVault.vault.withdrawQueue;
+  return accrualVault.deadDepositsBitmap.toString(2).padStart(withdrawQueue.length + 1, "0");
+}
+
+export function vaultHasDeadDeposits(
+  accrualVault: ContractFunctionReturnType<
+    typeof Lens.read.getAccrualVault.abi,
+    "view",
+    typeof Lens.read.getAccrualVault.functionName
+  >,
+) {
+  return !getDeadDepositsBitmap(accrualVault).includes("0");
+}
+
+export function marketHasDeadDeposit(
+  accrualVault: ContractFunctionReturnType<
+    typeof Lens.read.getAccrualVault.abi,
+    "view",
+    typeof Lens.read.getAccrualVault.functionName
+  >,
+  marketId: Hex,
+) {
+  const deadDepositsBitmap = getDeadDepositsBitmap(accrualVault);
+  const marketIdx = accrualVault.vault.withdrawQueue.findIndex((x) => x === marketId);
+  return marketIdx > -1 && deadDepositsBitmap[marketIdx + 1] === "1";
 }

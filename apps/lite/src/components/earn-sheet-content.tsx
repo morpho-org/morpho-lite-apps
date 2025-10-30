@@ -18,6 +18,7 @@ import { Address, erc20Abi, erc4626Abi, parseUnits } from "viem";
 import { useAccount, useBytecode, useReadContract, useReadContracts } from "wagmi";
 
 import { RISKS_DOCUMENTATION, TRANSACTION_DATA_SUFFIX } from "@/lib/constants";
+import { getShouldEnforceDeadDeposit } from "@/lib/overrides";
 
 enum Actions {
   Deposit = "Deposit",
@@ -30,7 +31,15 @@ const STYLE_INPUT_WRAPPER =
   "bg-primary hover:bg-secondary flex flex-col gap-4 rounded-2xl p-4 transition-colors duration-200 ease-in-out";
 const STYLE_INPUT_HEADER = "text-secondary-foreground flex items-center justify-between text-xs font-light";
 
-export function EarnSheetContent({ vaultAddress, asset }: { vaultAddress: Address; asset: Token }) {
+export function EarnSheetContent({
+  chainId,
+  vaultAddress,
+  asset,
+}: {
+  chainId?: number;
+  vaultAddress: Address;
+  asset: Token;
+}) {
   const { address: userAddress } = useAccount();
 
   const [selectedTab, setSelectedTab] = useState(Actions.Deposit);
@@ -41,7 +50,8 @@ export function EarnSheetContent({ vaultAddress, asset }: { vaultAddress: Addres
     address: userAddress,
     query: { enabled: !!userAddress },
   });
-  const canInteract = userBytecode !== undefined && userBytecode === null;
+  const shouldEnforceDeadDeposit = getShouldEnforceDeadDeposit(chainId);
+  const canInteract = shouldEnforceDeadDeposit || (userBytecode !== undefined && userBytecode === null);
 
   const { data: allowance, refetch: refetchAllowance } = useReadContract({
     address: asset.address,
