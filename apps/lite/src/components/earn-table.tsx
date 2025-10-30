@@ -326,7 +326,7 @@ export function EarnTable({
                     </TableCell>
                   </TableRow>
                 </SheetTrigger>
-                <EarnSheetContent vaultAddress={row.vault.address} asset={row.asset} />
+                <EarnSheetContent chainId={chain?.id} vaultAddress={row.vault.address} asset={row.asset} />
               </Sheet>
             );
           })}

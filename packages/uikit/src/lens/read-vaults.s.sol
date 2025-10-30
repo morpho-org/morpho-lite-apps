@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {FixedPointMathLib} from "solady/src/utils/FixedPointMathLib.sol";
+import {LibBit} from "solady/src/utils/LibBit.sol";
 import {LibSort} from "solady/src/utils/LibSort.sol";
 
 type Id is bytes32;
@@ -65,9 +66,8 @@ interface IMetaMorpho {
 }
 
 contract Lens {
-    uint256 constant MAX_SAFE_SHARE_PRICE = 100e6;
-    uint256 constant MIN_SAFE_DEAD_BALANCE = 1e9;
     address constant DEAD_ADDRESS = 0x000000000000000000000000000000000000dEaD;
+    uint256 constant MIN_DEAD_BALANCE = 1e9;
 
     struct Vault {
         IMetaMorpho vault;
@@ -96,9 +96,10 @@ contract Lens {
     }
 
     struct AccrualVault {
+        // leftmost bit is vault. each step to the right is next market in allocations array.
+        uint256 deadDepositsBitmap;
         Vault vault;
         VaultMarketAllocation[] allocations;
-        bool isInflatable;
     }
 
     /**
@@ -139,22 +140,24 @@ contract Lens {
     function getAccrualVault(IMorpho morpho, IMetaMorpho metaMorpho) public view returns (AccrualVault memory) {
         Vault memory vault = getVault(metaMorpho);
         VaultMarketAllocation[] memory allocations = new VaultMarketAllocation[](vault.withdrawQueue.length);
-        bool isInflatable = _isVaultInflatable(vault.vault, vault.decimalsOffset);
+        uint256 deadDepositsBitmap = LibBit.toUint(metaMorpho.balanceOf(DEAD_ADDRESS) >= MIN_DEAD_BALANCE);
 
         for (uint256 i; i < allocations.length; i++) {
             Id id = vault.withdrawQueue[i];
+            uint256 hasDeadDeposit = LibBit.toUint(morpho.position(id, DEAD_ADDRESS).supplyShares >= MIN_DEAD_BALANCE);
+
+            assembly ("memory-safe") {
+                deadDepositsBitmap := or(shl(1, deadDepositsBitmap), hasDeadDeposit)
+            }
+
             allocations[i] = VaultMarketAllocation({
                 id: id,
                 position: morpho.position(id, address(metaMorpho)),
                 config: metaMorpho.config(id)
             });
-
-            if (!isInflatable) {
-                isInflatable = _isMarketInflatable(morpho, id);
-            }
         }
 
-        return AccrualVault({vault: vault, allocations: allocations, isInflatable: isInflatable});
+        return AccrualVault({deadDepositsBitmap: deadDepositsBitmap, vault: vault, allocations: allocations});
     }
 
     function getVault(IMetaMorpho metaMorpho) public view returns (Vault memory) {
@@ -177,29 +180,6 @@ contract Lens {
             totalAssets: metaMorpho.totalAssets(),
             lastTotalAssets: metaMorpho.lastTotalAssets()
         });
-    }
-
-    function _isVaultInflatable(IMetaMorpho metaMorpho, uint8 decimalsOffset) private view returns (bool) {
-        uint256 deadShares = metaMorpho.balanceOf(DEAD_ADDRESS);
-        if (deadShares < MIN_SAFE_DEAD_BALANCE) return true;
-
-        uint256 sharePrice =
-            FixedPointMathLib.fullMulDiv(metaMorpho.totalAssets(), 10 ** (6 + decimalsOffset), metaMorpho.totalSupply());
-        if (sharePrice > MAX_SAFE_SHARE_PRICE) return true;
-
-        return false;
-    }
-
-    function _isMarketInflatable(IMorpho morpho, Id id) private view returns (bool) {
-        uint256 deadShares = morpho.position(id, DEAD_ADDRESS).supplyShares;
-        if (deadShares < MIN_SAFE_DEAD_BALANCE) return true;
-
-        Market memory market = morpho.market(id);
-        uint256 sharePrice =
-            FixedPointMathLib.fullMulDiv(market.totalSupplyAssets + 1, 1e6, market.totalSupplyShares + 1e6);
-        if (sharePrice > MAX_SAFE_SHARE_PRICE) return true;
-
-        return false;
     }
 
     function _getSupplyQueue(IMetaMorpho metaMorpho) private view returns (Id[] memory ids) {

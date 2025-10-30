@@ -10,7 +10,12 @@ import {
 import { metaMorphoAbi } from "@morpho-org/uikit/assets/abis/meta-morpho";
 import { metaMorphoFactoryAbi } from "@morpho-org/uikit/assets/abis/meta-morpho-factory";
 import useContractEvents from "@morpho-org/uikit/hooks/use-contract-events/use-contract-events";
-import { readAccrualVaults, readAccrualVaultsStateOverride } from "@morpho-org/uikit/lens/read-vaults";
+import {
+  getDeadDepositsBitmap,
+  readAccrualVaults,
+  readAccrualVaultsStateOverride,
+  vaultHasDeadDeposits,
+} from "@morpho-org/uikit/lens/read-vaults";
 import { CORE_DEPLOYMENTS, getContractDeploymentInfo } from "@morpho-org/uikit/lib/deployments";
 import { Token } from "@morpho-org/uikit/lib/utils";
 import { useEffect, useMemo } from "react";
@@ -25,7 +30,7 @@ import * as Merkl from "@/hooks/use-merkl-campaigns";
 import { useMerklOpportunities } from "@/hooks/use-merkl-opportunities";
 import { useTopNCurators } from "@/hooks/use-top-n-curators";
 import { getDisplayableCurators } from "@/lib/curators";
-import { CREATE_METAMORPHO_EVENT_OVERRIDES, getDeploylessMode } from "@/lib/overrides";
+import { CREATE_METAMORPHO_EVENT_OVERRIDES, getDeploylessMode, getShouldEnforceDeadDeposit } from "@/lib/overrides";
 import { getTokenURI } from "@/lib/tokens";
 
 const STALE_TIME = 5 * 60 * 1000;
@@ -37,6 +42,7 @@ export function EarnSubPage() {
 
   const shouldOverrideCreateMetaMorphoEvents = chainId !== undefined && chainId in CREATE_METAMORPHO_EVENT_OVERRIDES;
   const shouldUseDeploylessReads = getDeploylessMode(chainId) === "deployless";
+  const shouldEnforceDeadDeposit = getShouldEnforceDeadDeposit(chainId);
 
   const [morpho, factory, factoryV1_1] = useMemo(
     () => [
@@ -131,13 +137,19 @@ export function EarnSubPage() {
         pendingTimelock: { value: 0n, validAt: 0n },
       });
 
-      if (vault.name === "" || vaultData.allocations.some((allocation) => markets[allocation.id] === undefined)) {
+      const hasDeadDeposits = vaultHasDeadDeposits(vaultData);
+      if (
+        vault.name === "" ||
+        vaultData.allocations.some((allocation) => markets[allocation.id] === undefined) ||
+        (shouldEnforceDeadDeposit && !hasDeadDeposits)
+      ) {
         const urlSearchParams = new URLSearchParams(window.location.search);
         if (urlSearchParams.has("dev")) {
           // Detailed logging of filtering reason to help curators diagnose their situation.
           console.log(`Skipping vault '${vault.name}':
 - ${vault.name === "" ? "❌" : "✅"} name is defined
 - ${vaultData.allocations.some((allocation) => markets[allocation.id] === undefined) ? "❌" : "✅"} fetched constituent markets
+- ${shouldEnforceDeadDeposit && !hasDeadDeposits ? "❌" : "✅"} has dead deposits (${getDeadDepositsBitmap(vaultData)})
 `);
         }
         return;
@@ -170,7 +182,7 @@ export function EarnSubPage() {
     });
     vaults.sort((a, b) => (a.netApy > b.netApy ? -1 : 1));
     return vaults;
-  }, [vaultsData, markets]);
+  }, [shouldEnforceDeadDeposit, vaultsData, markets]);
 
   // MARK: Fetch metadata for every ERC20 asset
   const tokenAddresses = useMemo(() => {
