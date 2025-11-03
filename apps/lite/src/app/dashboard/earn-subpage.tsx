@@ -122,8 +122,9 @@ export function EarnSubPage() {
 
   const marketIds = useMemo(() => [...new Set(vaultsData?.flatMap((d) => d.vault.withdrawQueue) ?? [])], [vaultsData]);
   const markets = useMarkets({ chainId, marketIds, staleTime: STALE_TIME });
-  const vaults = useMemo(() => {
+  const { vaults, hasDeadDeposits } = useMemo(() => {
     const vaults: AccrualVault[] = [];
+    const hasDeadDeposits = new Map<Address, boolean>();
     vaultsData?.forEach((vaultData) => {
       const { vault: address, supplyQueue, withdrawQueue, ...iVault } = vaultData.vault;
       // NOTE: pending values are placeholders
@@ -137,12 +138,10 @@ export function EarnSubPage() {
         pendingTimelock: { value: 0n, validAt: 0n },
       });
 
-      const hasDeadDeposits = vaultHasDeadDeposits(vaultData);
-      if (
-        vault.name === "" ||
-        vaultData.allocations.some((allocation) => markets[allocation.id] === undefined) ||
-        (shouldEnforceDeadDeposit && !hasDeadDeposits)
-      ) {
+      const shouldSkipVault =
+        vault.name === "" || vaultData.allocations.some((allocation) => markets[allocation.id] === undefined);
+
+      if (shouldSkipVault) {
         const urlSearchParams = new URLSearchParams(window.location.search);
         if (urlSearchParams.has("dev")) {
           // Detailed logging of filtering reason to help curators diagnose their situation.
@@ -179,9 +178,10 @@ export function EarnSubPage() {
       });
 
       vaults.push(new AccrualVault(vault, allocations));
+      hasDeadDeposits.set(vault.address, vaultHasDeadDeposits(vaultData));
     });
     vaults.sort((a, b) => (a.netApy > b.netApy ? -1 : 1));
-    return vaults;
+    return { vaults, hasDeadDeposits };
   }, [shouldEnforceDeadDeposit, vaultsData, markets]);
 
   // MARK: Fetch metadata for every ERC20 asset
@@ -242,23 +242,30 @@ export function EarnSubPage() {
   ) as { [vault: Address]: bigint | undefined };
 
   const rows = useMemo(() => {
-    return vaults.map((vault) => {
-      const { decimals, symbol } = tokens.get(vault.asset) ?? { decimals: undefined, symbol: undefined };
+    return vaults
+      .filter((vault) => {
+        const userHasShares = (userShares[vault.address] ?? 0n) > 0n;
+        const isDeadDepositStateValid = !shouldEnforceDeadDeposit || hasDeadDeposits.get(vault.address);
 
-      return {
-        vault,
-        asset: {
-          address: vault.asset,
+        return userHasShares || isDeadDepositStateValid;
+      })
+      .map((vault) => {
+        const { decimals, symbol } = tokens.get(vault.asset) ?? { decimals: undefined, symbol: undefined };
+
+        return {
+          vault,
+          asset: {
+            address: vault.asset,
+            imageSrc: getTokenURI({ symbol, address: vault.asset, chainId }),
+            symbol,
+            decimals,
+          } as Token,
+          curators: getDisplayableCurators(vault, curators, chainId),
+          userShares: userShares[vault.address],
           imageSrc: getTokenURI({ symbol, address: vault.asset, chainId }),
-          symbol,
-          decimals,
-        } as Token,
-        curators: getDisplayableCurators(vault, curators, chainId),
-        userShares: userShares[vault.address],
-        imageSrc: getTokenURI({ symbol, address: vault.asset, chainId }),
-      };
-    });
-  }, [vaults, tokens, userShares, curators, chainId]);
+        };
+      });
+  }, [vaults, hasDeadDeposits, shouldEnforceDeadDeposit, tokens, userShares, curators, chainId]);
 
   const userRows = rows.filter((row) => (row.userShares ?? 0n) > 0n);
 

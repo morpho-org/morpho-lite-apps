@@ -101,18 +101,22 @@ export function BorrowSubPage() {
     },
   });
 
-  const marketIds = useMemo(
-    () => [
-      ...new Set(
-        vaultsData?.flatMap((d) =>
-          d.allocations
-            .filter((alloc) => alloc.config.enabled && (!shouldEnforceDeadDeposit || marketHasDeadDeposit(d, alloc.id)))
-            .map((alloc) => alloc.id),
-        ) ?? [],
-      ),
-    ],
-    [shouldEnforceDeadDeposit, vaultsData],
-  );
+  const marketIds = useMemo(() => {
+    // Get a flat map of allocations[i].id across all vaults for allocations that meet certain criteria:
+    // - they are actually enabled as a potential liquidity sink
+    // - they have a dead deposit (or dead deposit enforcement is disabled)
+    const filteredAllocationMarketIds = (vaultsData ?? []).flatMap((vd) =>
+      vd.allocations
+        .filter((alloc) => {
+          const isEnabled = alloc.config.enabled;
+          const isDeadDepositStateValid = !shouldEnforceDeadDeposit || marketHasDeadDeposit(vd, alloc.id);
+
+          return isEnabled && isDeadDepositStateValid;
+        })
+        .map((alloc) => alloc.id),
+    );
+    return [...new Set(filteredAllocationMarketIds)];
+  }, [shouldEnforceDeadDeposit, vaultsData]);
   const markets = useMarkets({ chainId, marketIds, staleTime: STALE_TIME, fetchPrices: true });
   const marketsArr = useMemo(() => {
     const marketsArr = Object.values(markets).filter(

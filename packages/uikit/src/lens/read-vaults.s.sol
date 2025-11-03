@@ -140,12 +140,16 @@ contract Lens {
     function getAccrualVault(IMorpho morpho, IMetaMorpho metaMorpho) public view returns (AccrualVault memory) {
         Vault memory vault = getVault(metaMorpho);
         VaultMarketAllocation[] memory allocations = new VaultMarketAllocation[](vault.withdrawQueue.length);
+        // Bitmap starts as just 0 or 1, then on each iteration of the loop, all existing bits are shifted left
+        // 1 place to make room for the new bit in the rightmost position.
         uint256 deadDepositsBitmap = LibBit.toUint(metaMorpho.balanceOf(DEAD_ADDRESS) >= MIN_DEAD_BALANCE);
 
         for (uint256 i; i < allocations.length; i++) {
             Id id = vault.withdrawQueue[i];
             uint256 hasDeadDeposit = LibBit.toUint(morpho.position(id, DEAD_ADDRESS).supplyShares >= MIN_DEAD_BALANCE);
 
+            // Shift all existing bits left 1 place, and insert `hasDeadDeposit` at the newly-freed
+            // rightmost position.
             assembly ("memory-safe") {
                 deadDepositsBitmap := or(shl(1, deadDepositsBitmap), hasDeadDeposit)
             }

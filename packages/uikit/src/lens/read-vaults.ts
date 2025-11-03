@@ -95,6 +95,21 @@ export function readAccrualVaultsStateOverride(): StateOverride[number] {
                             HELPERS
 //////////////////////////////////////////////////////////////*/
 
+/**
+ * Converts the raw `uint256`/BigInt representation of the dead deposits bitmap to a string of 1s and 0s,
+ * with 1 indicating sufficiently-protective dead balance, and 0 indicating otherwise.
+ *
+ * The bitmap is structured like so:
+ * ```
+ *     ┏╾ withdrawQueue[2]: market protected
+ *     ┃┏╾ withdrawQueue[3]: market NOT protected
+ *     ┃┃┏╾ withdrawQueue[4]: market protected
+ * "001101"
+ *  ┃┃┗╾ withdrawQueue[1]: market protected
+ *  ┃┗╾ withdrawQueue[0]: market NOT protected
+ *  ┗╾ vault shares NOT protected
+ * ```
+ */
 export function getDeadDepositsBitmap(
   accrualVault: ContractFunctionReturnType<
     typeof Lens.read.getAccrualVault.abi,
@@ -103,9 +118,16 @@ export function getDeadDepositsBitmap(
   >,
 ) {
   const withdrawQueue = accrualVault.vault.withdrawQueue;
+  // `toString(2)` creates a binary string, but if N highest bits are 0, the string will be too
+  // short by N. Therefore we have to pad to the expected size of the bitmap -- 1 bit per market
+  // in the `withdrawQueue`, +1 for the vault itself.
   return accrualVault.deadDepositsBitmap.toString(2).padStart(withdrawQueue.length + 1, "0");
 }
 
+/**
+ * Whether the vault itself AND all markets it's allocated to have sufficient dead deposits
+ * for inflation protection.
+ */
 export function vaultHasDeadDeposits(
   accrualVault: ContractFunctionReturnType<
     typeof Lens.read.getAccrualVault.abi,
@@ -113,9 +135,14 @@ export function vaultHasDeadDeposits(
     typeof Lens.read.getAccrualVault.functionName
   >,
 ) {
+  // Assert that the dead deposits bitmap does NOT contain any zeros (falsy values)
   return !getDeadDepositsBitmap(accrualVault).includes("0");
 }
 
+/**
+ * Whether the market (specified by `marketId`) has a sufficient dead deposit for
+ * inflation protection.
+ */
 export function marketHasDeadDeposit(
   accrualVault: ContractFunctionReturnType<
     typeof Lens.read.getAccrualVault.abi,
@@ -125,6 +152,10 @@ export function marketHasDeadDeposit(
   marketId: Hex,
 ) {
   const deadDepositsBitmap = getDeadDepositsBitmap(accrualVault);
+  // Locate `marketId` within the vault's withdrawQueue, as this tells us where its designated
+  // bit is in the bitmap.
   const marketIdx = accrualVault.vault.withdrawQueue.findIndex((x) => x === marketId);
+  // See if the market's bit is truthy. We skip 1 (`marketIdx + 1`) since the first
+  // entry corresponds to the vault itself -- all others are for markets in the `withdrawQueue`.
   return marketIdx > -1 && deadDepositsBitmap[marketIdx + 1] === "1";
 }

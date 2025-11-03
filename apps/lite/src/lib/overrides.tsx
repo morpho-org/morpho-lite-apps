@@ -25,5 +25,5 @@ export function getDeploylessMode(chainId: number | undefined): "deployless" | "
 const ENFORCE_DEAD_DEPOSIT_CHAINS = [...CORE_DEPLOYMENTS, celo.id];
 
 export function getShouldEnforceDeadDeposit(chainId: number | undefined) {
-  return ENFORCE_DEAD_DEPOSIT_CHAINS.includes(chainId ?? -1);
+  return chainId !== undefined && ENFORCE_DEAD_DEPOSIT_CHAINS.includes(chainId);
 }
