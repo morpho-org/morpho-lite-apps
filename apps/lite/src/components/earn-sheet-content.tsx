@@ -30,7 +30,15 @@ const STYLE_INPUT_WRAPPER =
   "bg-primary hover:bg-secondary flex flex-col gap-4 rounded-2xl p-4 transition-colors duration-200 ease-in-out";
 const STYLE_INPUT_HEADER = "text-secondary-foreground flex items-center justify-between text-xs font-light";
 
-export function EarnSheetContent({ vaultAddress, asset }: { vaultAddress: Address; asset: Token }) {
+export function EarnSheetContent({
+  vaultAddress,
+  isDeadDepositStateValid,
+  asset,
+}: {
+  vaultAddress: Address;
+  isDeadDepositStateValid: boolean;
+  asset: Token;
+}) {
   const { address: userAddress } = useAccount();
 
   const [selectedTab, setSelectedTab] = useState(Actions.Deposit);
@@ -41,7 +49,7 @@ export function EarnSheetContent({ vaultAddress, asset }: { vaultAddress: Addres
     address: userAddress,
     query: { enabled: !!userAddress },
   });
-  const canInteract = userBytecode !== undefined && userBytecode === null;
+  const isProtectedFromInflation = isDeadDepositStateValid || (userBytecode !== undefined && userBytecode === null);
 
   const { data: allowance, refetch: refetchAllowance } = useReadContract({
     address: asset.address,
@@ -157,7 +165,7 @@ export function EarnSheetContent({ vaultAddress, asset }: { vaultAddress: Addres
           {approvalTxnConfig ? (
             <TransactionButton
               variables={approvalTxnConfig}
-              disabled={inputValue === 0n || !canInteract}
+              disabled={inputValue === 0n || !isProtectedFromInflation}
               onTxnReceipt={() => refetchAllowance()}
             >
               Approve
@@ -165,7 +173,7 @@ export function EarnSheetContent({ vaultAddress, asset }: { vaultAddress: Addres
           ) : (
             <TransactionButton
               variables={depositTxnConfig}
-              disabled={!inputValue || !canInteract}
+              disabled={!inputValue || !isProtectedFromInflation}
               onTxnReceipt={() => {
                 setTextInputValue("");
                 void refetchMaxes();

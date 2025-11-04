@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import { LibSort } from "solady/src/utils/LibSort.sol";
+import {FixedPointMathLib} from "solady/src/utils/FixedPointMathLib.sol";
+import {LibBit} from "solady/src/utils/LibBit.sol";
+import {LibSort} from "solady/src/utils/LibSort.sol";
 
 type Id is bytes32;
 
@@ -60,11 +62,15 @@ interface IMetaMorpho {
     function asset() external view returns (address);
     function totalSupply() external view returns (uint256);
     function totalAssets() external view returns (uint256);
+    function balanceOf(address user) external view returns (uint256);
 }
 
 contract Lens {
+    address constant DEAD_ADDRESS = 0x000000000000000000000000000000000000dEaD;
+    uint256 constant MIN_DEAD_BALANCE = 1e9;
+
     struct Vault {
-        address vault;
+        IMetaMorpho vault;
         string name;
         string symbol;
         uint8 decimalsOffset;
@@ -90,6 +96,8 @@ contract Lens {
     }
 
     struct AccrualVault {
+        // leftmost bit is vault. each step to the right is next market in allocations array.
+        uint256 deadDepositsBitmap;
         Vault vault;
         VaultMarketAllocation[] allocations;
     }
@@ -97,20 +105,23 @@ contract Lens {
     /**
      * Reads vault data for each `IMetaMorpho` entry that has an owner in `includedOwners`. For non-included ones,
      * only the `owner` field is read to save gas.
-     * 
+     *
      * @param metaMorphos Array of `IMetaMorpho`s to search through and (possibly) read as a vault.
      * @param includedOwners Array of owners whose vaults should be included in the returned array.
      * MUST be strictly ascending (sorted and unique).
      */
-    function getAccrualVaults(IMorpho morpho, IMetaMorpho[] calldata metaMorphos, address[] memory includedOwners) external view returns (AccrualVault[] memory) {
+    function getAccrualVaults(IMorpho morpho, IMetaMorpho[] calldata metaMorphos, address[] memory includedOwners)
+        external
+        view
+        returns (AccrualVault[] memory)
+    {
         require(LibSort.isSortedAndUniquified(includedOwners), "sort");
 
-        address[] memory owners = new address[](metaMorphos.length);
+        bool[] memory include = new bool[](metaMorphos.length);
         uint256 count;
         for (uint256 i; i < metaMorphos.length; i++) {
-            address owner = metaMorphos[i].owner();
-            if (LibSort.inSorted(includedOwners, owner)) {
-                owners[i] = metaMorphos[i].owner();
+            if (LibSort.inSorted(includedOwners, metaMorphos[i].owner())) {
+                include[i] = true;
                 count++;
             }
         }
@@ -118,29 +129,31 @@ contract Lens {
         AccrualVault[] memory vaults = new AccrualVault[](count);
         count = 0;
         for (uint256 i; i < metaMorphos.length; i++) {
-            address owner = owners[i];
-            if (owner != address(0)) {
-                vaults[count] = _getAccrualVault(morpho, metaMorphos[i], owner);
+            if (include[i]) {
+                vaults[count] = getAccrualVault(morpho, metaMorphos[i]);
                 count++;
             }
         }
         return vaults;
     }
 
-    function getAccrualVault(IMorpho morpho, IMetaMorpho metaMorpho) external view returns (AccrualVault memory) {
-        return _getAccrualVault(morpho, metaMorpho, metaMorpho.owner());
-    }
-
-    function getVault(IMetaMorpho metaMorpho) external view returns (Vault memory) {
-        return _getVault(metaMorpho, metaMorpho.owner());
-    }
-
-    function _getAccrualVault(IMorpho morpho, IMetaMorpho metaMorpho, address owner) private view returns (AccrualVault memory) {
-        Vault memory vault = _getVault(metaMorpho, owner);
+    function getAccrualVault(IMorpho morpho, IMetaMorpho metaMorpho) public view returns (AccrualVault memory) {
+        Vault memory vault = getVault(metaMorpho);
         VaultMarketAllocation[] memory allocations = new VaultMarketAllocation[](vault.withdrawQueue.length);
+        // Bitmap starts as just 0 or 1, then on each iteration of the loop, all existing bits are shifted left
+        // 1 place to make room for the new bit in the rightmost position.
+        uint256 deadDepositsBitmap = LibBit.toUint(metaMorpho.balanceOf(DEAD_ADDRESS) >= MIN_DEAD_BALANCE);
 
         for (uint256 i; i < allocations.length; i++) {
             Id id = vault.withdrawQueue[i];
+            uint256 hasDeadDeposit = LibBit.toUint(morpho.position(id, DEAD_ADDRESS).supplyShares >= MIN_DEAD_BALANCE);
+
+            // Shift all existing bits left 1 place, and insert `hasDeadDeposit` at the newly-freed
+            // rightmost position.
+            assembly ("memory-safe") {
+                deadDepositsBitmap := or(shl(1, deadDepositsBitmap), hasDeadDeposit)
+            }
+
             allocations[i] = VaultMarketAllocation({
                 id: id,
                 position: morpho.position(id, address(metaMorpho)),
@@ -148,18 +161,18 @@ contract Lens {
             });
         }
 
-        return AccrualVault({ vault: vault, allocations: allocations });
+        return AccrualVault({deadDepositsBitmap: deadDepositsBitmap, vault: vault, allocations: allocations});
     }
 
-    function _getVault(IMetaMorpho metaMorpho, address owner) private view returns (Vault memory) {
+    function getVault(IMetaMorpho metaMorpho) public view returns (Vault memory) {
         return Vault({
-            vault: address(metaMorpho),
+            vault: metaMorpho,
             name: metaMorpho.name(),
             symbol: metaMorpho.symbol(),
             decimalsOffset: metaMorpho.DECIMALS_OFFSET(),
             asset: metaMorpho.asset(),
             curator: metaMorpho.curator(),
-            owner: owner,
+            owner: metaMorpho.owner(),
             guardian: metaMorpho.guardian(),
             fee: metaMorpho.fee(),
             feeRecipient: metaMorpho.feeRecipient(),
@@ -177,13 +190,17 @@ contract Lens {
         uint256 length = metaMorpho.supplyQueueLength();
 
         ids = new Id[](length);
-        for (uint256 i; i < length; i++) ids[i] = metaMorpho.supplyQueue(i);
+        for (uint256 i; i < length; i++) {
+            ids[i] = metaMorpho.supplyQueue(i);
+        }
     }
 
     function _getWithdrawQueue(IMetaMorpho metaMorpho) private view returns (Id[] memory ids) {
         uint256 length = metaMorpho.withdrawQueueLength();
 
         ids = new Id[](length);
-        for (uint256 i; i < length; i++) ids[i] = metaMorpho.withdrawQueue(i);
+        for (uint256 i; i < length; i++) {
+            ids[i] = metaMorpho.withdrawQueue(i);
+        }
     }
 }
