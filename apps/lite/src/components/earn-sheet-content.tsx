@@ -18,7 +18,6 @@ import { Address, erc20Abi, erc4626Abi, parseUnits } from "viem";
 import { useAccount, useBytecode, useReadContract, useReadContracts } from "wagmi";
 
 import { RISKS_DOCUMENTATION, TRANSACTION_DATA_SUFFIX } from "@/lib/constants";
-import { getShouldEnforceDeadDeposit } from "@/lib/overrides";
 
 enum Actions {
   Deposit = "Deposit",
@@ -32,12 +31,12 @@ const STYLE_INPUT_WRAPPER =
 const STYLE_INPUT_HEADER = "text-secondary-foreground flex items-center justify-between text-xs font-light";
 
 export function EarnSheetContent({
-  chainId,
   vaultAddress,
+  isDeadDepositStateValid,
   asset,
 }: {
-  chainId?: number;
   vaultAddress: Address;
+  isDeadDepositStateValid: boolean;
   asset: Token;
 }) {
   const { address: userAddress } = useAccount();
@@ -50,8 +49,7 @@ export function EarnSheetContent({
     address: userAddress,
     query: { enabled: !!userAddress },
   });
-  const shouldEnforceDeadDeposit = getShouldEnforceDeadDeposit(chainId);
-  const canInteract = shouldEnforceDeadDeposit || (userBytecode !== undefined && userBytecode === null);
+  const isProtectedFromInflation = isDeadDepositStateValid || (userBytecode !== undefined && userBytecode === null);
 
   const { data: allowance, refetch: refetchAllowance } = useReadContract({
     address: asset.address,
@@ -167,7 +165,7 @@ export function EarnSheetContent({
           {approvalTxnConfig ? (
             <TransactionButton
               variables={approvalTxnConfig}
-              disabled={inputValue === 0n || !canInteract}
+              disabled={inputValue === 0n || !isProtectedFromInflation}
               onTxnReceipt={() => refetchAllowance()}
             >
               Approve
@@ -175,7 +173,7 @@ export function EarnSheetContent({
           ) : (
             <TransactionButton
               variables={depositTxnConfig}
-              disabled={!inputValue || !canInteract}
+              disabled={!inputValue || !isProtectedFromInflation}
               onTxnReceipt={() => {
                 setTextInputValue("");
                 void refetchMaxes();

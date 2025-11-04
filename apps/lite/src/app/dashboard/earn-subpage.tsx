@@ -243,17 +243,13 @@ export function EarnSubPage() {
 
   const rows = useMemo(() => {
     return vaults
-      .filter((vault) => {
-        const userHasShares = (userShares[vault.address] ?? 0n) > 0n;
-        const isDeadDepositStateValid = !shouldEnforceDeadDeposit || hasDeadDeposits.get(vault.address);
-
-        return userHasShares || isDeadDepositStateValid;
-      })
       .map((vault) => {
         const { decimals, symbol } = tokens.get(vault.asset) ?? { decimals: undefined, symbol: undefined };
+        const isDeadDepositStateValid = !shouldEnforceDeadDeposit || (hasDeadDeposits.get(vault.address) ?? false);
 
         return {
           vault,
+          isDeadDepositStateValid,
           asset: {
             address: vault.asset,
             imageSrc: getTokenURI({ symbol, address: vault.asset, chainId }),
@@ -264,7 +260,8 @@ export function EarnSubPage() {
           userShares: userShares[vault.address],
           imageSrc: getTokenURI({ symbol, address: vault.asset, chainId }),
         };
-      });
+      })
+      .filter((vault) => vault.isDeadDepositStateValid || (vault.userShares ?? 0n) > 0n);
   }, [vaults, hasDeadDeposits, shouldEnforceDeadDeposit, tokens, userShares, curators, chainId]);
 
   const userRows = rows.filter((row) => (row.userShares ?? 0n) > 0n);

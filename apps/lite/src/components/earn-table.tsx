@@ -29,6 +29,7 @@ import { getTokenURI } from "@/lib/tokens";
 
 export type Row = {
   vault: AccrualVault;
+  isDeadDepositStateValid: boolean;
   asset: Token;
   curators: DisplayableCurators;
   userShares: bigint | undefined;
@@ -326,7 +327,11 @@ export function EarnTable({
                     </TableCell>
                   </TableRow>
                 </SheetTrigger>
-                <EarnSheetContent chainId={chain?.id} vaultAddress={row.vault.address} asset={row.asset} />
+                <EarnSheetContent
+                  vaultAddress={row.vault.address}
+                  isDeadDepositStateValid={row.isDeadDepositStateValid}
+                  asset={row.asset}
+                />
               </Sheet>
             );
           })}
