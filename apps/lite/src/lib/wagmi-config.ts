@@ -8,6 +8,7 @@ import {
   base,
   celo,
   corn,
+  etherlink,
   fraxtal,
   hemi,
   ink,
@@ -104,6 +105,7 @@ const chains = [
   // abstract,
   celo,
   // corn,
+  etherlink,
   // fraxtal,
   hemi,
   // ink,
@@ -179,6 +181,10 @@ const transports: { [K in (typeof chains)[number]["id"]]: Transport } & { [k: nu
     { url: "https://corn.gateway.tenderly.co", batch: { batchSize: 10 } },
     { url: "https://mainnet.corn-rpc.com", batch: false },
     { url: "https://maizenet-rpc.usecorn.com", batch: false },
+  ]),
+  [etherlink.id]: createFallbackTransport([
+    ...createPonderHttp(etherlink.id),
+    { url: "https://node.mainnet.etherlink.com", batch: false },
   ]),
   [fraxtal.id]: createFallbackTransport([
     ...createPrivateAlchemyHttp("frax-mainnet"),
