@@ -70,6 +70,8 @@ const chains = [
   customChains.katana,
   arbitrum,
   customChains.hyperevm,
+  optimism,
+  customChains.monad,
   // fallback support (alphabetical)
   abstract,
   bsc,
@@ -82,7 +84,6 @@ const chains = [
   ink,
   lisk,
   modeMainnet,
-  optimism,
   plumeMainnet,
   scrollMainnet,
   sei,
@@ -196,6 +197,7 @@ const transports: Record<(typeof chains)[number]["id"], Transport> = {
     { url: "https://mainnet.mode.network", batch: false },
     { url: "https://mode.drpc.org", batch: false },
   ]),
+  [customChains.monad.id]: createFallbackTransport([...createPonderHttp(customChains.monad.id)]),
   [hemi.id]: createFallbackTransport([{ url: "https://rpc.hemi.network/rpc", batch: false }]),
   [flame.id]: createFallbackTransport(flame.rpcUrls.default.http.map((url) => ({ url, batch: false }))),
   [lisk.id]: createFallbackTransport([
