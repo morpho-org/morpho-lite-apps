@@ -3,12 +3,12 @@ import { Button } from "@morpho-org/uikit/components/shadcn/button";
 import { WalletMenu } from "@morpho-org/uikit/components/wallet-menu";
 import { CORE_DEPLOYMENTS } from "@morpho-org/uikit/lib/deployments";
 import { getChainSlug } from "@morpho-org/uikit/lib/utils";
-import { ConnectKitButton } from "connectkit";
 import { useCallback, useEffect, useMemo } from "react";
 import { Link, Outlet, useLocation, useNavigate, useParams } from "react-router";
 import { Toaster } from "sonner";
 import { useChains } from "wagmi";
 
+import { ConnectWalletButton } from "@/components/connect-wallet-button";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { MorphoMenu } from "@/components/morpho-menu";
@@ -19,21 +19,6 @@ import { APP_DETAILS, WORDMARK } from "@/lib/constants";
 enum SubPage {
   Earn = "earn",
   Borrow = "borrow",
-}
-
-function ConnectWalletButton() {
-  return (
-    <ConnectKitButton.Custom>
-      {({ show }) => {
-        return (
-          <Button variant="blue" size="lg" className="rounded-full px-4 font-light md:px-6" onClick={show}>
-            <span className="inline md:hidden">Connect</span>
-            <span className="hidden md:inline">Connect&nbsp;Wallet</span>
-          </Button>
-        );
-      }}
-    </ConnectKitButton.Custom>
-  );
 }
 
 export default function Page() {
