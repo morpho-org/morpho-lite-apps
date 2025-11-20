@@ -9,6 +9,7 @@ import {
 } from "@morpho-org/blue-sdk";
 import { metaMorphoAbi } from "@morpho-org/uikit/assets/abis/meta-morpho";
 import { metaMorphoFactoryAbi } from "@morpho-org/uikit/assets/abis/meta-morpho-factory";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@morpho-org/uikit/components/shadcn/tabs";
 import useContractEvents from "@morpho-org/uikit/hooks/use-contract-events/use-contract-events";
 import {
   getDeadDepositsBitmap,
@@ -23,6 +24,7 @@ import { useOutletContext } from "react-router";
 import { type Address, type Chain, erc20Abi, zeroAddress } from "viem";
 import { useAccount, useReadContract, useReadContracts } from "wagmi";
 
+import { BoxTopRoundedCorners } from "@/components/box-top-rounded-corners";
 import { CtaCard } from "@/components/cta-card";
 import { EarnTable } from "@/components/earn-table";
 import { useMarkets } from "@/hooks/use-markets";
@@ -270,21 +272,33 @@ export function EarnSubPage() {
 
   return (
     <div className="flex min-h-screen flex-col px-2.5 pt-16">
-      {status === "disconnected" ? (
-        <div className="bg-linear-to-b flex w-full flex-col from-transparent to-white/[0.03] px-8 pb-20 pt-8">
-          <CtaCard
-            className="md:w-7xl flex flex-col gap-4 md:mx-auto md:max-w-full md:flex-row md:items-center md:justify-between"
-            bigText="Earn on your terms"
-            littleText="Connect wallet to get started"
-            videoSrc={{
-              mov: "https://cdn.morpho.org/v2/assets/videos/earn-animation.mov",
-              webm: "https://cdn.morpho.org/v2/assets/videos/earn-animation.webm",
-            }}
-          />
-        </div>
-      ) : (
-        userRows.length > 0 && (
-          <div className="bg-linear-to-b lg:pt-22 flex h-fit w-full flex-col items-center from-transparent to-white/[0.03] pb-20">
+      <div className="bg-linear-to-b to-white/3 flex w-full flex-col from-transparent pb-20">
+        <CtaCard
+          bigText="Earn on your terms"
+          littleText="Connect wallet to get started"
+          videoSrc={{
+            mov: "https://cdn.morpho.org/v2/assets/videos/earn-animation.mov",
+            webm: "https://cdn.morpho.org/v2/assets/videos/earn-animation.webm",
+          }}
+        />
+      </div>
+
+      <BoxTopRoundedCorners>
+        <Tabs
+          defaultValue={userRows.length > 0 ? "user-positions" : "vaults"}
+          className="w-full max-w-7xl px-2 lg:px-8"
+        >
+          <TabsList className="grid grid-cols-2 p-0">
+            <TabsTrigger
+              className="disabled:cursor-not-allowed!"
+              value="user-positions"
+              disabled={userRows.length === 0}
+            >
+              Your positions
+            </TabsTrigger>
+            <TabsTrigger value="vaults">Vaults</TabsTrigger>
+          </TabsList>
+          <TabsContent value="user-positions" className="mt-4">
             <EarnTable
               chain={chain}
               rows={userRows}
@@ -293,25 +307,19 @@ export function EarnSubPage() {
               lendingRewards={lendingRewards}
               refetchPositions={refetchBalanceOf}
             />
-          </div>
-        )
-      )}
-      {/*
-      Outer div ensures background color matches the end of the gradient from the div above,
-      allowing rounded corners to show correctly. Inner div defines rounded corners and table background.
-      */}
-      <div className="flex grow flex-col bg-white/[0.03]">
-        <div className="bg-linear-to-b from-background to-primary flex h-full grow justify-center rounded-t-xl pb-16 pt-8">
-          <EarnTable
-            chain={chain}
-            rows={rows}
-            depositsMode="totalAssets"
-            tokens={tokens}
-            lendingRewards={lendingRewards}
-            refetchPositions={refetchBalanceOf}
-          />
-        </div>
-      </div>
+          </TabsContent>
+          <TabsContent value="vaults" className="mt-4">
+            <EarnTable
+              chain={chain}
+              rows={rows}
+              depositsMode="totalAssets"
+              tokens={tokens}
+              lendingRewards={lendingRewards}
+              refetchPositions={refetchBalanceOf}
+            />
+          </TabsContent>
+        </Tabs>
+      </BoxTopRoundedCorners>
     </div>
   );
 }

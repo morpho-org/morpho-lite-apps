@@ -11,55 +11,56 @@ import {
   TableHeader,
   TableRow,
 } from "@morpho-org/uikit/components/shadcn/table";
-import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@morpho-org/uikit/components/shadcn/tooltip";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@morpho-org/uikit/components/shadcn/tooltip";
 import { formatLtv, formatBalanceWithSymbol, Token, abbreviateAddress } from "@morpho-org/uikit/lib/utils";
 import { blo } from "blo";
 import { CheckCheck, Copy, ExternalLink, Info } from "lucide-react";
-import { useState } from "react";
+import { lazy, useState } from "react";
 import { type Chain, type Hex, type Address } from "viem";
 
-import { BorrowSheetContent } from "@/components/borrow-sheet-content";
 import { ApyTableCell } from "@/components/table-cells/apy-table-cell";
 import { type useMerklOpportunities } from "@/hooks/use-merkl-opportunities";
 import { SHARED_LIQUIDITY_DOCUMENTATION } from "@/lib/constants";
 import { type DisplayableCurators } from "@/lib/curators";
 
+const BorrowSheetContent = lazy(() =>
+  import("@/components/borrow-sheet-content").then((mod) => ({ default: mod.BorrowSheetContent })),
+);
+
 function TokenTableCell({ address, symbol, imageSrc, chain }: Token & { chain: Chain | undefined }) {
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <div className="hover:bg-secondary flex w-min items-center gap-2 rounded-sm p-2">
-            <Avatar className="size-4 rounded-full">
-              <AvatarImage src={imageSrc} alt="Avatar" />
-              <AvatarFallback delayMs={1000}>
-                <img src={blo(address)} />
-              </AvatarFallback>
-            </Avatar>
-            {symbol ?? "－"}
-          </div>
-        </TooltipTrigger>
-        <TooltipContent
-          className="text-primary-foreground rounded-3xl p-4 shadow-2xl"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="flex items-center gap-1">
-            <p>
-              Address: <code>{abbreviateAddress(address)}</code>
-            </p>
-            {chain?.blockExplorers?.default.url && (
-              <a
-                href={`${chain.blockExplorers.default.url}/address/${address}`}
-                rel="noopener noreferrer"
-                target="_blank"
-              >
-                <ExternalLink className="size-4" />
-              </a>
-            )}
-          </div>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <div className="hover:bg-secondary flex w-min items-center gap-2 rounded-sm p-2">
+          <Avatar className="size-4 rounded-full">
+            <AvatarImage src={imageSrc} alt="Avatar" />
+            <AvatarFallback delayMs={1000}>
+              <img src={blo(address)} />
+            </AvatarFallback>
+          </Avatar>
+          {symbol ?? "－"}
+        </div>
+      </TooltipTrigger>
+      <TooltipContent
+        className="text-primary-foreground rounded-3xl p-4 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center gap-1">
+          <p>
+            Address: <code>{abbreviateAddress(address)}</code>
+          </p>
+          {chain?.blockExplorers?.default.url && (
+            <a
+              href={`${chain.blockExplorers.default.url}/address/${address}`}
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              <ExternalLink className="size-4" />
+            </a>
+          )}
+        </div>
+      </TooltipContent>
+    </Tooltip>
   );
 }
 
@@ -87,36 +88,34 @@ function HealthTableCell({
       ? formatLtv(position.priceVariationToLiquidationPrice)
       : "－";
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <div className="hover:bg-secondary ml-[-8px] flex w-min items-center gap-2 rounded-sm p-2">
-            {ltvText} / {lltvText}
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <div className="hover:bg-secondary ml-[-8px] flex w-min items-center gap-2 rounded-sm p-2">
+          {ltvText} / {lltvText}
+        </div>
+      </TooltipTrigger>
+      <TooltipContent
+        className="text-primary-foreground rounded-3xl p-4 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex w-[240px] flex-col gap-3">
+          <div className="flex justify-between">
+            LTV / Liq. LTV
+            <span>
+              {ltvText} / {lltvText}
+            </span>
           </div>
-        </TooltipTrigger>
-        <TooltipContent
-          className="text-primary-foreground rounded-3xl p-4 shadow-2xl"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="flex w-[240px] flex-col gap-3">
-            <div className="flex justify-between">
-              LTV / Liq. LTV
-              <span>
-                {ltvText} / {lltvText}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              Liq. Price {`(${collateralToken.symbol} / ${loanToken.symbol})`}
-              <span>{lPriceText}</span>
-            </div>
-            <div className="flex justify-between">
-              Price Drop To Liq.
-              <span>{priceDropText}</span>
-            </div>
+          <div className="flex justify-between">
+            Liq. Price {`(${collateralToken.symbol} / ${loanToken.symbol})`}
+            <span>{lPriceText}</span>
           </div>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+          <div className="flex justify-between">
+            Price Drop To Liq.
+            <span>{priceDropText}</span>
+          </div>
+        </div>
+      </TooltipContent>
+    </Tooltip>
   );
 }
 
@@ -215,38 +214,36 @@ function IdTableCell({ marketId }: { marketId: MarketId }) {
   const [recentlyCopiedText, setRecentlyCopiedText] = useState("");
 
   return (
-    <TooltipProvider>
-      <Tooltip delayDuration={1000}>
-        <TooltipTrigger asChild>
-          <button
-            className="hover:bg-secondary ml-[-8px] flex w-min cursor-pointer items-center gap-2 rounded-sm p-2"
-            onClick={(event) => {
-              event.stopPropagation();
-              void navigator.clipboard.writeText(marketId);
+    <Tooltip delayDuration={1000}>
+      <TooltipTrigger asChild>
+        <button
+          className="hover:bg-secondary ml-[-8px] flex w-min cursor-pointer items-center gap-2 rounded-sm p-2"
+          onClick={(event) => {
+            event.stopPropagation();
+            void navigator.clipboard.writeText(marketId);
 
-              setRecentlyCopiedText(marketId);
-              setTimeout(() => setRecentlyCopiedText(""), 500);
-            }}
-          >
-            {marketId === recentlyCopiedText ? (
-              <CheckCheck className="size-4 text-green-400" />
-            ) : (
-              <Copy className="size-4" />
-            )}
-          </button>
-        </TooltipTrigger>
-        <TooltipContent
-          className="text-primary-foreground rounded-3xl p-4 shadow-2xl"
-          onClick={(e) => e.stopPropagation()}
+            setRecentlyCopiedText(marketId);
+            setTimeout(() => setRecentlyCopiedText(""), 500);
+          }}
         >
-          <div className="wrap-anywhere flex max-w-[200px] items-center gap-1">
-            <p>
-              Market ID: <code>{marketId}</code>
-            </p>
-          </div>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+          {marketId === recentlyCopiedText ? (
+            <CheckCheck className="size-4 text-green-400" />
+          ) : (
+            <Copy className="size-4" />
+          )}
+        </button>
+      </TooltipTrigger>
+      <TooltipContent
+        className="text-primary-foreground rounded-3xl p-4 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="wrap-anywhere flex max-w-[200px] items-center gap-1">
+          <p>
+            Market ID: <code>{marketId}</code>
+          </p>
+        </div>
+      </TooltipContent>
+    </Tooltip>
   );
 }
 
@@ -265,17 +262,28 @@ export function BorrowTable({
   borrowingRewards: ReturnType<typeof useMerklOpportunities>;
   refetchPositions: () => void;
 }) {
+  const [selectedMarket, setSelectedMarket] = useState<Market | null>(null);
+
   return (
-    <Table className="border-separate border-spacing-y-3">
-      <TableHeader className="bg-primary">
-        <TableRow>
-          <TableHead className="text-secondary-foreground rounded-l-lg pl-4 text-xs font-light">Collateral</TableHead>
-          <TableHead className="text-secondary-foreground text-xs font-light">Loan</TableHead>
-          <TableHead className="text-secondary-foreground text-xs font-light">LLTV</TableHead>
-          <TableHead className="text-secondary-foreground text-xs font-light">
-            <div className="flex items-center gap-1">
-              Liquidity
-              <TooltipProvider>
+    <Sheet
+      onOpenChange={(isOpen) => {
+        if (!isOpen) {
+          setSelectedMarket(null);
+          void refetchPositions();
+        }
+      }}
+    >
+      <Table className="border-separate border-spacing-y-3">
+        <TableHeader className="bg-primary">
+          <TableRow className="text-xs font-light">
+            <TableHead className="text-secondary-foreground w-[23%] min-w-[13rem] rounded-l-lg pl-4">
+              Collateral
+            </TableHead>
+            <TableHead className="text-secondary-foreground w-[15%] min-w-[8.5rem]">Loan</TableHead>
+            <TableHead className="text-secondary-foreground w-[10.5%] min-w-[6rem]">LLTV</TableHead>
+            <TableHead className="text-secondary-foreground w-[17.5%] min-w-[10rem]">
+              <div className="flex items-center gap-1">
+                Liquidity
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Info className="size-4" />
@@ -293,24 +301,21 @@ export function BorrowTable({
                     which could be reallocated to this market after you borrow.
                   </TooltipContent>
                 </Tooltip>
-              </TooltipProvider>
-            </div>
-          </TableHead>
-          <TableHead className="text-secondary-foreground text-xs font-light">Rate</TableHead>
-          <TableHead className="text-secondary-foreground text-xs font-light">Vault Listing</TableHead>
-          <TableHead className="text-secondary-foreground rounded-r-lg text-xs font-light">ID</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {markets.map((market) => (
-          <Sheet
-            key={market.id}
-            onOpenChange={(isOpen) => {
-              // Refetch positions on sidesheet close, since user may have sent txns to modify one
-              if (!isOpen) void refetchPositions();
-            }}
-          >
-            <SheetTrigger asChild>
+              </div>
+            </TableHead>
+            <TableHead className="text-secondary-foreground w-[12.5%] min-w-[7rem]">Rate</TableHead>
+            <TableHead className="text-secondary-foreground w-[13%] min-w-[7.5rem]">Vault Listing</TableHead>
+            <TableHead className="text-secondary-foreground w-[8.5%] min-w-[4.5rem] rounded-r-lg">ID</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {markets.map((market) => (
+            <SheetTrigger
+              aria-label={`Manage yours positions for ${tokens.get(market.params.collateralToken)?.symbol} market`}
+              onClick={() => setSelectedMarket(market)}
+              key={market.id}
+              asChild
+            >
               <TableRow className="bg-primary hover:bg-secondary">
                 <TableCell className="rounded-l-lg py-3">
                   <TokenTableCell {...tokens.get(market.params.collateralToken)!} chain={chain} />
@@ -349,11 +354,18 @@ export function BorrowTable({
                 </TableCell>
               </TableRow>
             </SheetTrigger>
-            <BorrowSheetContent marketId={market.id} marketParams={market.params} imarket={market} tokens={tokens} />
-          </Sheet>
-        ))}
-      </TableBody>
-    </Table>
+          ))}
+        </TableBody>
+      </Table>
+      {selectedMarket && (
+        <BorrowSheetContent
+          marketId={selectedMarket.id}
+          marketParams={selectedMarket.params}
+          imarket={selectedMarket}
+          tokens={tokens}
+        />
+      )}
+    </Sheet>
   );
 }
 
@@ -372,46 +384,49 @@ export function BorrowPositionTable({
   borrowingRewards: ReturnType<typeof useMerklOpportunities>;
   refetchPositions: () => void;
 }) {
+  const [selectedMarket, setSelectedMarket] = useState<Market | null>(null);
+
   return (
-    <Table className="border-separate border-spacing-y-3">
-      <TableHeader className="bg-primary">
-        <TableRow>
-          <TableHead className="text-secondary-foreground rounded-l-lg pl-4 text-xs font-light">Collateral</TableHead>
-          <TableHead className="text-secondary-foreground text-xs font-light">Loan</TableHead>
-          <TableHead className="text-secondary-foreground text-xs font-light">Rate</TableHead>
-          <TableHead className="text-secondary-foreground text-xs font-light">Health</TableHead>
-          <TableHead className="text-secondary-foreground rounded-r-lg text-xs font-light">ID</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {markets.map((market) => {
-          const collateralToken = tokens.get(market.params.collateralToken)!;
-          const loanToken = tokens.get(market.params.loanToken)!;
-          const position = positions?.get(market.id);
+    <Sheet
+      onOpenChange={(isOpen) => {
+        if (!isOpen) {
+          setSelectedMarket(null);
+          void refetchPositions();
+        }
+      }}
+    >
+      <Table className="border-separate border-spacing-y-3">
+        <TableHeader className="bg-primary">
+          <TableRow>
+            <TableHead className="text-secondary-foreground rounded-l-lg pl-4 text-xs font-light">Collateral</TableHead>
+            <TableHead className="text-secondary-foreground text-xs font-light">Loan</TableHead>
+            <TableHead className="text-secondary-foreground text-xs font-light">Rate</TableHead>
+            <TableHead className="text-secondary-foreground text-xs font-light">Health</TableHead>
+            <TableHead className="text-secondary-foreground rounded-r-lg text-xs font-light">ID</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {markets.map((market) => {
+            const collateralToken = tokens.get(market.params.collateralToken)!;
+            const loanToken = tokens.get(market.params.loanToken)!;
+            const position = positions?.get(market.id);
 
-          let collateralText = collateralToken.symbol;
-          if (position && collateralToken.decimals !== undefined) {
-            collateralText = formatBalanceWithSymbol(
-              position.collateral,
-              collateralToken.decimals,
-              collateralToken.symbol,
-              5,
-            );
-          }
-          let loanText = loanToken.symbol;
-          if (position && loanToken.decimals !== undefined) {
-            loanText = formatBalanceWithSymbol(position.borrowAssets, loanToken.decimals, loanToken.symbol, 5);
-          }
+            let collateralText = collateralToken.symbol;
+            if (position && collateralToken.decimals !== undefined) {
+              collateralText = formatBalanceWithSymbol(
+                position.collateral,
+                collateralToken.decimals,
+                collateralToken.symbol,
+                5,
+              );
+            }
+            let loanText = loanToken.symbol;
+            if (position && loanToken.decimals !== undefined) {
+              loanText = formatBalanceWithSymbol(position.borrowAssets, loanToken.decimals, loanToken.symbol, 5);
+            }
 
-          return (
-            <Sheet
-              key={market.id}
-              onOpenChange={(isOpen) => {
-                // Refetch positions on sidesheet close, since user may have sent txns to modify one
-                if (!isOpen) void refetchPositions();
-              }}
-            >
-              <SheetTrigger asChild>
+            return (
+              <SheetTrigger key={market.id} asChild onClick={() => setSelectedMarket(market)}>
                 <TableRow className="bg-primary hover:bg-secondary">
                   <TableCell className="rounded-l-lg py-3">
                     <TokenTableCell {...collateralToken} symbol={collateralText} chain={chain} />
@@ -439,11 +454,18 @@ export function BorrowPositionTable({
                   </TableCell>
                 </TableRow>
               </SheetTrigger>
-              <BorrowSheetContent marketId={market.id} marketParams={market.params} imarket={market} tokens={tokens} />
-            </Sheet>
-          );
-        })}
-      </TableBody>
-    </Table>
+            );
+          })}
+        </TableBody>
+      </Table>
+      {selectedMarket && (
+        <BorrowSheetContent
+          marketId={selectedMarket.id}
+          marketParams={selectedMarket.params}
+          imarket={selectedMarket}
+          tokens={tokens}
+        />
+      )}
+    </Sheet>
   );
 }

@@ -11,21 +11,24 @@ import {
   TableCell,
   Table,
 } from "@morpho-org/uikit/components/shadcn/table";
-import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@morpho-org/uikit/components/shadcn/tooltip";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@morpho-org/uikit/components/shadcn/tooltip";
 import { useModifierKey } from "@morpho-org/uikit/hooks/use-modifier-key";
 import { formatBalanceWithSymbol, Token, formatLtv, abbreviateAddress } from "@morpho-org/uikit/lib/utils";
 import { blo } from "blo";
-// @ts-expect-error: this package lacks types
 import humanizeDuration from "humanize-duration";
 import { ClockAlert, ExternalLink } from "lucide-react";
+import { lazy, useState } from "react";
 import { Chain, hashMessage, Address, zeroAddress, formatUnits } from "viem";
 
-import { EarnSheetContent } from "@/components/earn-sheet-content";
 import { ApyTableCell } from "@/components/table-cells/apy-table-cell";
 import { type useMerklOpportunities } from "@/hooks/use-merkl-opportunities";
 import { MIN_TIMELOCK } from "@/lib/constants";
 import { type DisplayableCurators } from "@/lib/curators";
 import { getTokenURI } from "@/lib/tokens";
+
+const EarnSheetContent = lazy(() =>
+  import("@/components/earn-sheet-content").then((mod) => ({ default: mod.EarnSheetContent })),
+);
 
 export type Row = {
   vault: AccrualVault;
@@ -44,51 +47,49 @@ function VaultTableCell({
   timelock,
 }: Token & { chain: Chain | undefined; timelock: bigint }) {
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <div className="hover:bg-secondary flex w-min items-center gap-2 rounded-sm p-2">
-            <Avatar className="h-4 w-4 rounded-full">
-              <AvatarImage src={imageSrc} alt="Avatar" />
-              <AvatarFallback delayMs={1000}>
-                <img src={blo(address)} />
-              </AvatarFallback>
-            </Avatar>
-            {symbol ?? "－"}
-            {timelock < MIN_TIMELOCK && (
-              <ClockAlert height={16} width={16} className="text-morpho-error duration-750 animate-pulse" />
-            )}
-          </div>
-        </TooltipTrigger>
-        <TooltipContent
-          className="text-primary-foreground rounded-3xl p-4 shadow-2xl"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <p className="underline">Properties</p>
-          <p>Timelock: {humanizeDuration(Number(timelock) * 1000)}</p>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <div className="hover:bg-secondary flex w-min items-center gap-2 rounded-sm p-2">
+          <Avatar className="h-4 w-4 rounded-full">
+            <AvatarImage src={imageSrc} alt="Avatar" />
+            <AvatarFallback delayMs={1000}>
+              <img src={blo(address)} />
+            </AvatarFallback>
+          </Avatar>
+          {symbol ?? "－"}
           {timelock < MIN_TIMELOCK && (
-            <p className="text-morpho-error italic">
-              This timelock seems low. Please exercise caution and ask the curator about it if you have questions.
-            </p>
+            <ClockAlert height={16} width={16} className="text-morpho-error duration-750 animate-pulse" />
           )}
-          <br />
-          <div className="flex items-center gap-1">
-            <p>
-              Vault: <code>{abbreviateAddress(address)}</code>
-            </p>
-            {chain?.blockExplorers?.default.url && (
-              <a
-                href={`${chain.blockExplorers.default.url}/address/${address}`}
-                rel="noopener noreferrer"
-                target="_blank"
-              >
-                <ExternalLink className="h-4 w-4" />
-              </a>
-            )}
-          </div>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+        </div>
+      </TooltipTrigger>
+      <TooltipContent
+        className="text-primary-foreground rounded-3xl p-4 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <p className="underline">Properties</p>
+        <p>Timelock: {humanizeDuration(Number(timelock) * 1000)}</p>
+        {timelock < MIN_TIMELOCK && (
+          <p className="text-morpho-error italic">
+            This timelock seems low. Please exercise caution and ask the curator about it if you have questions.
+          </p>
+        )}
+        <br />
+        <div className="flex items-center gap-1">
+          <p>
+            Vault: <code>{abbreviateAddress(address)}</code>
+          </p>
+          {chain?.blockExplorers?.default.url && (
+            <a
+              href={`${chain.blockExplorers.default.url}/address/${address}`}
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              <ExternalLink className="h-4 w-4" />
+            </a>
+          )}
+        </div>
+      </TooltipContent>
+    </Tooltip>
   );
 }
 
@@ -100,54 +101,52 @@ function CuratorTableCell({
   chain,
 }: Row["curators"][string] & { chain: Chain | undefined }) {
   return (
-    <TooltipProvider>
-      <Tooltip delayDuration={0}>
-        <TooltipTrigger asChild>
-          <div className="hover:bg-secondary ml-[-8px] flex w-min items-center gap-2 rounded-sm p-2">
-            <Avatar className="h-4 w-4 rounded-full">
-              <AvatarImage src={imageSrc ?? ""} alt="Avatar" />
-              <AvatarFallback delayMs={500}>
-                <img src={blo(hashMessage(name).padEnd(42, "0").slice(0, 42) as Address)} />
-              </AvatarFallback>
-            </Avatar>
-            {name}
-          </div>
-        </TooltipTrigger>
-        <TooltipContent
-          className="text-primary-foreground rounded-3xl p-4 shadow-2xl"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* It's possible for a curator to have no onchain roles. In that case, just show their URL. */}
-          {roles.length > 0 && (
-            <>
-              <p className="underline">Roles</p>
-              {roles.map((role) => (
-                <div className="flex items-center gap-1" key={role.name}>
-                  <p>
-                    {role.name}: <code>{abbreviateAddress(role.address)}</code>
-                  </p>
-                  {chain?.blockExplorers?.default.url && (
-                    <a
-                      href={`${chain.blockExplorers.default.url}/address/${role.address}`}
-                      rel="noopener noreferrer"
-                      target="_blank"
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                    </a>
-                  )}
-                </div>
-              ))}
-              <br />
-            </>
-          )}
-          {url != null && (
-            <SafeLink className="text-blue-200 underline" href={url}>
-              {url}
-            </SafeLink>
-          )}
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <Tooltip delayDuration={0}>
+      <TooltipTrigger asChild>
+        <div className="hover:bg-secondary ml-[-8px] flex w-min items-center gap-2 rounded-sm p-2">
+          <Avatar className="h-4 w-4 rounded-full">
+            <AvatarImage src={imageSrc ?? ""} alt="Avatar" />
+            <AvatarFallback delayMs={500}>
+              <img src={blo(hashMessage(name).padEnd(42, "0").slice(0, 42) as Address)} />
+            </AvatarFallback>
+          </Avatar>
+          {name}
+        </div>
+      </TooltipTrigger>
+      <TooltipContent
+        className="text-primary-foreground rounded-3xl p-4 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* It's possible for a curator to have no onchain roles. In that case, just show their URL. */}
+        {roles.length > 0 && (
+          <>
+            <p className="underline">Roles</p>
+            {roles.map((role) => (
+              <div className="flex items-center gap-1" key={role.name}>
+                <p>
+                  {role.name}: <code>{abbreviateAddress(role.address)}</code>
+                </p>
+                {chain?.blockExplorers?.default.url && (
+                  <a
+                    href={`${chain.blockExplorers.default.url}/address/${role.address}`}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                  </a>
+                )}
+              </div>
+            ))}
+            <br />
+          </>
+        )}
+        {url != null && (
+          <SafeLink className="text-blue-200 underline" href={url}>
+            {url}
+          </SafeLink>
+        )}
+      </TooltipContent>
+    </Tooltip>
   );
 }
 
@@ -244,55 +243,63 @@ export function EarnTable({
   refetchPositions: () => void;
 }) {
   const isShiftHeld = useModifierKey("Shift");
+  const [selectedRow, setSelectedRow] = useState<Row | null>(null);
 
   return (
-    <div className="text-primary-foreground w-full max-w-7xl px-2 lg:px-8">
-      <Table className="border-separate border-spacing-y-3">
-        <TableHeader className="bg-primary">
-          <TableRow>
-            <TableHead className="text-secondary-foreground rounded-l-lg pl-4 text-xs font-light">Vault</TableHead>
-            <TableHead className="text-secondary-foreground text-xs font-light">Deposits</TableHead>
-            <TableHead className="text-secondary-foreground text-xs font-light">Curator</TableHead>
-            <TableHead className="text-secondary-foreground text-xs font-light">Collateral</TableHead>
-            <TableHead className="text-secondary-foreground rounded-r-lg text-xs font-light">APY</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {rows.map((row) => {
-            const ownerText = abbreviateAddress(row.vault.owner);
-            const deposits =
-              depositsMode === "userAssets"
-                ? row.userShares !== undefined
-                  ? row.vault.toAssets(row.userShares)
-                  : undefined
-                : row.vault.totalAssets;
+    <div className="text-primary-foreground w-full max-w-7xl">
+      <Sheet
+        onOpenChange={(isOpen) => {
+          if (!isOpen) {
+            setSelectedRow(null);
+            // Refetch positions on sidesheet close, since user may have sent txns to modify one
+            void refetchPositions();
+          }
+        }}
+      >
+        <Table className="border-separate border-spacing-y-3">
+          <TableHeader className="bg-primary">
+            <TableRow className="text-xs font-light">
+              <TableHead className="text-secondary-foreground w-[30%] min-w-[18rem] rounded-l-lg pl-4">Vault</TableHead>
+              <TableHead className="text-secondary-foreground w-[15%] min-w-[8.5rem]">Deposits</TableHead>
+              <TableHead className="text-secondary-foreground w-[28%] min-w-[17rem]">Curator</TableHead>
+              <TableHead className="text-secondary-foreground w-[15%] min-w-[9rem]">Collateral</TableHead>
+              <TableHead className="text-secondary-foreground w-[12%] min-w-[6rem] rounded-r-lg">APY</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {rows.map((row) => {
+              const ownerText = abbreviateAddress(row.vault.owner);
+              const deposits =
+                depositsMode === "userAssets"
+                  ? row.userShares !== undefined
+                    ? row.vault.toAssets(row.userShares)
+                    : undefined
+                  : row.vault.totalAssets;
 
-            const rewardsVault = lendingRewards.get(row.vault.address) ?? [];
-            const rewardsMarkets = [...row.vault.allocations.keys()].flatMap((marketId) =>
-              (lendingRewards.get(marketId) ?? [])
-                .map((opportunity) => {
-                  const proportion = parseFloat(formatUnits(row.vault.getAllocationProportion(marketId), 18));
-                  return {
-                    ...opportunity,
-                    apr: opportunity.apr * proportion,
-                    dailyRewards: opportunity.dailyRewards * proportion,
-                  };
-                })
-                .filter((opportunity) => opportunity.apr > 0),
-            );
-            // When a vault has vault-level rewards, use those instead of market-level rewards
-            // because vault campaigns are configured specifically for the vault's allocation
-            const rewards = rewardsVault.length > 0 ? rewardsVault : rewardsMarkets;
+              const rewardsVault = lendingRewards.get(row.vault.address) ?? [];
+              const rewardsMarkets = [...row.vault.allocations.keys()].flatMap((marketId) =>
+                (lendingRewards.get(marketId) ?? [])
+                  .map((opportunity) => {
+                    const proportion = parseFloat(formatUnits(row.vault.getAllocationProportion(marketId), 18));
+                    return {
+                      ...opportunity,
+                      apr: opportunity.apr * proportion,
+                      dailyRewards: opportunity.dailyRewards * proportion,
+                    };
+                  })
+                  .filter((opportunity) => opportunity.apr > 0),
+              );
+              // When a vault has vault-level rewards, use those instead of market-level rewards
+              // because vault campaigns are configured specifically for the vault's allocation
+              const rewards = rewardsVault.length > 0 ? rewardsVault : rewardsMarkets;
 
-            return (
-              <Sheet
-                key={row.vault.address}
-                onOpenChange={(isOpen) => {
-                  // Refetch positions on sidesheet close, since user may have sent txns to modify one
-                  if (!isOpen) void refetchPositions();
-                }}
-              >
-                <SheetTrigger asChild>
+              return (
+                <SheetTrigger
+                  key={row.vault.address}
+                  aria-label={`Manage yours positions for ${row.vault.name}`}
+                  asChild
+                  onClick={() => setSelectedRow(row)}
+                >
                   <TableRow className="bg-primary hover:bg-secondary">
                     <TableCell className="rounded-l-lg py-3">
                       <VaultTableCell
@@ -327,16 +334,18 @@ export function EarnTable({
                     </TableCell>
                   </TableRow>
                 </SheetTrigger>
-                <EarnSheetContent
-                  vaultAddress={row.vault.address}
-                  isDeadDepositStateValid={row.isDeadDepositStateValid}
-                  asset={row.asset}
-                />
-              </Sheet>
-            );
-          })}
-        </TableBody>
-      </Table>
+              );
+            })}
+          </TableBody>
+        </Table>
+        {selectedRow && (
+          <EarnSheetContent
+            vaultAddress={selectedRow.vault.address}
+            isDeadDepositStateValid={selectedRow.isDeadDepositStateValid}
+            asset={selectedRow.asset}
+          />
+        )}
+      </Sheet>
     </div>
   );
 }
