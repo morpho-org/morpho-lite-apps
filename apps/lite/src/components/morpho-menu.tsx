@@ -28,7 +28,7 @@ function DropdownMenuLink({ children, href }: { children: ReactNode; href: strin
 export function MorphoMenu() {
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
+      <DropdownMenuTrigger aria-label="Open Morpho menu" asChild>
         <div className="flex cursor-pointer items-center gap-1">
           <WordmarkSvg height={24} className="hidden md:block" />
           <ChevronDown className="hidden h-4 w-4 md:block" />

@@ -108,7 +108,7 @@ export const ADDITIONAL_OFFCHAIN_CURATORS: Record<Address, DisplayableCurators> 
       roles: [],
       url: "https://www.cicada.partners/",
       imageSrc:
-        "https://static.wixstatic.com/media/f9d184_1702c7c11ec647f480ad8e0c8c4859c3~mv2.png/v1/fill/w_120,h_155,al_c,lg_1,q_85,enc_avif,quality_auto/Cicada%20Image_Black%20on%20White_25%25.png",
+        "https://static.wixstatic.com/media/f9d184_1702c7c11ec647f480ad8e0c8c4859c3~mv2.png/v1/fill/w_16,h_16,al_c,lg_1,q_85,enc_avif,quality_auto/Cicada%20Image_Black%20on%20White_25%25.png",
       shouldAlwaysShow: true,
     },
   },

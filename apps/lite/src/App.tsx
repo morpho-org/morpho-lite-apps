@@ -1,5 +1,6 @@
 import { AddressScreeningModal } from "@morpho-org/uikit/components/address-screening-modal";
 import { SafeLinkModal } from "@morpho-org/uikit/components/safe-link-modal";
+import { TooltipProvider } from "@morpho-org/uikit/components/shadcn/tooltip";
 import { AddressScreeningProvider } from "@morpho-org/uikit/hooks/use-address-screening";
 import { SafeLinksProvider } from "@morpho-org/uikit/hooks/use-safe-links";
 import { cyrb64Hash } from "@morpho-org/uikit/lib/cyrb64";
@@ -59,13 +60,15 @@ function App({ children, wagmiConfig = defaultWagmiConfig }: { children: ReactNo
           }}
         >
           <UrqlProvider value={urqlClient}>
-            <AddressScreeningProvider>
-              <SafeLinksProvider>
-                {children}
-                <SafeLinkModal />
-              </SafeLinksProvider>
-              <AddressScreeningModal />
-            </AddressScreeningProvider>
+            <TooltipProvider>
+              <AddressScreeningProvider>
+                <SafeLinksProvider>
+                  {children}
+                  <SafeLinkModal />
+                </SafeLinksProvider>
+                <AddressScreeningModal />
+              </AddressScreeningProvider>
+            </TooltipProvider>
           </UrqlProvider>
         </ConnectKitProvider>
       </PersistQueryClientProvider>
