@@ -2,7 +2,7 @@ import { abbreviateAddress } from "@morpho-org/uikit/lib/utils";
 import userEvent from "@testing-library/user-event";
 import { http, UserRejectedRequestError } from "viem";
 import { generatePrivateKey, privateKeyToAddress } from "viem/accounts";
-import { mainnet, base, optimism } from "viem/chains";
+import { mainnet, base, soneium } from "viem/chains";
 import { describe, expect, vi } from "vitest";
 import { mock } from "wagmi";
 
@@ -68,13 +68,13 @@ describe("connect wallet flow", () => {
 });
 
 describe("switch chain flow", () => {
-  testWithMainnetFork("switches to optimism without wallet and opens main app", async ({ client }) => {
+  testWithMainnetFork("switches to soneium without wallet and opens main app", async ({ client }) => {
     const account = privateKeyToAddress(generatePrivateKey());
     const wagmiConfig = createConfig({
-      chains: [mainnet, optimism],
+      chains: [mainnet, soneium],
       transports: {
         [mainnet.id]: http(client.transport.url),
-        [optimism.id]: http(rpcUrls[optimism.id]),
+        [soneium.id]: http(rpcUrls[soneium.id]),
       },
       connectors: [mock({ accounts: [account] })],
     });
@@ -82,24 +82,24 @@ describe("switch chain flow", () => {
     window.localStorage.setItem("hasSeenWelcome", "true");
     render(<Page />, {
       wagmiConfig,
-      routes: [{ element: <div>Switched to Optimism successfully!</div>, path: "op-mainnet/earn" }],
+      routes: [{ element: <div>Switched to Soneium successfully!</div>, path: "soneium-mainnet/earn" }],
     });
 
     window.open = vi.fn();
 
     await userEvent.click(screen.getByRole("combobox"));
-    await userEvent.click(screen.getByText("OP Mainnet"));
+    await userEvent.click(screen.getByText("Soneium Mainnet"));
 
-    expect(screen.getByText("Switched to Optimism successfully!")).toBeInTheDocument();
+    expect(screen.getByText("Switched to Soneium successfully!")).toBeInTheDocument();
   });
 
-  testWithMainnetFork("switches to optimism with wallet", async ({ client }) => {
+  testWithMainnetFork("switches to soneium with wallet", async ({ client }) => {
     const account = privateKeyToAddress(generatePrivateKey());
     const wagmiConfig = createConfig({
-      chains: [mainnet, optimism],
+      chains: [mainnet, soneium],
       transports: {
         [mainnet.id]: http(client.transport.url),
-        [optimism.id]: http(rpcUrls[optimism.id]),
+        [soneium.id]: http(rpcUrls[soneium.id]),
       },
       connectors: [mock({ accounts: [account], features: { defaultConnected: true } })],
     });
@@ -107,14 +107,14 @@ describe("switch chain flow", () => {
     window.localStorage.setItem("hasSeenWelcome", "true");
     render(<Page />, {
       wagmiConfig,
-      routes: [{ element: <div>Switched to Optimism successfully!</div>, path: "op-mainnet/earn" }],
+      routes: [{ element: <div>Switched to Soneium successfully!</div>, path: "soneium-mainnet/earn" }],
     });
 
     window.open = vi.fn();
 
     await userEvent.click(screen.getByRole("combobox"));
-    await userEvent.click(screen.getByText("OP Mainnet"));
+    await userEvent.click(screen.getByText("Soneium Mainnet"));
 
-    expect(screen.getByText("Switched to Optimism successfully!")).toBeInTheDocument();
+    expect(screen.getByText("Switched to Soneium successfully!")).toBeInTheDocument();
   });
 });
