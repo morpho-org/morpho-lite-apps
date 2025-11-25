@@ -46,6 +46,7 @@ import InkSvg from "@/assets/chains/ink.svg?react";
 import KatanaSvg from "@/assets/chains/katana.svg?react";
 import LiskSvg from "@/assets/chains/lisk.svg?react";
 import ModeSvg from "@/assets/chains/mode.svg?react";
+import MonadSvg from "@/assets/chains/monad.svg?react";
 import OptimismSvg from "@/assets/chains/op.svg?react";
 import PlumeSvg from "@/assets/chains/plume.svg?react";
 import PolygonSvg from "@/assets/chains/polygon.svg?react";
@@ -97,6 +98,8 @@ export function ChainIcon({ id }: { id: number | undefined }): JSX.Element {
       return <EthereumSvg />;
     case modeMainnet.id:
       return <ModeSvg />;
+    case customChains.monad.id:
+      return <MonadSvg />;
     case optimism.id:
       return <OptimismSvg />;
     case plumeMainnet.id:

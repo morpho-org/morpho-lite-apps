@@ -161,6 +161,10 @@ export const DEPLOYMENTS: Deployments = {
     Morpho: { address: "0x918B9F2E4B44E20c6423105BB6cCEB71473aD35c", fromBlock: 853025n },
     MetaMorphoV1_1Factory: { address: "0xcDA78f4979d17Ec93052A84A12001fe0088AD734", fromBlock: 978654n },
   },
+  [customChains.monad.id]: {
+    Morpho: { address: "0xD5D960E8C380B724a48AC59E2DfF1b2CB4a1eAee", fromBlock: 31907457n },
+    MetaMorphoV1_1Factory: { address: "0x33f20973275B2F574488b18929cd7DCBf1AbF275", fromBlock: 32320327n },
+  },
 };
 
 export const CORE_DEPLOYMENTS = new Set<keyof Deployments>([
@@ -171,6 +175,8 @@ export const CORE_DEPLOYMENTS = new Set<keyof Deployments>([
   customChains.katana.id,
   arbitrum.id,
   customChains.hyperevm.id,
+  optimism.id,
+  customChains.monad.id,
 ]);
 
 export function getContractDeploymentInfo(chainId: number, name: OptionalContracts): DeploymentDetails | undefined;
