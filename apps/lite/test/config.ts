@@ -4,11 +4,11 @@ import { base, mainnet, optimism, polygon, soneium } from "viem/chains";
 export const chains = [mainnet, base, optimism, polygon, soneium] as const;
 
 export const rpcUrls: { [K in (typeof chains)[number]["id"]]: `https://${string}` } = {
-  [mainnet.id]: `https://curator.morpho.org/api/rpc/${mainnet.id}`,
-  [base.id]: `https://curator.morpho.org/api/rpc/${base.id}`,
-  [optimism.id]: `https://curator.morpho.org/api/rpc/${optimism.id}`,
-  [polygon.id]: `https://curator.morpho.org/api/rpc/${polygon.id}`,
-  [soneium.id]: `https://curator.morpho.org/api/rpc/${soneium.id}`,
+  [mainnet.id]: `https://rpc.mevblocker.io`,
+  [base.id]: `https://base.gateway.tenderly.co`,
+  [optimism.id]: `https://optimism.gateway.tenderly.co`,
+  [polygon.id]: `https://polygon.gateway.tenderly.co`,
+  [soneium.id]: `https://rpc.soneium.org`,
 };
 
 export const testWithMainnetFork = createViemTest(mainnet, {
