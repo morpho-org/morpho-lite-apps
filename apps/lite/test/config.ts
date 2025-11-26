@@ -4,11 +4,11 @@ import { base, mainnet, optimism, polygon, soneium } from "viem/chains";
 export const chains = [mainnet, base, optimism, polygon, soneium] as const;
 
 export const rpcUrls: { [K in (typeof chains)[number]["id"]]: `https://${string}` } = {
-  [mainnet.id]: `https://eth-mainnet.g.alchemy.com/v2/${import.meta.env.VITE_ALCHEMY_API_KEY}`,
-  [base.id]: `https://base-mainnet.g.alchemy.com/v2/${import.meta.env.VITE_ALCHEMY_API_KEY}`,
-  [optimism.id]: `https://op-mainnet.g.alchemy.com/v2/${import.meta.env.VITE_ALCHEMY_API_KEY}`,
+  [mainnet.id]: `https://rpc.mevblocker.io`,
+  [base.id]: `https://base.gateway.tenderly.co`,
+  [optimism.id]: `https://optimism.gateway.tenderly.co`,
   [polygon.id]: `https://polygon.gateway.tenderly.co`,
-  [soneium.id]: `https://soneium-mainnet.g.alchemy.com/v2/${import.meta.env.VITE_ALCHEMY_API_KEY}`,
+  [soneium.id]: `https://rpc.soneium.org`,
 };
 
 export const testWithMainnetFork = createViemTest(mainnet, {
