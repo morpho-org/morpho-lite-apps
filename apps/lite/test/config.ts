@@ -7,7 +7,7 @@ export const rpcUrls: { [K in (typeof chains)[number]["id"]]: `https://${string}
   [mainnet.id]: `https://eth-mainnet.g.alchemy.com/v2/${import.meta.env.VITE_ALCHEMY_API_KEY}`,
   [base.id]: `https://base-mainnet.g.alchemy.com/v2/${import.meta.env.VITE_ALCHEMY_API_KEY}`,
   [optimism.id]: `https://op-mainnet.g.alchemy.com/v2/${import.meta.env.VITE_ALCHEMY_API_KEY}`,
-  [polygon.id]: `https://polygon-mainnet.g.alchemy.com/v2/${import.meta.env.VITE_ALCHEMY_API_KEY}`,
+  [polygon.id]: `https://polygon.gateway.tenderly.co`,
   [soneium.id]: `https://soneium-mainnet.g.alchemy.com/v2/${import.meta.env.VITE_ALCHEMY_API_KEY}`,
 };
 
