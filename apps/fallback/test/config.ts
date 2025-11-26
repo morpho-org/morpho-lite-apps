@@ -17,5 +17,5 @@ export const testWithMainnetFork = createViemTest(mainnet, {
 
 export const testWithPolygonFork = createViemTest(polygon, {
   forkUrl: rpcUrls[polygon.id],
-  forkBlockNumber: 70_000_000,
+  forkBlockNumber: 79_501_383,
 });

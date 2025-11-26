@@ -465,7 +465,7 @@ describe("repay flow", () => {
 
     expect(approval.args.owner).toBe(account);
     expect(approval.args.spender).toBe(morphoAddress);
-    expect(approval.args.value).toBe(10009997787393201n); // > 0.01 because of share growth buffer
+    expect(approval.args.value).toBe(10009973542199462n); // > 0.01 because of share growth buffer
 
     await waitFor(() => screen.findAllByRole("button", { name: "Repay" }), { timeout: 10_000 });
 
