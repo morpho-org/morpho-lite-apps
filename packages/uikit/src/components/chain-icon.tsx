@@ -54,6 +54,7 @@ import ScrollSvg from "@/assets/chains/scroll.svg?react";
 import SeiSvg from "@/assets/chains/sei.svg?react";
 import SoneiumSvg from "@/assets/chains/soneium.svg?react";
 import SonicSvg from "@/assets/chains/sonic.svg?react";
+import StableSvg from "@/assets/chains/stable.svg?react";
 import TacSvg from "@/assets/chains/tac.svg?react";
 import UnichainSvg from "@/assets/chains/unichain.svg?react";
 import WorldchainSvg from "@/assets/chains/worldchain.svg?react";
@@ -114,6 +115,8 @@ export function ChainIcon({ id }: { id: number | undefined }): JSX.Element {
       return <SoneiumSvg />;
     case sonic.id:
       return <SonicSvg />;
+    case customChains.stable.id:
+      return <StableSvg />;
     case customChains.tac.id:
       return <TacSvg />;
     case unichain.id:

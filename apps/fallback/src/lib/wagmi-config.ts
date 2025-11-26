@@ -17,7 +17,6 @@ import {
   celo,
   corn,
   etherlink,
-  flame,
   fraxtal,
   hemi,
   ink,
@@ -72,13 +71,13 @@ const chains = [
   customChains.hyperevm,
   optimism,
   customChains.monad,
+  customChains.stable,
   // fallback support (alphabetical)
   abstract,
   bsc,
   celo,
   corn,
   etherlink,
-  flame,
   fraxtal,
   hemi,
   ink,
@@ -199,7 +198,6 @@ const transports: Record<(typeof chains)[number]["id"], Transport> = {
   ]),
   [customChains.monad.id]: createFallbackTransport([...createPonderHttp(customChains.monad.id)]),
   [hemi.id]: createFallbackTransport([{ url: "https://rpc.hemi.network/rpc", batch: false }]),
-  [flame.id]: createFallbackTransport(flame.rpcUrls.default.http.map((url) => ({ url, batch: false }))),
   [lisk.id]: createFallbackTransport([
     { url: "https://lisk.gateway.tenderly.co", batch: { batchSize: 10 } },
     ...lisk.rpcUrls.default.http.map((url) => ({ url, batch: false })),
@@ -217,6 +215,10 @@ const transports: Record<(typeof chains)[number]["id"], Transport> = {
   [customChains.tac.id]: createFallbackTransport([
     ...createPonderHttp(customChains.tac.id),
     ...customChains.tac.rpcUrls.default.http.map((url) => ({ url, batch: false })),
+  ]),
+  [customChains.stable.id]: createFallbackTransport([
+    ...createPonderHttp(customChains.stable.id),
+    ...customChains.stable.rpcUrls.default.http.map((url) => ({ url, batch: false })),
   ]),
   // [customChains.basecamp.id]: createFallbackTransport(
   //   customChains.basecamp.rpcUrls.default.http.map((url) => ({ url, batch: false })),
