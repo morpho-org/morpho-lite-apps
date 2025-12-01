@@ -52,8 +52,9 @@ function createPonderHttp(chainId: number) {
   ];
 }
 
-function createPrivateProxyHttp(chainId: number, hasArchive = true): ({ url: string } & HttpTransportConfig)[] {
-  const url = `https://curator.morpho.org/api/rpc/${chainId}`;
+function createPrivateProxyHttp(chainId: number): ({ url: string } & HttpTransportConfig)[] {
+  const subdomain = import.meta.env.DEV ? "rpc-dev" : "rpc";
+  const url = `https://${subdomain}.morpho.dev/cache/evm/${chainId}?secret=${import.meta.env.VITE_ERPC_API_KEY}`;
   return [
     {
       url,
@@ -61,13 +62,11 @@ function createPrivateProxyHttp(chainId: number, hasArchive = true): ({ url: str
       methods: { exclude: ["eth_getLogs"] },
       key: "proxy-maxNum-0", // NOTE: Ensures `useContractEvents` won't try to use this
     },
-    // NOTE: If proxy has archive nodes, disable batching and make block range unconstrained.
-    // Otherwise, enable batching and set max block range = 2000.
     {
       url,
-      batch: hasArchive ? false : { batchSize: 20, wait: 50 },
+      batch: false,
       methods: { include: ["eth_getLogs"] },
-      ...(hasArchive ? {} : { key: "proxy-maxNum-2000" }),
+      key: "proxy-maxNum-1000000",
     },
   ];
 }
@@ -132,7 +131,7 @@ const transports: { [K in (typeof chains)[number]["id"]]: Transport } & { [k: nu
   ]),
   [customChains.katana.id]: createFallbackTransport([
     ...createPonderHttp(customChains.katana.id),
-    { url: `https://rpc-katana.t.conduit.xyz/${import.meta.env.VITE_CONDUIT_API_KEY}`, batch: false },
+    ...createPrivateProxyHttp(customChains.katana.id),
     ...customChains.katana.rpcUrls.default.http.map((url) => ({ url, batch: false })),
   ]),
   [arbitrum.id]: createFallbackTransport([
@@ -166,7 +165,10 @@ const transports: { [K in (typeof chains)[number]["id"]]: Transport } & { [k: nu
     { url: "https://fraxtal.gateway.tenderly.co", batch: { batchSize: 10 } },
     { url: "https://fraxtal.drpc.org", batch: false },
   ]),
-  [hemi.id]: createFallbackTransport([{ url: "https://rpc.hemi.network/rpc", batch: false }]),
+  [hemi.id]: createFallbackTransport([
+    { url: "https://rpc.hemi.network/rpc", batch: false },
+    ...createPrivateProxyHttp(hemi.id),
+  ]),
   [ink.id]: createFallbackTransport([
     ...createPrivateProxyHttp(ink.id),
     { url: "https://ink.gateway.tenderly.co", batch: { batchSize: 10 } },
@@ -174,6 +176,7 @@ const transports: { [K in (typeof chains)[number]["id"]]: Transport } & { [k: nu
   ]),
   [lisk.id]: createFallbackTransport([
     { url: "https://lisk.gateway.tenderly.co", batch: { batchSize: 10 } },
+    ...createPrivateProxyHttp(lisk.id),
     ...lisk.rpcUrls.default.http.map((url) => ({ url, batch: false })),
   ]),
   [modeMainnet.id]: createFallbackTransport([
@@ -190,7 +193,7 @@ const transports: { [K in (typeof chains)[number]["id"]]: Transport } & { [k: nu
     { url: "https://optimism.lava.build", batch: false },
   ]),
   [plumeMainnet.id]: createFallbackTransport([
-    { url: `https://rpc-plume-mainnet-1.t.conduit.xyz/${import.meta.env.VITE_CONDUIT_API_KEY}`, batch: false },
+    ...createPrivateProxyHttp(plumeMainnet.id),
     { url: "https://rpc.plume.org", batch: false },
   ]),
   [scrollMainnet.id]: createFallbackTransport([
@@ -200,7 +203,7 @@ const transports: { [K in (typeof chains)[number]["id"]]: Transport } & { [k: nu
   ]),
   [sei.id]: createFallbackTransport([
     ...createPonderHttp(sei.id),
-    ...createPrivateProxyHttp(sei.id, false),
+    ...createPrivateProxyHttp(sei.id),
     { url: "https://sei-public.nodies.app", batch: false, key: "sei-nodies-maxNum-2000" },
     { url: "https://sei.therpc.io", batch: false, key: "sei-therpc-maxNum-2000" },
     { url: "https://sei.drpc.org", batch: false, key: "sei-drpc-maxNum-2000" },
