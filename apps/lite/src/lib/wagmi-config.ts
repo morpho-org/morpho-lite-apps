@@ -52,41 +52,21 @@ function createPonderHttp(chainId: number) {
   ];
 }
 
-function createPrivateAlchemyHttp(slug: string, hasArchive = true): ({ url: string } & HttpTransportConfig)[] {
-  const alchemyApiKey = import.meta.env.VITE_ALCHEMY_API_KEY;
-  const url = `https://${slug}.g.alchemy.com/v2/${alchemyApiKey}`;
+function createPrivateProxyHttp(chainId: number): ({ url: string } & HttpTransportConfig)[] {
+  const subdomain = import.meta.env.DEV ? "rpc-dev" : "rpc";
+  const url = `https://${subdomain}.morpho.dev/cache/evm/${chainId}?secret=${import.meta.env.VITE_ERPC_API_KEY}`;
   return [
     {
       url,
       batch: { batchSize: 10, wait: 20 },
       methods: { exclude: ["eth_getLogs"] },
-      key: "alchemy-maxNum-0", // NOTE: Ensures `useContractEvents` won't try to use this
-    },
-    // NOTE: If Alchemy has archive nodes, disable batching and make block range unconstrained.
-    // Otherwise, enable batching and set max block range = 2000.
-    {
-      url,
-      batch: hasArchive ? false : { batchSize: 20, wait: 50 },
-      methods: { include: ["eth_getLogs"] },
-      ...(hasArchive ? {} : { key: "alchemy-maxNum-2000" }),
-    },
-  ];
-}
-
-function createPrivateAnkrHttp(slug: string): ({ url: string } & HttpTransportConfig)[] {
-  const ankrApiKey = import.meta.env.VITE_ANKR_API_KEY;
-  const url = `https://rpc.ankr.com/${slug}/${ankrApiKey}`;
-  return [
-    {
-      url,
-      batch: { batchSize: 10, wait: 20 },
-      methods: { exclude: ["eth_getLogs"] },
-      key: "ankr-no-events", // NOTE: Ensures `useContractEvents` won't try to use this
+      key: "proxy-maxNum-0", // NOTE: Ensures `useContractEvents` won't try to use this
     },
     {
       url,
       batch: false,
       methods: { include: ["eth_getLogs"] },
+      key: "proxy-maxNum-1000000",
     },
   ];
 }
@@ -123,7 +103,7 @@ const transports: { [K in (typeof chains)[number]["id"]]: Transport } & { [k: nu
   // full support
   [mainnet.id]: createFallbackTransport([
     ...createPonderHttp(mainnet.id),
-    ...createPrivateAlchemyHttp("eth-mainnet"),
+    ...createPrivateProxyHttp(mainnet.id),
     { url: "https://rpc.mevblocker.io", batch: { batchSize: 10 } },
     { url: "https://rpc.ankr.com/eth", batch: { batchSize: 10 } },
     { url: "https://eth.drpc.org", batch: false },
@@ -131,7 +111,7 @@ const transports: { [K in (typeof chains)[number]["id"]]: Transport } & { [k: nu
   ]),
   [base.id]: createFallbackTransport([
     ...createPonderHttp(base.id),
-    ...createPrivateAlchemyHttp("base-mainnet"),
+    ...createPrivateProxyHttp(base.id),
     { url: "https://base.gateway.tenderly.co", batch: { batchSize: 10 } },
     { url: "https://base.drpc.org", batch: false },
     { url: "https://mainnet.base.org", batch: { batchSize: 10 } },
@@ -139,40 +119,40 @@ const transports: { [K in (typeof chains)[number]["id"]]: Transport } & { [k: nu
   ]),
   [polygon.id]: createFallbackTransport([
     ...createPonderHttp(polygon.id),
-    ...createPrivateAlchemyHttp("polygon-mainnet"),
+    ...createPrivateProxyHttp(polygon.id),
     { url: "https://polygon.gateway.tenderly.co", batch: { batchSize: 10 } },
     { url: "https://polygon.drpc.org", batch: false },
   ]),
   [unichain.id]: createFallbackTransport([
     ...createPonderHttp(unichain.id),
-    ...createPrivateAlchemyHttp("unichain-mainnet"),
+    ...createPrivateProxyHttp(unichain.id),
     { url: "https://unichain.gateway.tenderly.co", batch: { batchSize: 10 } },
     { url: "https://unichain.drpc.org", batch: false },
   ]),
   [customChains.katana.id]: createFallbackTransport([
     ...createPonderHttp(customChains.katana.id),
-    { url: `https://rpc-katana.t.conduit.xyz/${import.meta.env.VITE_CONDUIT_API_KEY}`, batch: false },
+    ...createPrivateProxyHttp(customChains.katana.id),
     ...customChains.katana.rpcUrls.default.http.map((url) => ({ url, batch: false })),
   ]),
   [arbitrum.id]: createFallbackTransport([
     ...createPonderHttp(arbitrum.id),
-    ...createPrivateAlchemyHttp("arb-mainnet"),
+    ...createPrivateProxyHttp(arbitrum.id),
     { url: "https://arbitrum.gateway.tenderly.co", batch: { batchSize: 10 } },
     { url: "https://rpc.ankr.com/arbitrum", batch: { batchSize: 10 } },
     { url: "https://arbitrum.drpc.org", batch: false },
   ]),
   [customChains.hyperevm.id]: createFallbackTransport([
     ...createPonderHttp(customChains.hyperevm.id),
-    ...createPrivateAlchemyHttp("hyperliquid-mainnet"),
+    ...createPrivateProxyHttp(customChains.hyperevm.id),
     { url: "https://rpc.hyperlend.finance/archive", batch: false },
   ]),
   // lite support (alphabetical)
   [abstract.id]: createFallbackTransport([
-    ...createPrivateAlchemyHttp("abstract-mainnet"),
+    ...createPrivateProxyHttp(abstract.id),
     { url: "https://api.mainnet.abs.xyz", batch: false },
   ]),
   [celo.id]: createFallbackTransport([
-    ...createPrivateAlchemyHttp("celo-mainnet"),
+    ...createPrivateProxyHttp(celo.id),
     { url: "https://celo.drpc.org", batch: false },
   ]),
   [corn.id]: createFallbackTransport([
@@ -181,56 +161,60 @@ const transports: { [K in (typeof chains)[number]["id"]]: Transport } & { [k: nu
     { url: "https://maizenet-rpc.usecorn.com", batch: false },
   ]),
   [fraxtal.id]: createFallbackTransport([
-    ...createPrivateAlchemyHttp("frax-mainnet"),
+    ...createPrivateProxyHttp(fraxtal.id),
     { url: "https://fraxtal.gateway.tenderly.co", batch: { batchSize: 10 } },
     { url: "https://fraxtal.drpc.org", batch: false },
   ]),
-  [hemi.id]: createFallbackTransport([{ url: "https://rpc.hemi.network/rpc", batch: false }]),
+  [hemi.id]: createFallbackTransport([
+    { url: "https://rpc.hemi.network/rpc", batch: false },
+    ...createPrivateProxyHttp(hemi.id),
+  ]),
   [ink.id]: createFallbackTransport([
-    ...createPrivateAlchemyHttp("ink-mainnet"),
+    ...createPrivateProxyHttp(ink.id),
     { url: "https://ink.gateway.tenderly.co", batch: { batchSize: 10 } },
     { url: "https://ink.drpc.org", batch: false },
   ]),
   [lisk.id]: createFallbackTransport([
     { url: "https://lisk.gateway.tenderly.co", batch: { batchSize: 10 } },
+    ...createPrivateProxyHttp(lisk.id),
     ...lisk.rpcUrls.default.http.map((url) => ({ url, batch: false })),
   ]),
   [modeMainnet.id]: createFallbackTransport([
-    ...createPrivateAlchemyHttp("mode-mainnet"),
+    ...createPrivateProxyHttp(modeMainnet.id),
     { url: "https://mode.gateway.tenderly.co", batch: false },
     { url: "https://mainnet.mode.network", batch: false },
     { url: "https://mode.drpc.org", batch: false },
   ]),
   [optimism.id]: createFallbackTransport([
-    ...createPrivateAlchemyHttp("opt-mainnet"),
+    ...createPrivateProxyHttp(optimism.id),
     { url: "https://optimism.gateway.tenderly.co", batch: { batchSize: 10 } },
     { url: "https://op-pokt.nodies.app", batch: { batchSize: 10 } },
     { url: "https://optimism.drpc.org", batch: false },
     { url: "https://optimism.lava.build", batch: false },
   ]),
   [plumeMainnet.id]: createFallbackTransport([
-    { url: `https://rpc-plume-mainnet-1.t.conduit.xyz/${import.meta.env.VITE_CONDUIT_API_KEY}`, batch: false },
+    ...createPrivateProxyHttp(plumeMainnet.id),
     { url: "https://rpc.plume.org", batch: false },
   ]),
   [scrollMainnet.id]: createFallbackTransport([
-    ...createPrivateAlchemyHttp("scroll-mainnet"),
+    ...createPrivateProxyHttp(scrollMainnet.id),
     { url: "https://scroll-mainnet.gateway.tenderly.co", batch: { batchSize: 10 } },
     { url: "https://scroll.drpc.org", batch: false },
   ]),
   [sei.id]: createFallbackTransport([
     ...createPonderHttp(sei.id),
-    ...createPrivateAlchemyHttp("sei-mainnet", false),
+    ...createPrivateProxyHttp(sei.id),
     { url: "https://sei-public.nodies.app", batch: false, key: "sei-nodies-maxNum-2000" },
     { url: "https://sei.therpc.io", batch: false, key: "sei-therpc-maxNum-2000" },
     { url: "https://sei.drpc.org", batch: false, key: "sei-drpc-maxNum-2000" },
   ]),
   [soneium.id]: createFallbackTransport([
-    ...createPrivateAlchemyHttp("soneium-mainnet"),
+    ...createPrivateProxyHttp(soneium.id),
     { url: "https://soneium.gateway.tenderly.co", batch: { batchSize: 10 } },
     ...soneium.rpcUrls.default.http.map((url) => ({ url, batch: false })),
   ]),
   [sonic.id]: createFallbackTransport([
-    ...createPrivateAlchemyHttp("sonic-mainnet"),
+    ...createPrivateProxyHttp(sonic.id),
     { url: "https://sonic.gateway.tenderly.co", batch: { batchSize: 10 } },
     { url: "https://rpc.soniclabs.com", batch: false },
     { url: "https://rpc.ankr.com/sonic_mainnet", batch: false },
@@ -238,12 +222,12 @@ const transports: { [K in (typeof chains)[number]["id"]]: Transport } & { [k: nu
   ]),
   [customChains.tac.id]: createFallbackTransport([
     ...createPonderHttp(customChains.tac.id),
-    ...createPrivateAnkrHttp("tac"),
+    ...createPrivateProxyHttp(customChains.tac.id),
     { url: "https://rpc.tac.build/", batch: false },
     { url: "https://tac.therpc.io", batch: false },
   ]),
   [worldchain.id]: createFallbackTransport([
-    ...createPrivateAlchemyHttp("worldchain-mainnet"),
+    ...createPrivateProxyHttp(worldchain.id),
     { url: "https://worldchain-mainnet.gateway.tenderly.co", batch: { batchSize: 10 } },
     { url: "https://worldchain.drpc.org", batch: false },
   ]),
