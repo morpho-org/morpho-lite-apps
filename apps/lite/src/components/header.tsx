@@ -2,6 +2,7 @@ import { useKeyedState } from "@morpho-org/uikit/hooks/use-keyed-state";
 import { cn } from "@morpho-org/uikit/lib/utils";
 import { XIcon } from "lucide-react";
 
+import { InstallBanner } from "@/components/install-banner";
 import { BANNERS } from "@/lib/constants";
 
 function Banner(chainId: number | undefined) {
@@ -34,6 +35,7 @@ export function Header({ className, children, chainId, ...props }: React.Compone
     <>
       {placeholder}
       <div className="pointer-events-none fixed top-0 z-50 flex h-screen w-screen flex-col">
+        <InstallBanner />
         {banner}
         <header className={cn("bg-primary pointer-events-auto h-16", className)} {...props}>
           {children}
