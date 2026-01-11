@@ -18,6 +18,9 @@ export default defineConfig({
       strategies: "injectManifest",
       srcDir: "src",
       filename: "sw-user-notifications.ts",
+      injectManifest: {
+        injectionPoint: undefined,
+      },
       devOptions: {
         enabled: true, // Enable PWA in development
         type: "module",

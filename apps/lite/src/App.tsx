@@ -11,6 +11,7 @@ import { ReactNode } from "react";
 import { Client as UrqlClient, Provider as UrqlProvider, fetchExchange } from "urql";
 import { type Config, deserialize, serialize, WagmiProvider } from "wagmi";
 
+import { PWAProvider } from "@/hooks/use-pwa";
 import { TERMS_OF_USE } from "@/lib/constants";
 import { createConfig } from "@/lib/wagmi-config";
 
@@ -59,13 +60,15 @@ function App({ children, wagmiConfig = defaultWagmiConfig }: { children: ReactNo
           }}
         >
           <UrqlProvider value={urqlClient}>
-            <AddressScreeningProvider>
-              <SafeLinksProvider>
-                {children}
-                <SafeLinkModal />
-              </SafeLinksProvider>
-              <AddressScreeningModal />
-            </AddressScreeningProvider>
+            <PWAProvider>
+              <AddressScreeningProvider>
+                <SafeLinksProvider>
+                  {children}
+                  <SafeLinkModal />
+                </SafeLinksProvider>
+                <AddressScreeningModal />
+              </AddressScreeningProvider>
+            </PWAProvider>
           </UrqlProvider>
         </ConnectKitProvider>
       </PersistQueryClientProvider>

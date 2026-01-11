@@ -4,10 +4,10 @@ import { cn } from "@morpho-org/uikit/lib/utils";
 import { Download, XIcon } from "lucide-react";
 import { isIOS } from "react-device-detect";
 
-import { usePWAInstall } from "@/hooks/use-pwa-install";
+import { usePWA } from "@/hooks/use-pwa";
 
 export function InstallBanner() {
-  const { isInstallable, install } = usePWAInstall();
+  const { isInstallable, install } = usePWA();
   const [shouldShowBanner, setShouldShowBanner] = useKeyedState(true, "pwa-install-banner", { persist: true });
 
   if (!isInstallable || !shouldShowBanner) {
