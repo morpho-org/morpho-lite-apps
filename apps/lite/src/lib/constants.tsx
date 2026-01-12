@@ -41,13 +41,9 @@ export const BANNERS: Record<keyof Deployments, { color: string; text: ReactNode
     color: "bg-[rgb(255,61,0)]",
     text: (
       <span className="grow py-2 text-center">
-        Access additional features and explore incentives via the interfaces offered by{" "}
+        Access additional features and explore incentives via the interface offered by{" "}
         <SafeLink className="underline" href="https://app.mysticfinance.xyz">
           Mystic
-        </SafeLink>
-        {" and "}
-        <SafeLink className="underline" href="https://morpho.solera.market/earn?chains=Plume">
-          Solera
         </SafeLink>
         .
       </span>
