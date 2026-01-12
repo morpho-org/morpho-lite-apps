@@ -2,8 +2,10 @@ export type JobType = "HEALTH_FACTOR" | "MARKET_YIELD";
 
 export interface HealthFactor {
   chainId: number;
-  address: string;
-  borrowId: string;
+  userAddress: string;
+  to: string; // Multicall3 contract address
+  data: string; // Encoded multicall
+  threshold: number; // Health factor threshold
 }
 
 export interface MarketYield {

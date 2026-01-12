@@ -2,6 +2,7 @@ import { AccrualPosition } from "@morpho-org/blue-sdk";
 import { restructure } from "@morpho-org/blue-sdk-viem";
 import { metaMorphoFactoryAbi } from "@morpho-org/uikit/assets/abis/meta-morpho-factory";
 import { morphoAbi } from "@morpho-org/uikit/assets/abis/morpho";
+import { oracleAbi } from "@morpho-org/uikit/assets/abis/oracle";
 import useContractEvents from "@morpho-org/uikit/hooks/use-contract-events/use-contract-events";
 import {
   marketHasDeadDeposit,
@@ -10,9 +11,9 @@ import {
 } from "@morpho-org/uikit/lens/read-vaults";
 import { CORE_DEPLOYMENTS, getContractDeploymentInfo } from "@morpho-org/uikit/lib/deployments";
 import { Token } from "@morpho-org/uikit/lib/utils";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useOutletContext } from "react-router";
-import { type Address, erc20Abi, type Chain, zeroAddress, type Hex } from "viem";
+import { encodeFunctionData, type Address, erc20Abi, type Chain, zeroAddress, type Hex, multicall3Abi } from "viem";
 import { useAccount, useReadContract, useReadContracts } from "wagmi";
 
 import { BorrowPositionTable, BorrowTable } from "@/components/borrow-table";
@@ -21,9 +22,11 @@ import { useMarkets } from "@/hooks/use-markets";
 import * as Merkl from "@/hooks/use-merkl-campaigns";
 import { useMerklOpportunities } from "@/hooks/use-merkl-opportunities";
 import { useTopNCurators } from "@/hooks/use-top-n-curators";
+import { useUserNotifications } from "@/hooks/use-user-notifications";
 import { type DisplayableCurators, getDisplayableCurators } from "@/lib/curators";
 import { CREATE_METAMORPHO_EVENT_OVERRIDES, getDeploylessMode, getShouldEnforceDeadDeposit } from "@/lib/overrides";
 import { getTokenURI } from "@/lib/tokens";
+import type { HealthFactor } from "@/user-notifications/types";
 
 const STALE_TIME = 5 * 60 * 1000;
 
@@ -36,6 +39,10 @@ export function BorrowSubPage() {
   const { status, address: userAddress } = useAccount();
   const { chain } = useOutletContext() as { chain?: Chain };
   const chainId = chain?.id;
+
+  const { monitorHealthFactor } = useUserNotifications();
+
+  const DEFAULT_HEALTH_FACTOR_THRESHOLD = 3;
 
   const shouldOverrideCreateMetaMorphoEvents = chainId !== undefined && chainId in CREATE_METAMORPHO_EVENT_OVERRIDES;
   const shouldUseDeploylessReads = getDeploylessMode(chainId) === "deployless";
@@ -233,6 +240,76 @@ export function BorrowSubPage() {
     });
     return map;
   }, [marketsArr, erc20Symbols, erc20Decimals, chainId]);
+
+  // Enqueue borrows for monitoring when positions change
+  useEffect(() => {
+    if (positions && userAddress && chainId && morpho && marketsArr.length > 0) {
+      const healthFactorJobs: HealthFactor[] = [];
+
+      positions.forEach((position, marketId) => {
+        const accruedPosition = position.accrueInterest(BigInt(Math.floor(Date.now() / 1000)));
+        if (accruedPosition.borrowAssets > 0n) {
+          const multicall3Address = chain?.contracts?.multicall3?.address;
+          if (!multicall3Address) return;
+
+          // Find the market to get oracle address
+          const market = marketsArr.find((m) => m.id === marketId);
+          if (!market) return;
+
+          // Encode all required calls for health factor calculation
+          const positionCalldata = encodeFunctionData({
+            abi: morphoAbi,
+            functionName: "position",
+            args: [marketId, userAddress],
+          });
+
+          const marketParamsCalldata = encodeFunctionData({
+            abi: morphoAbi,
+            functionName: "idToMarketParams",
+            args: [marketId],
+          });
+
+          const marketCalldata = encodeFunctionData({
+            abi: morphoAbi,
+            functionName: "market",
+            args: [marketId],
+          });
+
+          const oraclePriceCalldata = encodeFunctionData({
+            abi: oracleAbi,
+            functionName: "price",
+            args: [],
+          });
+
+          // Encode multicall aggregate3 with all calls (viem uses aggregate3 function)
+          const multicallData = encodeFunctionData({
+            abi: multicall3Abi,
+            functionName: "aggregate3",
+            args: [
+              [
+                { target: morpho.address, callData: positionCalldata, allowFailure: false },
+                { target: morpho.address, callData: marketParamsCalldata, allowFailure: false },
+                { target: morpho.address, callData: marketCalldata, allowFailure: false },
+                { target: market.params.oracle, callData: oraclePriceCalldata, allowFailure: false },
+              ],
+            ],
+          });
+
+          healthFactorJobs.push({
+            chainId: chainId,
+            userAddress: userAddress,
+            to: multicall3Address,
+            data: multicallData,
+            threshold: DEFAULT_HEALTH_FACTOR_THRESHOLD,
+          });
+        }
+      });
+
+      if (healthFactorJobs.length > 0) {
+        void monitorHealthFactor(healthFactorJobs);
+      }
+    }
+  }, [positions, userAddress, chainId, monitorHealthFactor, morpho, marketsArr, chain?.contracts?.multicall3?.address]);
 
   if (status === "reconnecting") return undefined;
 

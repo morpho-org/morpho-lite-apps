@@ -1,10 +1,10 @@
 /// <reference lib="webworker" />
-import { handleBorrowsCheck, handleMarketYieldCheck } from "./user-notifications/jobs";
+import { handleHealthFactor } from "./user-notifications/jobs/health-factor";
+import { handleMarketYieldCheck } from "./user-notifications/jobs/market-yield";
 import { runJob } from "./user-notifications/sw-handlers";
-import type { SWMessage } from "./user-notifications/types";
+import type { HealthFactor, MarketYield, SWMessage } from "./user-notifications/types";
 
 declare const self: ServiceWorkerGlobalScope;
-
 // Activate service worker immediately
 self.addEventListener("activate", (event) => {
   event.waitUntil(self.clients.claim());
@@ -40,10 +40,10 @@ self.addEventListener("message", async (event) => {
 
   switch (message.type) {
     case "HEALTH_FACTOR":
-      runJob("HEALTH_FACTOR", message.payload, handleBorrowsCheck, 5 * 60 * 1000);
+      runJob("HEALTH_FACTOR", message.payload as HealthFactor[], handleHealthFactor, 30 * 1000);
       break;
     case "MARKET_YIELD":
-      runJob("MARKET_YIELD", message.payload, handleMarketYieldCheck, 10 * 60 * 1000);
+      runJob("MARKET_YIELD", message.payload as MarketYield[], handleMarketYieldCheck, 30 * 1000);
       break;
     default: {
       // This should never happen if all message types are handled

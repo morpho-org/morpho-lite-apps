@@ -1,6 +1,15 @@
 import * as customChains from "@morpho-org/uikit/lib/chains";
 import { getDefaultConfig as createConnectKitConfigParams } from "connectkit";
-import type { Chain, HttpTransportConfig } from "viem";
+import {
+  extractChain,
+  createPublicClient,
+  http as viemHttp,
+  type Address,
+  type Chain,
+  type Hex,
+  type HttpTransportConfig,
+  type PublicClient,
+} from "viem";
 import { CreateConnectorFn, createConfig as createWagmiConfig, fallback, http, type Transport } from "wagmi";
 import {
   abstract,
@@ -31,6 +40,9 @@ const httpConfig: HttpTransportConfig = {
   retryDelay: 0,
   timeout: 30_000,
 };
+
+// Simple cache for public clients (used in service worker context)
+const clientCache = new Map<number, PublicClient>();
 
 function createFallbackTransport(rpcs: ({ url: string } & HttpTransportConfig)[]) {
   return fallback(
@@ -259,4 +271,56 @@ export function createConfig(args: {
       ssr: import.meta.env.SSR,
     }),
   );
+}
+
+/**
+ * Get a public client for a given chainId
+ * Useful for service worker context where React hooks are not available
+ */
+export function getPublicClient(chainId: number) {
+  // Check cache first
+  if (clientCache.has(chainId)) {
+    return clientCache.get(chainId)!;
+  }
+
+  // Get chain dynamically from chains array
+  const chain = extractChain({ chains, id: chainId as (typeof chains)[number]["id"] });
+  if (!chain) {
+    console.warn(`Chain ${chainId} not supported`);
+    return null;
+  }
+
+  // Use the first available RPC URL from the chain
+  const rpcUrl = chain.rpcUrls.default.http[0];
+  if (!rpcUrl) {
+    console.warn(`No RPC URL found for chain ${chainId}`);
+    return null;
+  }
+
+  const client = createPublicClient({
+    chain,
+    transport: viemHttp(rpcUrl),
+  }) as PublicClient;
+
+  // Cache the client
+  clientCache.set(chainId, client);
+  return client;
+}
+
+/**
+ * Make an eth_call RPC call using viem's public client
+ * Useful for service worker context where React hooks are not available
+ */
+export async function ethCall({ chainId, to, data }: { chainId: number; to: string; data: Hex }): Promise<Hex> {
+  const client = getPublicClient(chainId);
+  if (!client) {
+    throw new Error(`No public client available for chain ${chainId}`);
+  }
+
+  const result = await client.call({
+    to: to as Address,
+    data,
+  });
+
+  return result.data ?? ("0x" as Hex);
 }
