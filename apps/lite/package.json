@@ -33,6 +33,7 @@
     "lucide-react": "^0.475.0",
     "ohash": "^1.1.4",
     "react": "^19.0.0",
+    "react-device-detect": "^2.2.3",
     "react-dom": "^19.0.0",
     "react-router": "^7.4.0",
     "recharts": "^2.15.1",
@@ -51,6 +52,7 @@
     "terser": "^5.39.0",
     "typescript": "~5.7.2",
     "vite": "^6.2.0",
+    "vite-plugin-pwa": "^0.21.1",
     "vite-plugin-svgr": "^4.3.0"
   }
 }
