@@ -22,13 +22,17 @@ import { useCallback, useMemo, useState } from "react";
 import { Address, erc20Abi, parseUnits } from "viem";
 import { useAccount, useChainId, useReadContract, useReadContracts } from "wagmi";
 
-import { RISKS_DOCUMENTATION, TRANSACTION_DATA_SUFFIX } from "@/lib/constants";
+import { CHAIN_DEPRECATION_INFO, RISKS_DOCUMENTATION, TRANSACTION_DATA_SUFFIX } from "@/lib/constants";
 
 enum Actions {
   SupplyCollateral = "Supply",
   WithdrawCollateral = "Withdraw",
   Borrow = "Borrow",
   Repay = "Repay",
+}
+
+function isReduceOnly(chainId: number | undefined) {
+  return chainId !== undefined && CHAIN_DEPRECATION_INFO[chainId] !== undefined;
 }
 
 function PositionProperty({ current, updated }: { current: string; updated?: string }) {
@@ -71,8 +75,9 @@ export function BorrowSheetContent({
 }) {
   const chainId = useChainId();
   const { address: userAddress } = useAccount();
+  const reduceOnly = isReduceOnly(chainId);
 
-  const [selectedTab, setSelectedTab] = useState(Actions.SupplyCollateral);
+  const [selectedTab, setSelectedTab] = useState(reduceOnly ? Actions.WithdrawCollateral : Actions.SupplyCollateral);
   const [textInputValue, setTextInputValue] = useState("");
 
   const morpho = getContractDeploymentInfo(chainId, "Morpho").address;
@@ -328,13 +333,13 @@ export function BorrowSheetContent({
         }}
       >
         <TabsList className="grid w-full grid-cols-4 gap-1 bg-transparent p-0">
-          <TabsTrigger className={STYLE_TAB} value={Actions.SupplyCollateral}>
+          <TabsTrigger className={STYLE_TAB} value={Actions.SupplyCollateral} disabled={reduceOnly}>
             {Actions.SupplyCollateral}
           </TabsTrigger>
           <TabsTrigger className={STYLE_TAB} value={Actions.WithdrawCollateral}>
             {Actions.WithdrawCollateral}
           </TabsTrigger>
-          <TabsTrigger className={STYLE_TAB} value={Actions.Borrow}>
+          <TabsTrigger className={STYLE_TAB} value={Actions.Borrow} disabled={reduceOnly}>
             {Actions.Borrow}
           </TabsTrigger>
           <TabsTrigger className={STYLE_TAB} value={Actions.Repay}>

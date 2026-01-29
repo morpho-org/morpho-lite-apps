@@ -328,6 +328,7 @@ export function EarnTable({
                   </TableRow>
                 </SheetTrigger>
                 <EarnSheetContent
+                  chainId={chain?.id}
                   vaultAddress={row.vault.address}
                   isDeadDepositStateValid={row.isDeadDepositStateValid}
                   asset={row.asset}
