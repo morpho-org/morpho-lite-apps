@@ -8,40 +8,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@morpho-org/uikit/components/shadcn/alert-dialog";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { CHAIN_DEPRECATION_INFO } from "@/lib/constants";
 
-function getStorageKey(chainId: number | undefined) {
-  return `hasSeenDeprecation_${chainId}`;
-}
-
-function readFromStorage(chainId: number | undefined): boolean {
-  try {
-    const item = window.localStorage.getItem(getStorageKey(chainId));
-    return item ? (JSON.parse(item) as boolean) : false;
-  } catch {
-    return false;
-  }
-}
-
 export function DeprecationModal({ chainId }: { chainId: number | undefined }) {
   const deprecationInfo = chainId !== undefined ? CHAIN_DEPRECATION_INFO[chainId] : undefined;
+  const [open, setOpen] = useState(true);
 
-  const [hasSeenDeprecation, setHasSeenDeprecation] = useState(() => readFromStorage(chainId));
-
-  // Re-read from localStorage when chainId changes
+  // Reset to open when chainId changes
   useEffect(() => {
-    setHasSeenDeprecation(readFromStorage(chainId));
-  }, [chainId]);
-
-  const onClose = useCallback(() => {
-    setHasSeenDeprecation(true);
-    try {
-      window.localStorage.setItem(getStorageKey(chainId), JSON.stringify(true));
-    } catch {
-      // Ignore storage errors
-    }
+    setOpen(true);
   }, [chainId]);
 
   if (!deprecationInfo) {
@@ -49,19 +26,23 @@ export function DeprecationModal({ chainId }: { chainId: number | undefined }) {
   }
 
   return (
-    <AlertDialog key={chainId} open={!hasSeenDeprecation}>
+    <AlertDialog key={chainId} open={open} onOpenChange={setOpen}>
       <AlertDialogContent className="rounded-2xl">
         <AlertDialogHeader>
-          <AlertDialogTitle className="mb-3 text-2xl font-light">Important Notice</AlertDialogTitle>
+          <AlertDialogTitle className="mb-3 text-2xl font-light">
+            {deprecationInfo.chain.name} Deprecation Notice
+          </AlertDialogTitle>
           <AlertDialogDescription asChild>
             <div className="bg-secondary text-secondary-foreground rounded-lg p-4 font-light">
               <p>
-                Lite is now reduce-only on {deprecationInfo.chain.name}. You can still repay, withdraw, and close
-                positions, but you can&apos;t open new ones.
+                Lite is now <strong className="font-medium">reduce-only</strong> on {deprecationInfo.chain.name}. You
+                can still repay, withdraw, and close positions, but you can&apos;t open new ones.
               </p>
               <p className="mt-4">
-                On {deprecationInfo.cutoffDate}, {deprecationInfo.chain.name} will be removed. After that, this chain
-                won&apos;t be available in the Lite app.
+                <strong className="font-medium">
+                  On {deprecationInfo.cutoffDate}, {deprecationInfo.chain.name} will be removed.
+                </strong>{" "}
+                After that, this chain won&apos;t be available in the Lite app.
               </p>
               <p className="mt-4 font-medium">What to do next:</p>
               <ul className="mt-2 list-disc pl-5">
@@ -85,9 +66,8 @@ export function DeprecationModal({ chainId }: { chainId: number | undefined }) {
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogAction className="w-full rounded-full" onClick={onClose}>
-            I Understand
-          </AlertDialogAction>
+          <AlertDialogAction className="bg-morpho-gray hover:bg-secondary rounded-full">Learn More</AlertDialogAction>
+          <AlertDialogAction className="bg-morpho-error rounded-full hover:bg-red-500">I Understand</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

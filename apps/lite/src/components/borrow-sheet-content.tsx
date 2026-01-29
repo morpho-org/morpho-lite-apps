@@ -22,17 +22,13 @@ import { useCallback, useMemo, useState } from "react";
 import { Address, erc20Abi, parseUnits } from "viem";
 import { useAccount, useChainId, useReadContract, useReadContracts } from "wagmi";
 
-import { CHAIN_DEPRECATION_INFO, RISKS_DOCUMENTATION, TRANSACTION_DATA_SUFFIX } from "@/lib/constants";
+import { isReduceOnly, RISKS_DOCUMENTATION, TRANSACTION_DATA_SUFFIX } from "@/lib/constants";
 
 enum Actions {
   SupplyCollateral = "Supply",
   WithdrawCollateral = "Withdraw",
   Borrow = "Borrow",
   Repay = "Repay",
-}
-
-function isReduceOnly(chainId: number | undefined) {
-  return chainId !== undefined && CHAIN_DEPRECATION_INFO[chainId] !== undefined;
 }
 
 function PositionProperty({ current, updated }: { current: string; updated?: string }) {

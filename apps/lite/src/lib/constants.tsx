@@ -39,6 +39,10 @@ export const CHAIN_DEPRECATION_INFO: Partial<
   },
 };
 
+export function isReduceOnly(chainId: number | undefined) {
+  return chainId !== undefined && CHAIN_DEPRECATION_INFO[chainId] !== undefined;
+}
+
 export const APP_DETAILS = {
   // NOTE: Should always match the title in `index.html` (won't break anything, but should be correct)
   name: import.meta.env.VITE_APP_TITLE,

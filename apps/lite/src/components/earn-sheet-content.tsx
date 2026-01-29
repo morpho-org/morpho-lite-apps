@@ -17,15 +17,11 @@ import { useState } from "react";
 import { Address, erc20Abi, erc4626Abi, parseUnits } from "viem";
 import { useAccount, useBytecode, useReadContract, useReadContracts } from "wagmi";
 
-import { CHAIN_DEPRECATION_INFO, RISKS_DOCUMENTATION, TRANSACTION_DATA_SUFFIX } from "@/lib/constants";
+import { isReduceOnly, RISKS_DOCUMENTATION, TRANSACTION_DATA_SUFFIX } from "@/lib/constants";
 
 enum Actions {
   Deposit = "Deposit",
   Withdraw = "Withdraw",
-}
-
-function isReduceOnly(chainId: number | undefined) {
-  return chainId !== undefined && CHAIN_DEPRECATION_INFO[chainId] !== undefined;
 }
 
 const STYLE_LABEL = "text-secondary-foreground flex items-center justify-between text-xs font-light";
