@@ -9,7 +9,19 @@ import { type Chain, hemi, optimism, plumeMainnet, polygon, sei, worldchain } fr
  */
 export const APP_DEPRECATION_BANNER: { color: string; text: ReactNode } | undefined = {
   color: "bg-amber-600",
-  text: <span className="grow py-2 text-center">Morpho Lite will be gradually phased out in the coming months.</span>,
+  text: (
+    <span className="grow py-2 text-center">
+      Morpho Lite will be gradually phased out in the coming months; learn more{" "}
+      <SafeLink
+        href="https://help.morpho.org/en/articles/13560956-morpho-lite-app-deprecation"
+        target="_blank"
+        className="underline"
+      >
+        here
+      </SafeLink>
+      .
+    </span>
+  ),
 };
 
 /**

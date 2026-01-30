@@ -66,7 +66,13 @@ export function DeprecationModal({ chainId }: { chainId: number | undefined }) {
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogAction className="bg-morpho-gray hover:bg-secondary rounded-full">Learn More</AlertDialogAction>
+          <SafeLink
+            href="https://help.morpho.org/en/articles/13560956-morpho-lite-app-deprecation"
+            target="_blank"
+            className="bg-morpho-gray hover:bg-secondary inline-flex h-9 items-center justify-center rounded-full px-4 py-2 text-sm font-medium"
+          >
+            Learn More
+          </SafeLink>
           <AlertDialogAction className="bg-morpho-error rounded-full hover:bg-red-500">I Understand</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
