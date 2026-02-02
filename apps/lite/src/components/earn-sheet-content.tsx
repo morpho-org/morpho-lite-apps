@@ -17,7 +17,7 @@ import { useState } from "react";
 import { Address, erc20Abi, erc4626Abi, parseUnits } from "viem";
 import { useAccount, useBytecode, useReadContract, useReadContracts } from "wagmi";
 
-import { RISKS_DOCUMENTATION, TRANSACTION_DATA_SUFFIX } from "@/lib/constants";
+import { isReduceOnly, RISKS_DOCUMENTATION, TRANSACTION_DATA_SUFFIX } from "@/lib/constants";
 
 enum Actions {
   Deposit = "Deposit",
@@ -31,17 +31,20 @@ const STYLE_INPUT_WRAPPER =
 const STYLE_INPUT_HEADER = "text-secondary-foreground flex items-center justify-between text-xs font-light";
 
 export function EarnSheetContent({
+  chainId,
   vaultAddress,
   isDeadDepositStateValid,
   asset,
 }: {
+  chainId: number | undefined;
   vaultAddress: Address;
   isDeadDepositStateValid: boolean;
   asset: Token;
 }) {
   const { address: userAddress } = useAccount();
+  const reduceOnly = isReduceOnly(chainId);
 
-  const [selectedTab, setSelectedTab] = useState(Actions.Deposit);
+  const [selectedTab, setSelectedTab] = useState(reduceOnly ? Actions.Withdraw : Actions.Deposit);
   const [textInputValue, setTextInputValue] = useState("");
 
   // TODO: TEMPORARY
@@ -142,7 +145,7 @@ export function EarnSheetContent({
         }}
       >
         <TabsList className="grid w-full grid-cols-2 gap-1 bg-transparent p-0">
-          <TabsTrigger className={STYLE_TAB} value={Actions.Deposit}>
+          <TabsTrigger className={STYLE_TAB} value={Actions.Deposit} disabled={reduceOnly}>
             {Actions.Deposit}
           </TabsTrigger>
           <TabsTrigger className={STYLE_TAB} value={Actions.Withdraw}>

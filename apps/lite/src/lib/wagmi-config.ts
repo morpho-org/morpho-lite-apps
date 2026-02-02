@@ -42,16 +42,6 @@ function createFallbackTransport(rpcs: ({ url: string } & HttpTransportConfig)[]
   );
 }
 
-function createPonderHttp(chainId: number) {
-  return [
-    {
-      url: `https://v1-indexer.marble.live/rpc/${chainId}`,
-      batch: false,
-      methods: { include: ["eth_getLogs"] },
-    },
-  ];
-}
-
 function createPrivateProxyHttp(chainId: number): ({ url: string } & HttpTransportConfig)[] {
   const subdomain = import.meta.env.DEV ? "rpc-dev" : "rpc";
   const url = `https://${subdomain}.morpho.dev/cache/evm/${chainId}?secret=${import.meta.env.VITE_ERPC_API_KEY}`;
@@ -102,7 +92,6 @@ const chains = [
 const transports: { [K in (typeof chains)[number]["id"]]: Transport } & { [k: number]: Transport } = {
   // full support
   [mainnet.id]: createFallbackTransport([
-    ...createPonderHttp(mainnet.id),
     ...createPrivateProxyHttp(mainnet.id),
     { url: "https://rpc.mevblocker.io", batch: { batchSize: 10 } },
     { url: "https://rpc.ankr.com/eth", batch: { batchSize: 10 } },
@@ -110,7 +99,6 @@ const transports: { [K in (typeof chains)[number]["id"]]: Transport } & { [k: nu
     { url: "https://eth.merkle.io", batch: false },
   ]),
   [base.id]: createFallbackTransport([
-    ...createPonderHttp(base.id),
     ...createPrivateProxyHttp(base.id),
     { url: "https://base.gateway.tenderly.co", batch: { batchSize: 10 } },
     { url: "https://base.drpc.org", batch: false },
@@ -118,31 +106,26 @@ const transports: { [K in (typeof chains)[number]["id"]]: Transport } & { [k: nu
     { url: "https://base.lava.build", batch: false },
   ]),
   [polygon.id]: createFallbackTransport([
-    ...createPonderHttp(polygon.id),
     ...createPrivateProxyHttp(polygon.id),
     { url: "https://polygon.gateway.tenderly.co", batch: { batchSize: 10 } },
     { url: "https://polygon.drpc.org", batch: false },
   ]),
   [unichain.id]: createFallbackTransport([
-    ...createPonderHttp(unichain.id),
     ...createPrivateProxyHttp(unichain.id),
     { url: "https://unichain.gateway.tenderly.co", batch: { batchSize: 10 } },
     { url: "https://unichain.drpc.org", batch: false },
   ]),
   [customChains.katana.id]: createFallbackTransport([
-    ...createPonderHttp(customChains.katana.id),
     ...createPrivateProxyHttp(customChains.katana.id),
     ...customChains.katana.rpcUrls.default.http.map((url) => ({ url, batch: false })),
   ]),
   [arbitrum.id]: createFallbackTransport([
-    ...createPonderHttp(arbitrum.id),
     ...createPrivateProxyHttp(arbitrum.id),
     { url: "https://arbitrum.gateway.tenderly.co", batch: { batchSize: 10 } },
     { url: "https://rpc.ankr.com/arbitrum", batch: { batchSize: 10 } },
     { url: "https://arbitrum.drpc.org", batch: false },
   ]),
   [customChains.hyperevm.id]: createFallbackTransport([
-    ...createPonderHttp(customChains.hyperevm.id),
     ...createPrivateProxyHttp(customChains.hyperevm.id),
     { url: "https://rpc.hyperlend.finance/archive", batch: false },
   ]),
@@ -202,7 +185,6 @@ const transports: { [K in (typeof chains)[number]["id"]]: Transport } & { [k: nu
     { url: "https://scroll.drpc.org", batch: false },
   ]),
   [sei.id]: createFallbackTransport([
-    ...createPonderHttp(sei.id),
     ...createPrivateProxyHttp(sei.id),
     { url: "https://sei-public.nodies.app", batch: false, key: "sei-nodies-maxNum-2000" },
     { url: "https://sei.therpc.io", batch: false, key: "sei-therpc-maxNum-2000" },
@@ -221,7 +203,6 @@ const transports: { [K in (typeof chains)[number]["id"]]: Transport } & { [k: nu
     { url: "https://sonic.drpc.org", batch: false },
   ]),
   [customChains.tac.id]: createFallbackTransport([
-    ...createPonderHttp(customChains.tac.id),
     ...createPrivateProxyHttp(customChains.tac.id),
     { url: "https://rpc.tac.build/", batch: false },
     { url: "https://tac.therpc.io", batch: false },

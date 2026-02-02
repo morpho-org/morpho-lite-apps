@@ -1,7 +1,59 @@
 import { SafeLink } from "@morpho-org/uikit/components/safe-link";
 import { type Deployments } from "@morpho-org/uikit/lib/deployments";
 import { ReactNode } from "react";
-import { hemi, optimism, plumeMainnet, polygon, sei, worldchain } from "wagmi/chains";
+import { type Chain, hemi, optimism, plumeMainnet, polygon, sei, worldchain } from "wagmi/chains";
+
+/**
+ * App-wide deprecation banner configuration.
+ * Set to undefined to disable the banner.
+ */
+export const APP_DEPRECATION_BANNER: { color: string; text: ReactNode } | undefined = {
+  color: "bg-amber-600",
+  text: (
+    <span className="grow py-2 text-center">
+      Morpho Lite will be gradually phased out in the coming months; learn more{" "}
+      <SafeLink
+        href="https://help.morpho.org/en/articles/13560956-morpho-lite-app-deprecation"
+        target="_blank"
+        className="underline"
+      >
+        here
+      </SafeLink>
+      .
+    </span>
+  ),
+};
+
+/**
+ * Chain-specific deprecation modal configuration.
+ * Only chains listed here will show the deprecation modal.
+ */
+export const CHAIN_DEPRECATION_INFO: Partial<
+  Record<keyof Deployments, { chain: Chain; cutoffDate: string; ecosystemBuilder: string; ecosystemBuilderUrl: string }>
+> = {
+  [worldchain.id]: {
+    chain: worldchain,
+    cutoffDate: "February 14, 2026",
+    ecosystemBuilder: "Oku",
+    ecosystemBuilderUrl: "https://oku.trade/morpho/vaults?inputChain=worldchain",
+  },
+  [plumeMainnet.id]: {
+    chain: plumeMainnet,
+    cutoffDate: "February 14, 2026",
+    ecosystemBuilder: "Mystic",
+    ecosystemBuilderUrl: "https://app.mysticfinance.xyz",
+  },
+  [sei.id]: {
+    chain: sei,
+    cutoffDate: "February 14, 2026",
+    ecosystemBuilder: "Feather",
+    ecosystemBuilderUrl: "https://app.feather.zone/portfolio",
+  },
+};
+
+export function isReduceOnly(chainId: number | undefined) {
+  return chainId !== undefined && CHAIN_DEPRECATION_INFO[chainId] !== undefined;
+}
 
 export const APP_DETAILS = {
   // NOTE: Should always match the title in `index.html` (won't break anything, but should be correct)
@@ -91,7 +143,7 @@ export const BANNERS: Record<keyof Deployments, { color: string; text: ReactNode
       <span className="grow py-2 text-center">
         Claim rewards and access enhanced features on the external{" "}
         <SafeLink className="underline" href="https://oku.trade/morpho/vaults?inputChain=worldchain">
-          Oku Trade
+          Oku
         </SafeLink>{" "}
         interface.
       </span>

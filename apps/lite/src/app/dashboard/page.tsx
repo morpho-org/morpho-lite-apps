@@ -9,6 +9,7 @@ import { Link, Outlet, useLocation, useNavigate, useParams } from "react-router"
 import { Toaster } from "sonner";
 import { useChains } from "wagmi";
 
+import { DeprecationModal } from "@/components/deprecation-modal";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { MorphoMenu } from "@/components/morpho-menu";
@@ -111,6 +112,7 @@ export default function Page() {
         </div>
       </Header>
       <WelcomeModal />
+      <DeprecationModal chainId={chain?.id} />
       <Outlet context={{ chain }} />
       <Footer />
     </div>
