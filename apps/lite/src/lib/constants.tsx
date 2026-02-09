@@ -39,7 +39,7 @@ export const CHAIN_DEPRECATION_INFO: Partial<
   },
   [plumeMainnet.id]: {
     chain: plumeMainnet,
-    cutoffDate: "February 14, 2026",
+    cutoffDate: "March 1, 2026",
     ecosystemBuilder: "Mystic",
     ecosystemBuilderUrl: "https://app.mysticfinance.xyz",
   },

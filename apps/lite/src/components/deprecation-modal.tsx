@@ -29,9 +29,7 @@ export function DeprecationModal({ chainId }: { chainId: number | undefined }) {
     <AlertDialog key={chainId} open={open} onOpenChange={setOpen}>
       <AlertDialogContent className="rounded-2xl">
         <AlertDialogHeader>
-          <AlertDialogTitle className="mb-3 text-2xl font-light">
-            {deprecationInfo.chain.name} Deprecation Notice
-          </AlertDialogTitle>
+          <AlertDialogTitle className="mb-3 text-2xl font-light">Lite App Deprecation Notice</AlertDialogTitle>
           <AlertDialogDescription asChild>
             <div className="bg-secondary text-secondary-foreground rounded-lg p-4 font-light">
               <p>
