@@ -33,7 +33,7 @@ export function DeprecationModal({ chainId }: { chainId: number | undefined }) {
           <AlertDialogDescription asChild>
             <div className="bg-secondary text-secondary-foreground rounded-lg p-4 font-light">
               <p>
-                Lite is being deprecated across allaecosystems, including {deprecationInfo.chain.name}, and is now in reduce-only mode.
+                Lite is being deprecated across all ecosystems, including {deprecationInfo.chain.name}, and is now in reduce-only mode.
                 Your positions are safe, Morpho vaults and markets are not going away - all positions remain fully accessible from {" "}
                   <SafeLink className="underline" href={deprecationInfo.ecosystemBuilderUrl}>
                     {deprecationInfo.ecosystemBuilder}
