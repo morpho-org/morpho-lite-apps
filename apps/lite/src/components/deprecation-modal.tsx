@@ -33,14 +33,17 @@ export function DeprecationModal({ chainId }: { chainId: number | undefined }) {
           <AlertDialogDescription asChild>
             <div className="bg-secondary text-secondary-foreground rounded-lg p-4 font-light">
               <p>
-                Lite is now <strong className="font-medium">reduce-only</strong> on {deprecationInfo.chain.name}. You
-                can still repay, withdraw, and close positions, but you can&apos;t open new ones.
-              </p>
+                Lite is being deprecated across all ecosystems, including {deprecationInfo.chain.name}, and is now in reduce-only mode.
+                Your positions are safe, Morpho vaults and markets are not going away - all positions remain fully accessible from {" "}
+                  <SafeLink className="underline" href={deprecationInfo.ecosystemBuilderUrl}>
+                    {deprecationInfo.ecosystemBuilder}
+                  </SafeLink>{" "}.
+              </p> 
+
               <p className="mt-4">
                 <strong className="font-medium">
-                  On {deprecationInfo.cutoffDate}, {deprecationInfo.chain.name} will be removed.
+                  You can still use the Lite app on {deprecationInfo.chain.name} until {deprecationInfo.cutoffDate} to repay, withdraw and close positions, but you can&apos;t open new ones.
                 </strong>{" "}
-                After that, this chain won&apos;t be available in the Lite app.
               </p>
               <p className="mt-4 font-medium">What to do next:</p>
               <ul className="mt-2 list-disc pl-5">
