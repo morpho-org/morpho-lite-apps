@@ -1,7 +1,8 @@
 import { SafeLink } from "@morpho-org/uikit/components/safe-link";
+import { tac } from "@morpho-org/uikit/lib/chains/tac";
 import { type Deployments } from "@morpho-org/uikit/lib/deployments";
 import { ReactNode } from "react";
-import { type Chain, hemi, optimism, plumeMainnet, polygon, sei, worldchain } from "wagmi/chains";
+import { type Chain, hemi, optimism, plumeMainnet, polygon, worldchain } from "wagmi/chains";
 
 /**
  * App-wide deprecation banner configuration.
@@ -31,28 +32,34 @@ export const APP_DEPRECATION_BANNER: { color: string; text: ReactNode } | undefi
 export const CHAIN_DEPRECATION_INFO: Partial<
   Record<keyof Deployments, { chain: Chain; cutoffDate: string; ecosystemBuilder: string; ecosystemBuilderUrl: string }>
 > = {
-  [worldchain.id]: {
-    chain: worldchain,
-    cutoffDate: "February 14, 2026",
-    ecosystemBuilder: "Oku",
-    ecosystemBuilderUrl: "https://oku.trade/morpho/vaults?inputChain=worldchain",
-  },
+  // [worldchain.id]: {
+  //   chain: worldchain,
+  //   cutoffDate: "February 14, 2026",
+  //   ecosystemBuilder: "Oku",
+  //   ecosystemBuilderUrl: "https://oku.trade/morpho/vaults?inputChain=worldchain",
+  // },
   [plumeMainnet.id]: {
     chain: plumeMainnet,
-    cutoffDate: "March 1, 2026",
+    cutoffDate: "March 2, 2026",
     ecosystemBuilder: "Mystic",
     ecosystemBuilderUrl: "https://app.mysticfinance.xyz",
   },
-  [sei.id]: {
-    chain: sei,
-    cutoffDate: "February 14, 2026",
+  [hemi.id]: {
+    chain: hemi,
+    cutoffDate: "March 2, 2026",
+    ecosystemBuilder: "Feather",
+    ecosystemBuilderUrl: "https://app.feather.zone/portfolio",
+  },
+  [tac.id]: {
+    chain: tac,
+    cutoffDate: "March 2, 2026",
     ecosystemBuilder: "Feather",
     ecosystemBuilderUrl: "https://app.feather.zone/portfolio",
   },
 };
 
 export function isReduceOnly(chainId: number | undefined) {
-  return chainId !== undefined && CHAIN_DEPRECATION_INFO[chainId] !== undefined;
+  return chainId !== undefined && (CHAIN_DEPRECATION_INFO[chainId] !== undefined || chainId === worldchain.id);
 }
 
 export const APP_DETAILS = {
@@ -108,18 +115,6 @@ export const BANNERS: Record<keyof Deployments, { color: string; text: ReactNode
         Claim rewards and access enhanced features on the external{" "}
         <SafeLink className="underline" href="https://compound.blue">
           Compound Blue
-        </SafeLink>{" "}
-        interface.
-      </span>
-    ),
-  },
-  [sei.id]: {
-    color: "bg-[rgb(145,44,34)]",
-    text: (
-      <span className="grow py-2 text-center">
-        Claim rewards and access enhanced features on the external{" "}
-        <SafeLink className="underline" href="https://app.feather.zone/portfolio">
-          Feather
         </SafeLink>{" "}
         interface.
       </span>

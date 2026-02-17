@@ -18,7 +18,6 @@ import {
   plumeMainnet,
   polygon,
   scroll as scrollMainnet,
-  sei,
   soneium,
   sonic,
   unichain,
@@ -82,7 +81,6 @@ const chains = [
   optimism,
   plumeMainnet,
   // scrollMainnet,
-  sei,
   soneium,
   // sonic,
   customChains.tac,
@@ -183,12 +181,6 @@ const transports: { [K in (typeof chains)[number]["id"]]: Transport } & { [k: nu
     ...createPrivateProxyHttp(scrollMainnet.id),
     { url: "https://scroll-mainnet.gateway.tenderly.co", batch: { batchSize: 10 } },
     { url: "https://scroll.drpc.org", batch: false },
-  ]),
-  [sei.id]: createFallbackTransport([
-    ...createPrivateProxyHttp(sei.id),
-    { url: "https://sei-public.nodies.app", batch: false, key: "sei-nodies-maxNum-2000" },
-    { url: "https://sei.therpc.io", batch: false, key: "sei-therpc-maxNum-2000" },
-    { url: "https://sei.drpc.org", batch: false, key: "sei-drpc-maxNum-2000" },
   ]),
   [soneium.id]: createFallbackTransport([
     ...createPrivateProxyHttp(soneium.id),
