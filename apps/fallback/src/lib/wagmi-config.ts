@@ -55,7 +55,7 @@ function createFallbackRpcHttp(chainId: number) {
   return [
     {
       // TODO: replace with actual RPC URL
-      url: `http://localhost:4000/${chainId}`,
+      url: `https://fallback-rpc.vercel.app/${chainId}`,
       batch: false,
       methods: { include: ["eth_getLogs"] },
     },
