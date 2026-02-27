@@ -4,7 +4,7 @@
 interface ImportMetaEnv {
   readonly VITE_WALLET_KIT_PROJECT_ID: string;
   readonly VITE_APP_TITLE: string;
-  readonly VITE_CONDUIT_API_KEY: string;
+  readonly VITE_ERPC_API_KEY: string;
 }
 
 interface ImportMeta {

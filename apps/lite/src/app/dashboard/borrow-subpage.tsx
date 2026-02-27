@@ -22,7 +22,7 @@ import * as Merkl from "@/hooks/use-merkl-campaigns";
 import { useMerklOpportunities } from "@/hooks/use-merkl-opportunities";
 import { useTopNCurators } from "@/hooks/use-top-n-curators";
 import { type DisplayableCurators, getDisplayableCurators } from "@/lib/curators";
-import { CREATE_METAMORPHO_EVENT_OVERRIDES, getDeploylessMode, getShouldEnforceDeadDeposit } from "@/lib/overrides";
+import { getDeploylessMode, getShouldEnforceDeadDeposit } from "@/lib/overrides";
 import { getTokenURI } from "@/lib/tokens";
 
 const STALE_TIME = 5 * 60 * 1000;
@@ -37,7 +37,6 @@ export function BorrowSubPage() {
   const { chain } = useOutletContext() as { chain?: Chain };
   const chainId = chain?.id;
 
-  const shouldOverrideCreateMetaMorphoEvents = chainId !== undefined && chainId in CREATE_METAMORPHO_EVENT_OVERRIDES;
   const shouldUseDeploylessReads = getDeploylessMode(chainId) === "deployless";
   const shouldEnforceDeadDeposit = getShouldEnforceDeadDeposit(chainId);
 
@@ -66,14 +65,11 @@ export function BorrowSubPage() {
     reverseChronologicalOrder: true,
     eventName: "CreateMetaMorpho",
     strict: true,
-    query: { enabled: chainId !== undefined && !shouldOverrideCreateMetaMorphoEvents && fromBlock !== undefined },
+    query: { enabled: chainId !== undefined && fromBlock !== undefined },
   });
   const vaultAddresses = useMemo(
-    () =>
-      shouldOverrideCreateMetaMorphoEvents
-        ? CREATE_METAMORPHO_EVENT_OVERRIDES[chainId]
-        : createMetaMorphoEvents.map((ev) => ev.args.metaMorpho),
-    [chainId, shouldOverrideCreateMetaMorphoEvents, createMetaMorphoEvents],
+    () => createMetaMorphoEvents.map((ev) => ev.args.metaMorpho),
+    [chainId, createMetaMorphoEvents],
   );
 
   // MARK: Fetch additional data for whitelisted vaults
@@ -93,8 +89,7 @@ export function BorrowSubPage() {
     ),
     stateOverride: shouldUseDeploylessReads ? undefined : [readAccrualVaultsStateOverride()],
     query: {
-      enabled:
-        chainId !== undefined && (fractionFetched > 0.99 || shouldOverrideCreateMetaMorphoEvents) && !!morpho?.address,
+      enabled: chainId !== undefined && fractionFetched > 0.99 && !!morpho?.address,
       staleTime: STALE_TIME,
       gcTime: Infinity,
       notifyOnChangeProps: ["data"],

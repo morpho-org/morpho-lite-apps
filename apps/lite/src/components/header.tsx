@@ -1,10 +1,34 @@
 import { useKeyedState } from "@morpho-org/uikit/hooks/use-keyed-state";
+import { useLocalStorage } from "@morpho-org/uikit/hooks/use-local-storage";
 import { cn } from "@morpho-org/uikit/lib/utils";
 import { XIcon } from "lucide-react";
 
-import { BANNERS } from "@/lib/constants";
+import { APP_DEPRECATION_BANNER, BANNERS } from "@/lib/constants";
 
-function Banner(chainId: number | undefined) {
+function AppDeprecationBanner() {
+  const [shouldShowBanner, setShouldShowBanner] = useLocalStorage("shouldShowAppDeprecationBanner", true);
+
+  if (!APP_DEPRECATION_BANNER || !shouldShowBanner) {
+    return { placeholder: undefined, banner: undefined };
+  }
+
+  return {
+    placeholder: <div className="h-10 min-h-min"></div>,
+    banner: (
+      <aside
+        className={cn(
+          "pointer-events-auto flex h-10 min-h-min items-center px-1 text-sm font-light italic",
+          APP_DEPRECATION_BANNER.color,
+        )}
+      >
+        {APP_DEPRECATION_BANNER.text}
+        <XIcon className="hover:bg-accent mx-2 h-6 w-6 rounded-sm p-1" onClick={() => setShouldShowBanner(false)} />
+      </aside>
+    ),
+  };
+}
+
+function ChainBanner(chainId: number | undefined) {
   const [shouldShowBanner, setShouldShowBanner] = useKeyedState(true, chainId, { persist: true });
 
   if (chainId === undefined || !BANNERS[chainId] || !shouldShowBanner) {
@@ -29,12 +53,15 @@ function Banner(chainId: number | undefined) {
 }
 
 export function Header({ className, children, chainId, ...props }: React.ComponentProps<"div"> & { chainId?: number }) {
-  const { placeholder, banner } = Banner(chainId);
+  const { placeholder: deprecationPlaceholder, banner: deprecationBanner } = AppDeprecationBanner();
+  const { placeholder: chainPlaceholder, banner: chainBanner } = ChainBanner(chainId);
   return (
     <>
-      {placeholder}
+      {deprecationPlaceholder}
+      {chainPlaceholder}
       <div className="pointer-events-none fixed top-0 z-50 flex h-screen w-screen flex-col">
-        {banner}
+        {deprecationBanner}
+        {chainBanner}
         <header className={cn("bg-primary pointer-events-auto h-16", className)} {...props}>
           {children}
         </header>

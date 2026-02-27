@@ -18,8 +18,8 @@ jobs:
         node-version: [22]
     env:
       VITE_WALLET_KIT_PROJECT_ID: ${{ secrets.VITE_WALLET_KIT_PROJECT_ID }}
-      VITE_CONDUIT_API_KEY: ${{ secrets. VITE_CONDUIT_API_KEY }}
       VITE_APP_TITLE: ${{ vars.VITE_APP_TITLE }}
+      VITE_ERPC_API_KEY: ${{ secrets.VITE_ERPC_API_KEY }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -38,8 +38,8 @@ jobs:
       - name: Create .env
         run: |
           echo "VITE_WALLET_KIT_PROJECT_ID=${{ env.VITE_WALLET_KIT_PROJECT_ID }}" >> apps/lite/.env
-          echo "VITE_CONDUIT_API_KEY=${{ env.VITE_CONDUIT_API_KEY }}" >> apps/lite/.env
           echo "VITE_APP_TITLE=${{ env.VITE_APP_TITLE }}" >> apps/lite/.env
+          echo "VITE_ERPC_API_KEY=${{ env.VITE_ERPC_API_KEY }}" >> apps/lite/.env
 
       - name: Build lite app
         run: pnpm lite-app:build

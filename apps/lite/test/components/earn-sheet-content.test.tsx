@@ -72,9 +72,17 @@ describe("deposit flow", () => {
       await client.deal({ account, amount: parseEther(amount), erc20: asset.address }); // for deposit
       await client.impersonateAccount({ address: account });
 
-      render(<TestableEarnSheetContent vaultAddress={vaultAddress} asset={asset} isDeadDepositStateValid={true} />, {
-        wagmiConfig,
-      });
+      render(
+        <TestableEarnSheetContent
+          chainId={chain.id}
+          vaultAddress={vaultAddress}
+          asset={asset}
+          isDeadDepositStateValid={true}
+        />,
+        {
+          wagmiConfig,
+        },
+      );
 
       // Wait for tabs -- this implies the `Testable` wrapper has connected the mock account
       await waitFor(() => screen.findAllByRole("tab"));
@@ -178,9 +186,17 @@ describe("withdraw flow", () => {
       ]);
       const maxText = formatUnits(maxWithdraw, asset.decimals!);
 
-      render(<TestableEarnSheetContent vaultAddress={vaultAddress} asset={asset} isDeadDepositStateValid={true} />, {
-        wagmiConfig,
-      });
+      render(
+        <TestableEarnSheetContent
+          chainId={chain.id}
+          vaultAddress={vaultAddress}
+          asset={asset}
+          isDeadDepositStateValid={true}
+        />,
+        {
+          wagmiConfig,
+        },
+      );
 
       // Wait for tabs -- this implies the `Testable` wrapper has connected the mock account
       await waitFor(() => screen.findAllByRole("tab"));
@@ -251,9 +267,17 @@ describe("withdraw flow", () => {
       await client.deal({ account, amount: parseEther(shares), erc20: vaultAddress }); // for withdraw
       await client.impersonateAccount({ address: account });
 
-      render(<TestableEarnSheetContent vaultAddress={vaultAddress} asset={asset} isDeadDepositStateValid={true} />, {
-        wagmiConfig,
-      });
+      render(
+        <TestableEarnSheetContent
+          chainId={chain.id}
+          vaultAddress={vaultAddress}
+          asset={asset}
+          isDeadDepositStateValid={true}
+        />,
+        {
+          wagmiConfig,
+        },
+      );
 
       // Wait for tabs -- this implies the `Testable` wrapper has connected the mock account
       await waitFor(() => screen.findAllByRole("tab"));
