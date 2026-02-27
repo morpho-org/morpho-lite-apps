@@ -54,7 +54,6 @@ function createFallbackTransport(rpcs: ({ url: string } & HttpTransportConfig)[]
 function createFallbackRpcHttp(chainId: number) {
   return [
     {
-      // TODO: replace with actual RPC URL
       url: `https://fallback-rpc.vercel.app/${chainId}`,
       batch: false,
       methods: { include: ["eth_getLogs"] },
