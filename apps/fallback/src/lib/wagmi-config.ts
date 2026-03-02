@@ -217,7 +217,7 @@ const transports: Record<(typeof chains)[number]["id"], Transport> = {
     ...customChains.tac.rpcUrls.default.http.map((url) => ({ url, batch: false })),
   ]),
   [customChains.stable.id]: createFallbackTransport([
-    ...createPonderHttp(customChains.stable.id),
+    ...createFallbackRpcHttp(customChains.stable.id),
     ...customChains.stable.rpcUrls.default.http.map((url) => ({ url, batch: false })),
   ]),
   // [customChains.basecamp.id]: createFallbackTransport(
