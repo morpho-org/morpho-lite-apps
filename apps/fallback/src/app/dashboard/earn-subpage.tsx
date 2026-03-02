@@ -69,6 +69,7 @@ export function EarnSubPage() {
     address: factoryV1_1 ? [factoryV1_1.address].concat(factory ? [factory.address] : []) : [],
     fromBlock: factory?.fromBlock ?? factoryV1_1?.fromBlock,
     reverseChronologicalOrder: true,
+    // This event is explictly whitelisted for our private RPC log service
     eventName: "CreateMetaMorpho",
     strict: true,
     query: { enabled: chainId !== undefined },
