@@ -68,6 +68,7 @@ export function BorrowSubPage() {
     address: morpho?.address,
     fromBlock: morpho?.fromBlock,
     reverseChronologicalOrder: true,
+    // This event is explictly whitelisted for our private RPC log service
     eventName: "SupplyCollateral",
     args: { onBehalf: userAddress },
     strict: true,

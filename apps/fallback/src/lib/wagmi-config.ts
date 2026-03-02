@@ -51,10 +51,10 @@ function createFallbackTransport(rpcs: ({ url: string } & HttpTransportConfig)[]
   );
 }
 
-function createPonderHttp(chainId: number) {
+function createFallbackRpcHttp(chainId: number) {
   return [
     {
-      url: `https://v1-indexer.marble.live/rpc/${chainId}`,
+      url: `https://fallback-rpc.vercel.app/${chainId}`,
       batch: false,
       methods: { include: ["eth_getLogs"] },
     },
@@ -99,7 +99,7 @@ const chains = [
 const transports: Record<(typeof chains)[number]["id"], Transport> = {
   // full support
   [mainnet.id]: createFallbackTransport([
-    ...createPonderHttp(mainnet.id),
+    ...createFallbackRpcHttp(mainnet.id),
     { url: "https://rpc.mevblocker.io", batch: { batchSize: 10 } },
     { url: "https://rpc.ankr.com/eth", batch: { batchSize: 10 } },
     { url: "https://eth-pokt.nodies.app", batch: false },
@@ -107,36 +107,36 @@ const transports: Record<(typeof chains)[number]["id"], Transport> = {
     { url: "https://eth.merkle.io", batch: false },
   ]),
   [base.id]: createFallbackTransport([
-    ...createPonderHttp(base.id),
+    ...createFallbackRpcHttp(base.id),
     { url: "https://base.gateway.tenderly.co", batch: { batchSize: 10 } },
     { url: "https://base.drpc.org", batch: false },
     { url: "https://mainnet.base.org", batch: { batchSize: 10 } },
     { url: "https://base.lava.build", batch: false },
   ]),
   [polygon.id]: createFallbackTransport([
-    ...createPonderHttp(polygon.id),
+    ...createFallbackRpcHttp(polygon.id),
     { url: "https://polygon.gateway.tenderly.co", batch: { batchSize: 10 } },
     { url: "https://polygon.drpc.org", batch: false },
   ]),
   [unichain.id]: createFallbackTransport([
-    ...createPonderHttp(unichain.id),
+    ...createFallbackRpcHttp(unichain.id),
     { url: "https://unichain.gateway.tenderly.co", batch: { batchSize: 10 } },
     { url: "https://mainnet.unichain.org", batch: false },
     { url: "https://unichain.drpc.org", batch: false },
   ]),
   [customChains.katana.id]: createFallbackTransport([
-    ...createPonderHttp(customChains.katana.id),
+    ...createFallbackRpcHttp(customChains.katana.id),
     { url: "https://katana.gateway.tenderly.co", batch: { batchSize: 10 } },
     ...customChains.katana.rpcUrls.default.http.map((url) => ({ url, batch: false })),
   ]),
   [arbitrum.id]: createFallbackTransport([
-    ...createPonderHttp(arbitrum.id),
+    ...createFallbackRpcHttp(arbitrum.id),
     { url: "https://arbitrum.gateway.tenderly.co", batch: { batchSize: 10 } },
     { url: "https://rpc.ankr.com/arbitrum", batch: { batchSize: 10 } },
     { url: "https://arbitrum.drpc.org", batch: false },
   ]),
   [customChains.hyperevm.id]: createFallbackTransport([
-    ...createPonderHttp(customChains.hyperevm.id),
+    ...createFallbackRpcHttp(customChains.hyperevm.id),
     ...customChains.hyperevm.rpcUrls.default.http.map((url) => ({ url, batch: false })),
   ]),
   // fallback support
@@ -196,7 +196,7 @@ const transports: Record<(typeof chains)[number]["id"], Transport> = {
     { url: "https://mainnet.mode.network", batch: false },
     { url: "https://mode.drpc.org", batch: false },
   ]),
-  [customChains.monad.id]: createFallbackTransport([...createPonderHttp(customChains.monad.id)]),
+  [customChains.monad.id]: createFallbackTransport([...createFallbackRpcHttp(customChains.monad.id)]),
   [hemi.id]: createFallbackTransport([{ url: "https://rpc.hemi.network/rpc", batch: false }]),
   [lisk.id]: createFallbackTransport([
     { url: "https://lisk.gateway.tenderly.co", batch: { batchSize: 10 } },
@@ -207,13 +207,13 @@ const transports: Record<(typeof chains)[number]["id"], Transport> = {
     ...soneium.rpcUrls.default.http.map((url) => ({ url, batch: false })),
   ]),
   [sei.id]: createFallbackTransport([
-    ...createPonderHttp(sei.id),
+    ...createFallbackRpcHttp(sei.id),
     { url: "https://sei-public.nodies.app", batch: false, key: "sei-nodies-maxNum-2000" },
     { url: "https://sei.therpc.io", batch: false, key: "sei-therpc-maxNum-2000" },
     { url: "https://sei.drpc.org", batch: false, key: "sei-drpc-maxNum-2000" },
   ]),
   [customChains.tac.id]: createFallbackTransport([
-    ...createPonderHttp(customChains.tac.id),
+    ...createFallbackRpcHttp(customChains.tac.id),
     ...customChains.tac.rpcUrls.default.http.map((url) => ({ url, batch: false })),
   ]),
   [customChains.stable.id]: createFallbackTransport([
