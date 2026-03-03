@@ -8,12 +8,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@morpho-org/uikit/components/shadcn/alert-dialog";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { CHAIN_DEPRECATION_INFO } from "@/lib/constants";
 
 export function DeprecationModal({ chainId }: { chainId: number | undefined }) {
-  const deprecationInfo = chainId !== undefined ? CHAIN_DEPRECATION_INFO[chainId] : undefined;
+  const deprecationInfo = useMemo(
+    () => (chainId !== undefined ? CHAIN_DEPRECATION_INFO[chainId] : undefined),
+    [chainId],
+  );
   const [open, setOpen] = useState(true);
 
   // Reset to open when chainId changes

@@ -69,21 +69,18 @@ const chains = [
   customChains.katana,
   arbitrum,
   customChains.hyperevm,
+  optimism,
   // lite support (alphabetical)
   // abstract,
   celo,
   // corn,
   // fraxtal,
-  hemi,
   // ink,
   lisk,
   // modeMainnet,
-  optimism,
-  plumeMainnet,
   // scrollMainnet,
   soneium,
   // sonic,
-  customChains.tac,
   worldchain,
 ] as const;
 
