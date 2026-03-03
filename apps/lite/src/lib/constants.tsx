@@ -1,8 +1,7 @@
 import { SafeLink } from "@morpho-org/uikit/components/safe-link";
-import { tac } from "@morpho-org/uikit/lib/chains/tac";
 import { type Deployments } from "@morpho-org/uikit/lib/deployments";
 import { ReactNode } from "react";
-import { type Chain, hemi, optimism, plumeMainnet, polygon, worldchain } from "wagmi/chains";
+import { celo, type Chain, hemi, lisk, optimism, plumeMainnet, polygon, soneium, worldchain } from "wagmi/chains";
 
 /**
  * App-wide deprecation banner configuration.
@@ -38,21 +37,21 @@ export const CHAIN_DEPRECATION_INFO: Partial<
   //   ecosystemBuilder: "Oku",
   //   ecosystemBuilderUrl: "https://oku.trade/morpho/vaults?inputChain=worldchain",
   // },
-  [plumeMainnet.id]: {
-    chain: plumeMainnet,
-    cutoffDate: "March 2, 2026",
-    ecosystemBuilder: "Mystic",
-    ecosystemBuilderUrl: "https://app.mysticfinance.xyz",
-  },
-  [hemi.id]: {
-    chain: hemi,
-    cutoffDate: "March 2, 2026",
+  [soneium.id]: {
+    chain: soneium,
+    cutoffDate: "March 16, 2026",
     ecosystemBuilder: "Feather",
     ecosystemBuilderUrl: "https://app.feather.zone/portfolio",
   },
-  [tac.id]: {
-    chain: tac,
-    cutoffDate: "March 2, 2026",
+  [lisk.id]: {
+    chain: lisk,
+    cutoffDate: "March 16, 2026",
+    ecosystemBuilder: "Feather",
+    ecosystemBuilderUrl: "https://app.feather.zone/portfolio",
+  },
+  [celo.id]: {
+    chain: celo,
+    cutoffDate: "March 16, 2026",
     ecosystemBuilder: "Feather",
     ecosystemBuilderUrl: "https://app.feather.zone/portfolio",
   },
@@ -74,7 +73,7 @@ export const WORDMARK = ""; // Replace with "/your-wordmark.svg" to customize in
 
 export const MIN_TIMELOCK = 3 * 24 * 60 * 60; // For filtering vaults
 
-export const DEFAULT_CHAIN = plumeMainnet;
+export const DEFAULT_CHAIN = worldchain;
 
 export const TRANSACTION_DATA_SUFFIX = "0x117E"; // (L I T E)
 
