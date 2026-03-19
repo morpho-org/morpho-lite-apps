@@ -72,14 +72,14 @@ const chains = [
   optimism,
   // lite support (alphabetical)
   // abstract,
-  celo,
+  // celo,
   // corn,
   // fraxtal,
   // ink,
-  lisk,
+  // lisk,
   // modeMainnet,
   // scrollMainnet,
-  soneium,
+  // soneium,
   // sonic,
   worldchain,
 ] as const;

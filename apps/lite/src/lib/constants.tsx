@@ -1,7 +1,7 @@
 import { SafeLink } from "@morpho-org/uikit/components/safe-link";
 import { type Deployments } from "@morpho-org/uikit/lib/deployments";
 import { ReactNode } from "react";
-import { celo, type Chain, hemi, lisk, optimism, plumeMainnet, polygon, soneium, worldchain } from "wagmi/chains";
+import { type Chain, hemi, optimism, plumeMainnet, polygon, worldchain } from "wagmi/chains";
 
 /**
  * App-wide deprecation banner configuration.
@@ -37,24 +37,6 @@ export const CHAIN_DEPRECATION_INFO: Partial<
   //   ecosystemBuilder: "Oku",
   //   ecosystemBuilderUrl: "https://oku.trade/morpho/vaults?inputChain=worldchain",
   // },
-  [soneium.id]: {
-    chain: soneium,
-    cutoffDate: "March 16, 2026",
-    ecosystemBuilder: "Feather",
-    ecosystemBuilderUrl: "https://app.feather.zone/portfolio",
-  },
-  [lisk.id]: {
-    chain: lisk,
-    cutoffDate: "March 16, 2026",
-    ecosystemBuilder: "Feather",
-    ecosystemBuilderUrl: "https://app.feather.zone/portfolio",
-  },
-  [celo.id]: {
-    chain: celo,
-    cutoffDate: "March 16, 2026",
-    ecosystemBuilder: "Feather",
-    ecosystemBuilderUrl: "https://app.feather.zone/portfolio",
-  },
 };
 
 export function isReduceOnly(chainId: number | undefined) {
