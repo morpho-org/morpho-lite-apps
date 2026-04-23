@@ -9,14 +9,17 @@ import {
   AlertDialogTitle,
 } from "@morpho-org/uikit/components/shadcn/alert-dialog";
 import { useEffect, useMemo, useState } from "react";
+import { useAccount } from "wagmi";
 
 import { CHAIN_DEPRECATION_INFO } from "@/lib/constants";
 
 export function DeprecationModal({ chainId }: { chainId: number | undefined }) {
+  const { address } = useAccount();
   const deprecationInfo = useMemo(
     () => (chainId !== undefined ? CHAIN_DEPRECATION_INFO[chainId] : undefined),
     [chainId],
   );
+  const dashboardUrl = address ? `https://app.morpho.org/dashboard/${address}` : "https://app.morpho.org/dashboard";
   const [open, setOpen] = useState(true);
 
   // Reset to open when chainId changes
@@ -33,13 +36,13 @@ export function DeprecationModal({ chainId }: { chainId: number | undefined }) {
       <AlertDialogContent className="rounded-2xl">
         <AlertDialogHeader>
           <AlertDialogTitle className="mb-3 text-2xl font-light">
-            The Morpho app now supports {deprecationInfo.chain.name}!
+            The main Morpho app now supports {deprecationInfo.chain.name}!
           </AlertDialogTitle>
           <AlertDialogDescription asChild>
             <div className="bg-secondary text-secondary-foreground rounded-lg p-4 font-light">
               <p>
                 Users can now manage their position on the{" "}
-                <SafeLink className="underline" href={deprecationInfo.dashboardUrl}>
+                <SafeLink className="underline" href={dashboardUrl}>
                   Dashboard
                 </SafeLink>
                 .

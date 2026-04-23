@@ -28,10 +28,9 @@ export const APP_DEPRECATION_BANNER: { color: string; text: ReactNode } | undefi
  * Chain-specific deprecation modal configuration.
  * Only chains listed here will show the deprecation modal.
  */
-export const CHAIN_DEPRECATION_INFO: Partial<Record<keyof Deployments, { chain: Chain; dashboardUrl: string }>> = {
+export const CHAIN_DEPRECATION_INFO: Partial<Record<keyof Deployments, { chain: Chain }>> = {
   [worldchain.id]: {
     chain: worldchain,
-    dashboardUrl: "https://app.morpho.org/worldchain/earn",
   },
 };
 
