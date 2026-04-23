@@ -204,7 +204,8 @@ Same as Fallback, plus:
 ### Deployment
 
 - Lite app deploys to Vercel via `pnpm run deploy` in `apps/lite`
-- Both apps support Fleek deployment (via `@fleek-platform/cli`)
+- Fallback app deploys to IPFS via Filebase (see `.github/workflows/filebase-deploy.yaml`) — the action uploads a CAR to the bucket, then publishes the new CID to the Site's IPNS via the Filebase Platform API
+- Both apps still support Fleek deployment (via `@fleek-platform/cli`); the Fleek workflow will be removed once the Filebase pipeline is validated
 - Ensure SPA routing is configured (all routes → `index.html`)
 
 ### Development Workflow

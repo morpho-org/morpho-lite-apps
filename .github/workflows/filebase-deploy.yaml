@@ -1,0 +1,65 @@
+name: Deploy site via Filebase
+on:
+  push:
+    branches: ["release"]
+    paths:
+      - "pnpm-lock.yaml"
+      - "packages/uikit/**"
+      - "apps/fallback/**"
+      - ".github/workflows/filebase-deploy.yaml"
+
+permissions:
+  contents: read
+  pull-requests: write
+  statuses: write
+
+jobs:
+  deploy-to-filebase:
+    environment:
+      name: IPFS
+      url: https://morpho-fallback-app.myfilebase.site
+
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        node-version: [22]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - name: Install pnpm
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with:
+          version: 10
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "pnpm"
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Build fallback app
+        env:
+          VITE_IS_IPFS_BUILD: "true"
+        run: pnpm run fallback-app:build
+      - name: Upload CAR to Filebase
+        id: deploy
+        uses: ipshipyard/ipfs-deploy-action@266952049b3bf1bdc2afadcf568759e11ac1ef66 # v1.9.2
+        with:
+          path-to-deploy: apps/fallback/dist
+          filebase-access-key: ${{ secrets.FILEBASE_ACCESS_KEY }}
+          filebase-secret-key: ${{ secrets.FILEBASE_SECRET_KEY }}
+          filebase-bucket: ${{ secrets.FILEBASE_BUCKET }}
+          github-token: ${{ github.token }}
+      - name: Publish new CID to Filebase Site (IPNS)
+        env:
+          FILEBASE_ACCESS_KEY: ${{ secrets.FILEBASE_ACCESS_KEY }}
+          FILEBASE_SECRET_KEY: ${{ secrets.FILEBASE_SECRET_KEY }}
+          SITE_LABEL: morpho-fallback-app.myfilebase.site
+          CID: ${{ steps.deploy.outputs.cid }}
+        run: |
+          TOKEN=$(printf '%s' "${FILEBASE_ACCESS_KEY}:${FILEBASE_SECRET_KEY}" | base64 -w 0)
+          curl -fsS -X PUT \
+            -H "Authorization: Bearer ${TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "{\"cid\":\"${CID}\"}" \
+            "https://api.filebase.io/v1/names/${SITE_LABEL}"

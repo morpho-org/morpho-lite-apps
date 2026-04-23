@@ -56,6 +56,8 @@ export function Footer() {
     return false;
   }, [ipfsDeployments]);
 
+  if (import.meta.env.VITE_IS_IPFS_BUILD === "true") return null;
+
   return (
     <div className="bg-primary fixed bottom-0 z-[51] h-[12px] w-full overflow-visible">
       <div
