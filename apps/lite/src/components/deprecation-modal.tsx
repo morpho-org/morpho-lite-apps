@@ -9,14 +9,17 @@ import {
   AlertDialogTitle,
 } from "@morpho-org/uikit/components/shadcn/alert-dialog";
 import { useEffect, useMemo, useState } from "react";
+import { useAccount } from "wagmi";
 
 import { CHAIN_DEPRECATION_INFO } from "@/lib/constants";
 
 export function DeprecationModal({ chainId }: { chainId: number | undefined }) {
+  const { address } = useAccount();
   const deprecationInfo = useMemo(
     () => (chainId !== undefined ? CHAIN_DEPRECATION_INFO[chainId] : undefined),
     [chainId],
   );
+  const dashboardUrl = address ? `https://app.morpho.org/dashboard/${address}` : "https://app.morpho.org/dashboard";
   const [open, setOpen] = useState(true);
 
   // Reset to open when chainId changes
@@ -32,43 +35,26 @@ export function DeprecationModal({ chainId }: { chainId: number | undefined }) {
     <AlertDialog key={chainId} open={open} onOpenChange={setOpen}>
       <AlertDialogContent className="rounded-2xl">
         <AlertDialogHeader>
-          <AlertDialogTitle className="mb-3 text-2xl font-light">Lite App Deprecation Notice</AlertDialogTitle>
+          <AlertDialogTitle className="mb-3 text-2xl font-light">
+            The main Morpho app now supports {deprecationInfo.chain.name}!
+          </AlertDialogTitle>
           <AlertDialogDescription asChild>
             <div className="bg-secondary text-secondary-foreground rounded-lg p-4 font-light">
               <p>
-                Lite is being deprecated across all ecosystems, including {deprecationInfo.chain.name}, and is now in
-                reduce-only mode. Your positions are safe, Morpho vaults and markets are not going away - all positions
-                remain fully accessible from{" "}
-                <SafeLink className="underline" href={deprecationInfo.ecosystemBuilderUrl}>
-                  {deprecationInfo.ecosystemBuilder}
+                Users can now manage their position on the{" "}
+                <SafeLink className="underline" href={dashboardUrl}>
+                  Dashboard
                 </SafeLink>
                 .
               </p>
-
+              <p className="mt-4 font-medium">The Lite app has now been sunsetted.</p>
               <p className="mt-4">
-                <strong className="font-medium">
-                  You can still use the Lite app on {deprecationInfo.chain.name} until {deprecationInfo.cutoffDate} to
-                  repay, withdraw and close positions, but you can&apos;t open new ones.
-                </strong>{" "}
+                Need to exit later? The{" "}
+                <SafeLink className="underline" href="https://fallback.morpho.org">
+                  fallback app
+                </SafeLink>{" "}
+                will always let you reduce positions.
               </p>
-              <p className="mt-4 font-medium">What to do next:</p>
-              <ul className="mt-2 list-disc pl-5">
-                <li>
-                  Use{" "}
-                  <SafeLink className="underline" href={deprecationInfo.ecosystemBuilderUrl}>
-                    {deprecationInfo.ecosystemBuilder}
-                  </SafeLink>{" "}
-                  to keep using {deprecationInfo.chain.name} with full functionality. Your positions will show there
-                  automatically.
-                </li>
-                <li className="mt-1">
-                  Need to exit later? The{" "}
-                  <SafeLink className="underline" href="https://fallback.morpho.org">
-                    fallback app
-                  </SafeLink>{" "}
-                  will always let you reduce positions.
-                </li>
-              </ul>
             </div>
           </AlertDialogDescription>
         </AlertDialogHeader>

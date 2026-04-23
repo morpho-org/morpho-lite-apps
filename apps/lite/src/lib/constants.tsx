@@ -11,7 +11,7 @@ export const APP_DEPRECATION_BANNER: { color: string; text: ReactNode } | undefi
   color: "bg-amber-600",
   text: (
     <span className="grow py-2 text-center">
-      Morpho Lite will be gradually phased out in the coming months; learn more{" "}
+      Morpho Lite has been sunsetted; learn more{" "}
       <SafeLink
         href="https://help.morpho.org/en/articles/13560956-morpho-lite-app-deprecation"
         target="_blank"
@@ -28,19 +28,14 @@ export const APP_DEPRECATION_BANNER: { color: string; text: ReactNode } | undefi
  * Chain-specific deprecation modal configuration.
  * Only chains listed here will show the deprecation modal.
  */
-export const CHAIN_DEPRECATION_INFO: Partial<
-  Record<keyof Deployments, { chain: Chain; cutoffDate: string; ecosystemBuilder: string; ecosystemBuilderUrl: string }>
-> = {
-  // [worldchain.id]: {
-  //   chain: worldchain,
-  //   cutoffDate: "February 14, 2026",
-  //   ecosystemBuilder: "Oku",
-  //   ecosystemBuilderUrl: "https://oku.trade/morpho/vaults?inputChain=worldchain",
-  // },
+export const CHAIN_DEPRECATION_INFO: Partial<Record<keyof Deployments, { chain: Chain }>> = {
+  [worldchain.id]: {
+    chain: worldchain,
+  },
 };
 
 export function isReduceOnly(chainId: number | undefined) {
-  return chainId !== undefined && (CHAIN_DEPRECATION_INFO[chainId] !== undefined || chainId === worldchain.id);
+  return chainId !== undefined && CHAIN_DEPRECATION_INFO[chainId] !== undefined;
 }
 
 export const APP_DETAILS = {
