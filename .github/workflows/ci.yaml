@@ -13,10 +13,6 @@ jobs:
     strategy:
       matrix:
         node-version: [22]
-    env:
-      VITE_WALLET_KIT_PROJECT_ID: ${{ secrets.VITE_WALLET_KIT_PROJECT_ID }}
-      VITE_APP_TITLE: ${{ vars.VITE_APP_TITLE }}
-      VITE_ERPC_API_KEY: ${{ secrets.VITE_ERPC_API_KEY }}
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
@@ -35,10 +31,5 @@ jobs:
         run: pnpm run uikit:build
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@8789b3e21e6c11b2697f5eb56eddae542f746c10 # v1
-      - name: Create .env
-        run: |
-          echo "VITE_WALLET_KIT_PROJECT_ID=${{ env.VITE_WALLET_KIT_PROJECT_ID }}" >> apps/lite/.env
-          echo "VITE_APP_TITLE=${{ env.VITE_APP_TITLE }}" >> apps/lite/.env
-          echo "VITE_ERPC_API_KEY=${{ env.VITE_ERPC_API_KEY }}" >> apps/lite/.env
       - name: Test
         run: pnpm vitest

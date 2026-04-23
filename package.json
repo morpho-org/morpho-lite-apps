@@ -10,8 +10,6 @@
     "uikit:example": "pnpm uikit:build && pnpm --filter '@morpho-org/uikit' '/^(dev|example)$/'",
     "fallback-app:build": "pnpm uikit:build && pnpm --filter '@morpho-org/fallback-app' build-this",
     "fallback-app:dev": "pnpm uikit:build && pnpm --parallel --filter '@morpho-org/fallback-app'... dev",
-    "lite-app:build": "pnpm uikit:build && pnpm --filter '@morpho-org/lite-app' build-this",
-    "lite-app:dev": "pnpm uikit:build && pnpm --parallel --filter '@morpho-org/lite-app'... dev",
     "lint": "pnpm --filter './**' lint",
     "prepare": "husky"
   },

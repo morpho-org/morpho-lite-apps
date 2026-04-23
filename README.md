@@ -1,7 +1,6 @@
-# Morpho Lite Monorepo
+# Morpho Fallback App
 
-This monorepo contains code for the [fallback](https://fallback.morpho.org/) and [lite](https://lite.morpho.org) apps, as well as a UIKit for components
-they share.
+This repository contains the code for the [fallback](https://fallback.morpho.org/) app, as well as a UIKit for shared components.
 
 ## Installation
 
@@ -13,11 +12,10 @@ cd morpho-lite-apps
 # Install packages
 pnpm install
 # Run
-pnpm run fallback-app:dev # ← for fallback app
-pnpm run lite-app:dev # ← for fallback app
+pnpm run fallback-app:dev
 ```
 
-After running the commands above, open [http://localhost:5173/](http://localhost:5173/) in your browser to use whichever app you ran.
+After running the commands above, open [http://localhost:5173/](http://localhost:5173/) in your browser to use the app.
 
 ## Features
 
@@ -25,25 +23,12 @@ After running the commands above, open [http://localhost:5173/](http://localhost
 
 > A resilient frontend, designed for emergencies with minimal dependencies
 
-- 🦋 View your deposits in MetaMorpho vaults
-- 🌌 View your borrow positions
-- 📤 Withdraw from MetaMorpho vaults
-- ⚡️ Repay loans, add collateral, and remove collateral
-- ⛓️ Support any chain with Morpho contracts
-- 🏗️ Requires no additional infrastructure/services
-
-### Lite
-
-> A lightweight frontend, designed for rapid multichain expansion without compromising quality in the main app
-
-All features from the Fallback App, plus:
-
-- 👀 Explore all whitelisted vaults and markets, rather than just those you've used before
-- 📥 Deposit or open new positions
-- ✨ View Merkl rewards campaigns for lending and borrowing on Morpho
-- 🏎️ Faster -- calls are tuned for Alchemy rather than public RPCs
-
-If you want to give your users a tailored experience across chains, the Lite App can also be whitelabeled. It only takes a few minutes to add your logo and deploy to Vercel.
+- View your deposits in MetaMorpho vaults
+- View your borrow positions
+- Withdraw from MetaMorpho vaults
+- Repay loans, add collateral, and remove collateral
+- Support any chain with Morpho contracts
+- Requires no additional infrastructure/services
 
 ### UIKit
 
@@ -57,20 +42,17 @@ If you want to give your users a tailored experience across chains, the Lite App
 
 ## Architecture
 
-Both apps are single page apps built with React 19, Vite, [shadcn](https://ui.shadcn.com), and [wagmi](https://wagmi.sh).
-The Lite App uses [React Router v7](https://reactrouter.com/) (`BrowserRouter`) to enable URL-based navigation. If you're deploying
-somewhere other than Vercel, take care to redirect all URL's to the route `index.html`, similar to what's done [here](apps/lite/vercel.json).
+The app is a single page app built with React 19, Vite, [shadcn](https://ui.shadcn.com), and [wagmi](https://wagmi.sh).
 
 ## Further Information
 
-You're reading the monorepo summary. For more details on individual apps, check out their respective READMEs:
+For more details, check out the app's README:
 
 - [README - Fallback App](apps/fallback/README.md)
-- [README - Lite App](apps/lite/README.md)
 
 ## Deployments
 
-The Lite and Fallback apps are automatically released when merging `main` → `release`. Recommended flow:
+The Fallback app is automatically released when merging `main` → `release`. Recommended flow:
 
 1. Wait for checks to pass on `main` (otherwise you won't be able to push your merge commit)
 2. Locally, do the following:
