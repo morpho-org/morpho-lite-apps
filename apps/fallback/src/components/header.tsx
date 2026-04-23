@@ -1,12 +1,18 @@
 import { Button } from "@morpho-org/uikit/components/shadcn/button";
+import { useKeyedState } from "@morpho-org/uikit/hooks/use-keyed-state";
 import { cn } from "@morpho-org/uikit/lib/utils";
 import { XIcon } from "lucide-react";
 import { useState } from "react";
+import { useChains } from "wagmi";
 
-import { GITHUB_REPO_URL } from "@/lib/constants";
+import { CHAIN_DEPRECATION_DATES, GITHUB_REPO_URL } from "@/lib/constants";
 
-export function Header({ className, children, ...props }: React.ComponentProps<"div">) {
+export function Header({ className, children, chainId, ...props }: React.ComponentProps<"div"> & { chainId?: number }) {
   const [shouldShowBanner, setShouldShowBanner] = useState(true);
+  const [shouldShowDeprecationBanner, setShouldShowDeprecationBanner] = useKeyedState(true, chainId, { persist: true });
+  const chains = useChains();
+  const chainName = chains.find((chain) => chain.id === chainId)?.name;
+  const deprecationDate = chainId !== undefined ? CHAIN_DEPRECATION_DATES[chainId] : undefined;
 
   return (
     <div className="pointer-events-none fixed top-0 z-50 flex h-screen w-screen flex-col">
@@ -20,6 +26,17 @@ export function Header({ className, children, ...props }: React.ComponentProps<"
             </a>
           </span>
           <Button size="sm" variant="ghost" onClick={() => setShouldShowBanner(false)}>
+            <XIcon />
+          </Button>
+        </aside>
+      )}
+      {deprecationDate !== undefined && shouldShowDeprecationBanner && (
+        <aside className="pointer-events-auto flex items-center bg-amber-600 px-1 text-sm font-light italic">
+          <span className="grow py-2 text-center">
+            This fallback app will stop supporting {chainName ?? "this chain"} on {deprecationDate}. Withdraw your
+            positions or use an alternative interface before then.
+          </span>
+          <Button size="sm" variant="ghost" onClick={() => setShouldShowDeprecationBanner(false)}>
             <XIcon />
           </Button>
         </aside>

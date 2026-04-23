@@ -1,8 +1,10 @@
 import MorphoLogoSvg from "@morpho-org/uikit/assets/morpho.svg?react";
 import { Button } from "@morpho-org/uikit/components/shadcn/button";
 import { WalletMenu } from "@morpho-org/uikit/components/wallet-menu";
+import { getChainSlug } from "@morpho-org/uikit/lib/utils";
 import { ExternalLink } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useChains } from "wagmi";
 
 import { BorrowSubPage } from "./borrow-subpage";
 import { EarnSubPage } from "./earn-subpage";
@@ -20,9 +22,15 @@ export default function Page() {
   const [selectedSubPage, setSelectedSubPage] = useState(SubPage.Earn);
   const [selectedChainSlug, setSelectedChainSlug] = useState("ethereum");
 
+  const chains = useChains();
+  const selectedChainId = useMemo(
+    () => chains.find((chain) => getChainSlug(chain) === selectedChainSlug)?.id,
+    [chains, selectedChainSlug],
+  );
+
   return (
     <div className="bg-gray-200 dark:bg-neutral-900">
-      <Header className="flex items-center justify-between px-5 py-3">
+      <Header className="flex items-center justify-between px-5 py-3" chainId={selectedChainId}>
         <div className="flex gap-4">
           <div className="text-primary-foreground flex items-center gap-2 text-xl">
             <MorphoLogoSvg width={24} height={24} />
